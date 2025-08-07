@@ -259,30 +259,30 @@ async def on_message(message):
     
     # Handle DM mentions
     if not message.guild:  # This is a DM
-        if bot.user in message.mentions or message.content.strip() == f"<@{bot.user.id}>":
+        if bot.user in message.mentions or message.content.strip() == f"<@{bot.user.id}>" or message.content.strip() == f"<@!{bot.user.id}>":
             embed = discord.Embed(
-                title="🌿 Enne vilicho?",
-                description="Njan *ᴠᴀᴀᴢʜᴀ-ʙᴏᴛ* aanu 😎\nEnte Dev aanu ente thala! 💻\nEnthelum help venamo? Just type /help 😄\nvaazha ila pidichu nadakkam 🌴",
+                title="🌱 Enne vilicho?",
+                description="Njan *ᴠᴀᴀᴢʜᴀ-ʙᴏᴛ* aanu 😄\nEnte Dev aanu ente thala! 💻\nEnthelum help venamo? Just type /help ✨\nvaazha ila pidichu nadakkam 🌴",
                 color=0x43b581
             )
             embed.set_thumbnail(url=bot.user.display_avatar.url)
             embed.set_footer(text="ᴠᴀᴀᴢʜᴀ-ʙᴏᴛ", icon_url=bot.user.display_avatar.url)
             
             view = discord.ui.View()
-            help_button = discord.ui.Button(label="📜 Commands", style=discord.ButtonStyle.primary, emoji="📜")
+            help_button = discord.ui.Button(label="📋 Commands", style=discord.ButtonStyle.primary, emoji="📋")
             help_button.callback = lambda i: help_command_callback(i)
-            invite_button = discord.ui.Button(label="🤖 Invite Bot", style=discord.ButtonStyle.link, url=f"https://discord.com/api/oauth2/authorize?client_id={bot.user.id}&permissions=8&scope=bot%20applications.commands", emoji="🤖")
+            invite_button = discord.ui.Button(label="🔗 Invite Bot", style=discord.ButtonStyle.link, url=f"https://discord.com/api/oauth2/authorize?client_id={bot.user.id}&permissions=8&scope=bot%20applications.commands", emoji="🔗")
             view.add_item(help_button)
             view.add_item(invite_button)
             
             await message.channel.send(embed=embed, view=view)
         
-        # Check for bot owner mention in DMs
+        # Check for bot owner mention in DMs - improved detection
         owner_id = os.getenv('BOT_OWNER_ID')
-        if owner_id and f"<@{owner_id}>" in message.content:
+        if owner_id and (f"<@{owner_id}>" in message.content or f"<@!{owner_id}>" in message.content or "daazo" in message.content.lower()):
             embed = discord.Embed(
-                title="👑 My Dev!",
-                description="*Daazo | Rio* aanu ente Developer 😎\n\nVaazha ila pidich nadakan paripichavan 🌿",
+                title="👨‍💻 My Dev!",
+                description="*Daazo | Rio* aanu ente Developer 😎\n\nVaazha ila pidich nadakan paripichavan 🌱",
                 color=0x3498db
             )
             embed.set_footer(text="ᴠᴀᴀᴢʜᴀ-ʙᴏᴛ", icon_url=bot.user.display_avatar.url)
@@ -291,34 +291,32 @@ async def on_message(message):
         
         return  # Don't process commands or XP in DMs
     
-    # Process automod first (from automod.py) but don't let it interfere with mentions
-    
-    # Check for bot owner mention
+    # Check for bot owner mention - improved detection
     owner_id = os.getenv('BOT_OWNER_ID')
-    if owner_id and f"<@{owner_id}>" in message.content:
+    if owner_id and (f"<@{owner_id}>" in message.content or f"<@!{owner_id}>" in message.content or "daazo" in message.content.lower()):
         embed = discord.Embed(
-            title="👑 My Dev!",
-            description="*Daazo | Rio* aanu ente Developer 😎\n\nVaazha ila pidich nadakan paripichavan 🌿",
+            title="👨‍💻 My Dev!",
+            description="*Daazo | Rio* aanu ente Developer 😎\n\nVaazha ila pidich nadakan paripichavan 🌱",
             color=0x3498db
         )
         embed.set_footer(text="ᴠᴀᴀᴢʜᴀ-ʙᴏᴛ", icon_url=bot.user.display_avatar.url)
         embed.set_thumbnail(url=bot.user.display_avatar.url)
         await message.channel.send(embed=embed)
     
-    # Bot mention reply
-    if bot.user in message.mentions and not message.content.startswith('/'):
+    # Bot mention reply - improved detection
+    if (bot.user in message.mentions or f"<@{bot.user.id}>" in message.content or f"<@!{bot.user.id}>" in message.content) and not message.content.startswith('/'):
         embed = discord.Embed(
-            title="🌿 Enne vilicho?",
-            description="Njan *ᴠᴀᴀᴢʜᴀ-ʙᴏᴛ* aanu 😎\nEnte Dev aanu ente thala! 💻\nEnthelum help venamo? Just type /help 😄\nvaazha ila pidichu nadakkam 🌴",
+            title="🌱 Enne vilicho?",
+            description="Njan *ᴠᴀᴀᴢʜᴀ-ʙᴏᴛ* aanu 😄\nEnte Dev aanu ente thala! 💻\nEnthelum help venamo? Just type /help ✨\nvaazha ila pidichu nadakkam 🌴",
             color=0x43b581
         )
         embed.set_thumbnail(url=bot.user.display_avatar.url)
         embed.set_footer(text="ᴠᴀᴀᴢʜᴀ-ʙᴏᴛ", icon_url=bot.user.display_avatar.url)
         
         view = discord.ui.View()
-        help_button = discord.ui.Button(label="📜 Commands", style=discord.ButtonStyle.primary, emoji="📜")
+        help_button = discord.ui.Button(label="📋 Commands", style=discord.ButtonStyle.primary, emoji="📋")
         help_button.callback = lambda i: help_command_callback(i)
-        invite_button = discord.ui.Button(label="🤖 Invite Bot", style=discord.ButtonStyle.link, url=f"https://discord.com/api/oauth2/authorize?client_id={bot.user.id}&permissions=8&scope=bot%20applications.commands", emoji="🤖")
+        invite_button = discord.ui.Button(label="🔗 Invite Bot", style=discord.ButtonStyle.link, url=f"https://discord.com/api/oauth2/authorize?client_id={bot.user.id}&permissions=8&scope=bot%20applications.commands", emoji="🔗")
         view.add_item(help_button)
         view.add_item(invite_button)
         
@@ -497,7 +495,7 @@ async def on_member_join(member):
             formatted_message = welcome_message.replace("{user}", member.mention).replace("{server}", member.guild.name)
             
             embed = discord.Embed(
-                title="👋 **Welcome to the Community!** 🎉",
+                title="👋 **Welcome to the Community!** 🎊",
                 description=f"**{formatted_message}**\n\n*We're excited to have you here!* ✨",
                 color=0x43b581
             )

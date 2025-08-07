@@ -120,8 +120,8 @@ async def on_message(message):
             automod_settings['spam_tracking'] = spam_tracking
             await update_server_data(message.guild.id, {'automod': automod_settings})
     
-    # Continue processing - let main.py handle bot mentions and commands
-    # Don't call bot.process_commands() here to avoid conflicts
+    # Don't process commands here - let main.py handle everything
+    return
 
 async def has_permission_user_message(member, guild, permission_level):
     """Check if user has required permission level (for message events)"""

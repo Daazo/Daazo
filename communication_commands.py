@@ -23,7 +23,7 @@ async def say(interaction: discord.Interaction, message: str, channel: discord.T
     )
     await interaction.response.send_message(embed=embed, ephemeral=True)
     
-    await log_action(interaction.guild.id, "communication", f"📢 [SAY] Message sent to {target_channel.name} by {interaction.user}")
+    await log_action(interaction.guild.id, "communication", f"💬 [SAY] Message sent to {target_channel.name} by {interaction.user}")
 
 @bot.tree.command(name="embed", description="Send a rich embed message")
 @app_commands.describe(
@@ -81,7 +81,7 @@ async def embed_command(
     )
     await interaction.response.send_message(embed=response_embed, ephemeral=True)
     
-    await log_action(interaction.guild.id, "communication", f"📢 [EMBED] Embed sent to {target_channel.name} by {interaction.user}")
+    await log_action(interaction.guild.id, "communication", f"📝 [EMBED] Embed sent to {target_channel.name} by {interaction.user}")
 
 @bot.tree.command(name="announce", description="Send an announcement")
 @app_commands.describe(
@@ -239,7 +239,7 @@ async def dm_command(interaction: discord.Interaction, user: discord.Member, mes
     
     try:
         embed = discord.Embed(
-            title=f"📨 Message from {interaction.guild.name}",
+            title=f"📩 Message from {interaction.guild.name}",
             description=message,
             color=0x3498db
         )
