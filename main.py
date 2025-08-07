@@ -257,6 +257,8 @@ async def on_message(message):
     if message.author.bot:
         return
     
+    # Process automod first (from automod.py) but don't let it interfere with mentions
+    
     # Check for bot owner mention
     owner_id = os.getenv('BOT_OWNER_ID')
     if owner_id and f"<@{owner_id}>" in message.content:
@@ -772,6 +774,9 @@ class HelpView(discord.ui.View):
     
     @discord.ui.button(label="Bot Info", style=discord.ButtonStyle.secondary, emoji="🤖")
     async def bot_info_help(self, interaction: discord.Interaction, button: discord.ui.Button):
+        bot_owner_id = os.getenv('BOT_OWNER_ID')
+        owner_mention = f"<@{bot_owner_id}>" if bot_owner_id else "Contact via server"
+        
         embed = discord.Embed(
             title="🤖 **About ᴠᴀᴀᴢʜᴀ Bot**",
             description="━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
@@ -784,7 +789,7 @@ class HelpView(discord.ui.View):
         )
         embed.add_field(
             name="👨‍💻 **Developer Information**", 
-            value=f"**Developer:** {BOT_OWNER_NAME}\n**About:** {BOT_OWNER_DESCRIPTION}\n**Contact:** Mention bot owner for support", 
+            value=f"**Developer:** {BOT_OWNER_NAME}\n**Owner Account:** {owner_mention}\n**About:** {BOT_OWNER_DESCRIPTION}\n**Contact:** Mention bot owner for support", 
             inline=False
         )
         embed.add_field(
@@ -794,7 +799,7 @@ class HelpView(discord.ui.View):
         )
         embed.add_field(
             name="🔗 **Links**", 
-            value=f"**Invite Bot:** [Click Here](https://discord.com/api/oauth2/authorize?client_id={bot.user.id}&permissions=8&scope=bot%20applications.commands)\n**Support:** Mention the bot owner in any server\n**Made with ❤️ from Kerala 🌴**", 
+            value=f"**Invite Bot:** [Click Here](https://discord.com/api/oauth2/authorize?client_id={bot.user.id}&permissions=8&scope=bot%20applications.commands)\n**Support:** Mention {owner_mention} in any server\n**Made with ❤️ from Kerala 🌴**", 
             inline=False
         )
         embed.set_footer(text="🌴 ᴠᴀᴀᴢʜᴀ - Your friendly Kerala assistant")

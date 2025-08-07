@@ -23,106 +23,105 @@ async def on_message(message):
     if not message.guild:
         return
     
-    # Check if user has moderator permissions (exempt from automod)
-    if await has_permission_user_message(message.author, message.guild, "junior_moderator"):
-        await bot.process_commands(message)
-        return
-    
     server_data = await get_server_data(message.guild.id)
     automod_settings = server_data.get('automod', {})
     disabled_channels = automod_settings.get('disabled_channels', [])
     
-    # Skip automod in disabled channels
-    if str(message.channel.id) in disabled_channels:
-        await bot.process_commands(message)
-        return
+    # Skip automod in disabled channels or for moderators
+    should_skip_automod = (
+        str(message.channel.id) in disabled_channels or 
+        await has_permission_user_message(message.author, message.guild, "junior_moderator")
+    )
+    
+    if not should_skip_automod:
     
     # Check for bad words
-    if automod_settings.get('bad_words', False):
-        content_lower = message.content.lower()
-        for bad_word in BAD_WORDS:
-            if bad_word in content_lower:
+        if automod_settings.get('bad_words', False):
+            content_lower = message.content.lower()
+            for bad_word in BAD_WORDS:
+                if bad_word in content_lower:
+                    await message.delete()
+                    
+                    embed = discord.Embed(
+                        title="🚫 Message Deleted",
+                        description=f"**{message.author.mention}**, your message contained inappropriate language!",
+                        color=0xe74c3c
+                    )
+                    warning_msg = await message.channel.send(embed=embed)
+                    await asyncio.sleep(5)
+                    await warning_msg.delete()
+                    
+                    await log_action(message.guild.id, "moderation", f"🚫 [AUTOMOD] Bad word detected from {message.author} in {message.channel}")
+                    return  # Don't process commands if message was deleted
+        
+        # Check for links
+        if automod_settings.get('links', False):
+            if URL_PATTERN.search(message.content):
                 await message.delete()
                 
                 embed = discord.Embed(
-                    title="🚫 Message Deleted",
-                    description=f"**{message.author.mention}**, your message contained inappropriate language!",
+                    title="🔗 Link Blocked",
+                    description=f"**{message.author.mention}**, links are not allowed in this channel!",
                     color=0xe74c3c
                 )
                 warning_msg = await message.channel.send(embed=embed)
                 await asyncio.sleep(5)
                 await warning_msg.delete()
                 
-                await log_action(message.guild.id, "moderation", f"🚫 [AUTOMOD] Bad word detected from {message.author} in {message.channel}")
-                return
-    
-    # Check for links
-    if automod_settings.get('links', False):
-        if URL_PATTERN.search(message.content):
-            await message.delete()
-            
-            embed = discord.Embed(
-                title="🔗 Link Blocked",
-                description=f"**{message.author.mention}**, links are not allowed in this channel!",
-                color=0xe74c3c
-            )
-            warning_msg = await message.channel.send(embed=embed)
-            await asyncio.sleep(5)
-            await warning_msg.delete()
-            
-            await log_action(message.guild.id, "moderation", f"🔗 [AUTOMOD] Link blocked from {message.author} in {message.channel}")
-            return
-    
-    # Check for spam (messages sent too quickly)
-    if automod_settings.get('spam', False):
-        # Simple spam detection - user sends more than 5 messages in 10 seconds
-        user_id = str(message.author.id)
-        spam_tracking = automod_settings.get('spam_tracking', {})
+                await log_action(message.guild.id, "moderation", f"🔗 [AUTOMOD] Link blocked from {message.author} in {message.channel}")
+                return  # Don't process commands if message was deleted
         
-        import time
-        current_time = time.time()
-        
-        if user_id not in spam_tracking:
-            spam_tracking[user_id] = []
-        
-        # Clean old messages (older than 10 seconds)
-        spam_tracking[user_id] = [t for t in spam_tracking[user_id] if current_time - t < 10]
-        spam_tracking[user_id].append(current_time)
-        
-        if len(spam_tracking[user_id]) > 5:
-            await message.delete()
+        # Check for spam (messages sent too quickly)
+        if automod_settings.get('spam', False):
+            # Simple spam detection - user sends more than 5 messages in 10 seconds
+            user_id = str(message.author.id)
+            spam_tracking = automod_settings.get('spam_tracking', {})
             
-            # Timeout user for 5 minutes
-            try:
-                await message.author.timeout(duration=300, reason="Spam detection")
-                embed = discord.Embed(
-                    title="⏱️ Timeout Applied",
-                    description=f"**{message.author.mention}** has been timed out for 5 minutes due to spam!",
-                    color=0xf39c12
-                )
-                await message.channel.send(embed=embed)
-            except:
-                embed = discord.Embed(
-                    title="🚫 Spam Detected",
-                    description=f"**{message.author.mention}**, please slow down your messages!",
-                    color=0xe74c3c
-                )
-                warning_msg = await message.channel.send(embed=embed)
-                await asyncio.sleep(5)
-                await warning_msg.delete()
+            import time
+            current_time = time.time()
             
-            # Reset spam tracking for user
-            spam_tracking[user_id] = []
+            if user_id not in spam_tracking:
+                spam_tracking[user_id] = []
+            
+            # Clean old messages (older than 10 seconds)
+            spam_tracking[user_id] = [t for t in spam_tracking[user_id] if current_time - t < 10]
+            spam_tracking[user_id].append(current_time)
+            
+            if len(spam_tracking[user_id]) > 5:
+                await message.delete()
+                
+                # Timeout user for 5 minutes
+                try:
+                    await message.author.timeout(duration=300, reason="Spam detection")
+                    embed = discord.Embed(
+                        title="⏱️ Timeout Applied",
+                        description=f"**{message.author.mention}** has been timed out for 5 minutes due to spam!",
+                        color=0xf39c12
+                    )
+                    await message.channel.send(embed=embed)
+                except:
+                    embed = discord.Embed(
+                        title="🚫 Spam Detected",
+                        description=f"**{message.author.mention}**, please slow down your messages!",
+                        color=0xe74c3c
+                    )
+                    warning_msg = await message.channel.send(embed=embed)
+                    await asyncio.sleep(5)
+                    await warning_msg.delete()
+                
+                # Reset spam tracking for user
+                spam_tracking[user_id] = []
+                automod_settings['spam_tracking'] = spam_tracking
+                await update_server_data(message.guild.id, {'automod': automod_settings})
+                
+                await log_action(message.guild.id, "moderation", f"⏱️ [AUTOMOD] Spam timeout applied to {message.author}")
+                return  # Don't process commands if user was timed out
+            
             automod_settings['spam_tracking'] = spam_tracking
             await update_server_data(message.guild.id, {'automod': automod_settings})
-            
-            await log_action(message.guild.id, "moderation", f"⏱️ [AUTOMOD] Spam timeout applied to {message.author}")
-            return
-        
-        automod_settings['spam_tracking'] = spam_tracking
-        await update_server_data(message.guild.id, {'automod': automod_settings})
     
-    await bot.process_commands(message)
+    # Continue processing - let main.py handle bot mentions and commands
+    # Don't call bot.process_commands() here to avoid conflicts
 
 async def has_permission_user_message(member, guild, permission_level):
     """Check if user has required permission level (for message events)"""
