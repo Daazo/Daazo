@@ -41,16 +41,20 @@ async def get_prefix(bot, message):
         return '!'
     
     guild_id = str(message.guild.id)
-    if guild_id in server_cache and 'prefix' in server_cache[guild_id]:
-        return server_cache[guild_id]['prefix']
     
+    # Always check database first for most up-to-date prefix
     if db is not None:
         server_data = await db.servers.find_one({'guild_id': guild_id})
         if server_data and 'prefix' in server_data:
+            # Update cache
             if guild_id not in server_cache:
                 server_cache[guild_id] = {}
             server_cache[guild_id]['prefix'] = server_data['prefix']
             return server_data['prefix']
+    
+    # Fallback to cache if database unavailable
+    if guild_id in server_cache and 'prefix' in server_cache[guild_id]:
+        return server_cache[guild_id]['prefix']
     
     return '!'
 
@@ -288,8 +292,8 @@ async def on_message(message):
         
         await message.channel.send(embed=embed, view=view)
     
-    # XP System
-    if message.guild:
+    # XP System - Give XP for ALL messages in guilds
+    if message.guild and not message.author.bot:
         xp_gain = random.randint(5, 15)
         level_up = await add_xp(message.author.id, message.guild.id, xp_gain)
         
@@ -319,6 +323,14 @@ async def on_message(message):
                         await xp_channel.send(embed=embed, file=file)
                     else:
                         await xp_channel.send(embed=embed)
+            else:
+                # Send level up message in current channel if no XP channel is set
+                embed = discord.Embed(
+                    title="🎉 **Level Up!** ✨",
+                    description=f"**{message.author.mention} reached Level {level}!** 🚀",
+                    color=0xf39c12
+                )
+                await message.channel.send(embed=embed)
     
     await bot.process_commands(message)
 
@@ -444,14 +456,17 @@ async def on_member_join(member):
     
     # Send welcome message to channel
     welcome_channel_id = server_data.get('welcome_channel')
-    welcome_message = server_data.get('welcome_message', f"Welcome to {member.guild.name}!")
+    welcome_message = server_data.get('welcome_message', f"Welcome {member.mention} to {member.guild.name}!")
     
     if welcome_channel_id:
         welcome_channel = bot.get_channel(int(welcome_channel_id))
         if welcome_channel:
+            # Replace placeholders safely
+            formatted_message = welcome_message.replace("{user}", member.mention).replace("{server}", member.guild.name)
+            
             embed = discord.Embed(
                 title="👋 **Welcome to the Community!** 🎉",
-                description=f"**{welcome_message.format(user=member.mention, server=member.guild.name)}**\n\n*We're excited to have you here!* ✨",
+                description=f"**{formatted_message}**\n\n*We're excited to have you here!* ✨",
                 color=0x43b581
             )
             embed.set_thumbnail(url=member.display_avatar.url)
@@ -753,6 +768,37 @@ class HelpView(discord.ui.View):
             inline=False
         )
         embed.set_footer(text="🟢 = Everyone • 🔵 = Junior Moderator • 🔴 = Main Moderator")
+        await interaction.response.edit_message(embed=embed, view=self)
+    
+    @discord.ui.button(label="Bot Info", style=discord.ButtonStyle.secondary, emoji="🤖")
+    async def bot_info_help(self, interaction: discord.Interaction, button: discord.ui.Button):
+        embed = discord.Embed(
+            title="🤖 **About ᴠᴀᴀᴢʜᴀ Bot**",
+            description="━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+            color=0x3498db
+        )
+        embed.add_field(
+            name="🌴 **Bot Information**", 
+            value=f"**Name:** {BOT_NAME}\n**Tagline:** {BOT_TAGLINE}\n**Servers:** {len(bot.guilds)} servers\n**Language:** Python (discord.py)", 
+            inline=False
+        )
+        embed.add_field(
+            name="👨‍💻 **Developer Information**", 
+            value=f"**Developer:** {BOT_OWNER_NAME}\n**About:** {BOT_OWNER_DESCRIPTION}\n**Contact:** Mention bot owner for support", 
+            inline=False
+        )
+        embed.add_field(
+            name="✨ **Special Features**", 
+            value="**🇮🇳 Made in Kerala, India (God's Own Country)**\n**🌴 Malayalam phrases and cultural touch**\n**🏆 Professional moderation & XP system**\n**🎫 Advanced ticket system with forms**\n**🛡️ Smart auto-moderation**\n**📊 MongoDB database for persistence**", 
+            inline=False
+        )
+        embed.add_field(
+            name="🔗 **Links**", 
+            value=f"**Invite Bot:** [Click Here](https://discord.com/api/oauth2/authorize?client_id={bot.user.id}&permissions=8&scope=bot%20applications.commands)\n**Support:** Mention the bot owner in any server\n**Made with ❤️ from Kerala 🌴**", 
+            inline=False
+        )
+        embed.set_footer(text="🌴 ᴠᴀᴀᴢʜᴀ - Your friendly Kerala assistant")
+        embed.set_thumbnail(url=bot.user.display_avatar.url)
         await interaction.response.edit_message(embed=embed, view=self)
 
 # Slash Commands

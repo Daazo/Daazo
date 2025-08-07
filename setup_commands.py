@@ -17,7 +17,8 @@ from main import bot, has_permission, get_server_data, update_server_data, log_a
     app_commands.Choice(name="welcome", value="welcome"),
     app_commands.Choice(name="prefix", value="prefix"),
     app_commands.Choice(name="logs", value="logs"),
-    app_commands.Choice(name="xp", value="xp")
+    app_commands.Choice(name="xp", value="xp"),
+    app_commands.Choice(name="ticket_support_role", value="ticket_support_role")
 ])
 async def setup(
     interaction: discord.Interaction,
@@ -142,3 +143,18 @@ async def setup(
         )
         await interaction.response.send_message(embed=embed)
         await log_action(interaction.guild.id, "setup", f"⚙️ [SETUP] XP channel set to {channel.name} by {interaction.user}")
+    
+    elif action == "ticket_support_role":
+        if not role:
+            await interaction.response.send_message("❌ Please specify a role for ticket support!", ephemeral=True)
+            return
+        
+        await update_server_data(interaction.guild.id, {'ticket_support_role': str(role.id)})
+        
+        embed = discord.Embed(
+            title="✅ Ticket Support Role Set",
+            description=f"**Role:** {role.mention}\n**Set by:** {interaction.user.mention}\n\n*This role will be mentioned when tickets are created.*",
+            color=0x43b581
+        )
+        await interaction.response.send_message(embed=embed)
+        await log_action(interaction.guild.id, "setup", f"⚙️ [SETUP] Ticket support role set to {role.name} by {interaction.user}")

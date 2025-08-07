@@ -4,6 +4,62 @@ from discord.ext import commands
 from discord import app_commands
 from main import bot, has_permission, log_action
 
+@bot.tree.command(name="mute", description="🔇 Mute user in voice channel")
+@app_commands.describe(user="User to mute")
+async def mute(interaction: discord.Interaction, user: discord.Member):
+    if not await has_permission(interaction, "junior_moderator"):
+        await interaction.response.send_message("❌ You need Junior Moderator permissions to use this command!", ephemeral=True)
+        return
+    
+    if not user.voice:
+        await interaction.response.send_message("❌ User is not in a voice channel!", ephemeral=True)
+        return
+    
+    try:
+        await user.edit(mute=True)
+        
+        embed = discord.Embed(
+            title="🔇 User Muted",
+            description=f"**User:** {user.mention}\n**Moderator:** {interaction.user.mention}",
+            color=0xf39c12
+        )
+        await interaction.response.send_message(embed=embed)
+        
+        await log_action(interaction.guild.id, "moderation", f"🔇 [MUTE] {user} muted by {interaction.user}")
+    
+    except discord.Forbidden:
+        await interaction.response.send_message("❌ I don't have permission to mute this user!", ephemeral=True)
+    except Exception as e:
+        await interaction.response.send_message(f"❌ An error occurred: {str(e)}", ephemeral=True)
+
+@bot.tree.command(name="unmute", description="🔊 Unmute user in voice channel")
+@app_commands.describe(user="User to unmute")
+async def unmute(interaction: discord.Interaction, user: discord.Member):
+    if not await has_permission(interaction, "junior_moderator"):
+        await interaction.response.send_message("❌ You need Junior Moderator permissions to use this command!", ephemeral=True)
+        return
+    
+    if not user.voice:
+        await interaction.response.send_message("❌ User is not in a voice channel!", ephemeral=True)
+        return
+    
+    try:
+        await user.edit(mute=False)
+        
+        embed = discord.Embed(
+            title="🔊 User Unmuted",
+            description=f"**User:** {user.mention}\n**Moderator:** {interaction.user.mention}",
+            color=0x43b581
+        )
+        await interaction.response.send_message(embed=embed)
+        
+        await log_action(interaction.guild.id, "moderation", f"🔊 [UNMUTE] {user} unmuted by {interaction.user}")
+    
+    except discord.Forbidden:
+        await interaction.response.send_message("❌ I don't have permission to unmute this user!", ephemeral=True)
+    except Exception as e:
+        await interaction.response.send_message(f"❌ An error occurred: {str(e)}", ephemeral=True)
+
 @bot.tree.command(name="movevc", description="Move user to different voice channel")
 @app_commands.describe(user="User to move", channel="Voice channel to move to")
 async def movevc(interaction: discord.Interaction, user: discord.Member, channel: discord.VoiceChannel):

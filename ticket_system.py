@@ -59,6 +59,7 @@ class TicketModal(discord.ui.Modal, title='🎫 Create Support Ticket'):
         # Get moderator roles
         main_mod_role_id = server_data.get('main_moderator_role')
         junior_mod_role_id = server_data.get('junior_moderator_role')
+        support_role_id = server_data.get('ticket_support_role')
         
         overwrites = {
             interaction.guild.default_role: discord.PermissionOverwrite(read_messages=False),
@@ -74,6 +75,11 @@ class TicketModal(discord.ui.Modal, title='🎫 Create Support Ticket'):
             junior_mod_role = interaction.guild.get_role(int(junior_mod_role_id))
             if junior_mod_role:
                 overwrites[junior_mod_role] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
+        
+        if support_role_id:
+            support_role = interaction.guild.get_role(int(support_role_id))
+            if support_role:
+                overwrites[support_role] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
         
         channel_name = f"ticket-{interaction.user.name.lower()}{interaction.user.discriminator}"
         ticket_channel = await category.create_text_channel(
@@ -103,7 +109,16 @@ class TicketModal(discord.ui.Modal, title='🎫 Create Support Ticket'):
         embed.set_footer(text="Support team will be with you shortly!")
         
         view = TicketControlView()
-        await ticket_channel.send(embed=embed, view=view)
+        
+        # Send ticket embed and mention support role if available
+        support_role_id = server_data.get('ticket_support_role')
+        mention_text = ""
+        if support_role_id:
+            support_role = interaction.guild.get_role(int(support_role_id))
+            if support_role:
+                mention_text = f"{support_role.mention} "
+        
+        await ticket_channel.send(mention_text, embed=embed, view=view)
         
         # Update cooldown
         ticket_cooldowns[user_id] = datetime.now().isoformat()

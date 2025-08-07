@@ -3,6 +3,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 import re
+import asyncio
 from main import bot, has_permission, get_server_data, update_server_data, log_action
 
 # Bad words list (can be expanded)
