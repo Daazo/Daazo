@@ -9,6 +9,7 @@ import time
 import os
 import re
 import random
+import sys
 from datetime import datetime, timedelta
 import motor.motor_asyncio
 from typing import Optional, Union
@@ -1061,10 +1062,25 @@ try:
 except ImportError:
     print("Voice commands module not found, skipping...")
 
-# Run the bot
+# Run the bot with error handling
 if __name__ == "__main__":
     token = os.getenv('DISCORD_BOT_TOKEN')
     if not token:
         print("Please set DISCORD_BOT_TOKEN in your secrets!")
+        sys.exit(1)
     else:
-        bot.run(token)
+        try:
+            print("🌴 VAAZHA Bot is starting...")
+            bot.run(token)
+        except discord.LoginFailure:
+            print("❌ Invalid bot token! Please check your DISCORD_BOT_TOKEN.")
+            sys.exit(1)
+        except discord.HTTPException as e:
+            print(f"❌ HTTP Error: {e}")
+            sys.exit(1)
+        except KeyboardInterrupt:
+            print("\n🛑 Bot stopped by user.")
+            sys.exit(0)
+        except Exception as e:
+            print(f"❌ Unexpected error: {e}")
+            sys.exit(1)
