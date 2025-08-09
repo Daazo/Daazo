@@ -3,6 +3,7 @@ import subprocess
 import time
 import sys
 import os
+from keep_alive import keep_alive
 
 def run_bot():
     """Run the bot with auto-restart functionality"""
@@ -48,4 +49,9 @@ def run_bot():
 
 if __name__ == "__main__":
     print("🤖 VAAZHA Bot Auto-Restart Manager Starting...")
+    
+    # Start keep-alive server
+    keep_alive()
+    
+    # Start bot with auto-restart
     run_bot()

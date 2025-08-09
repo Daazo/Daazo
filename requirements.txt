@@ -12,3 +12,4 @@ motor
 Pillow
 python-dotenv
 requests
+flask
