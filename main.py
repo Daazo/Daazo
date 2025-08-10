@@ -135,22 +135,43 @@ async def on_ready():
         )
     )
     
+    # Force command sync to ensure new commands are registered
     try:
+        print("🔄 Syncing slash commands...")
         synced = await bot.tree.sync()
-        print(f"Synced {len(synced)} command(s)")
+        print(f"✅ Successfully synced {len(synced)} command(s)")
+        
+        # List all synced commands for debugging
+        command_names = [cmd.name for cmd in synced]
+        print(f"📋 Synced commands: {', '.join(command_names)}")
+        
+        # Check if new commands are included
+        new_commands = ['adoptpet', 'petinfo', 'feedpet', 'playpet', 'dailypet', 'giverole', 'removerole', 'timedroles', 'profile', 'profilesetup']
+        for cmd in new_commands:
+            if cmd in command_names:
+                print(f"✅ {cmd} command registered")
+            else:
+                print(f"❌ {cmd} command NOT registered")
+                
     except Exception as e:
-        print(f"Failed to sync commands: {e}")
+        print(f"❌ Failed to sync commands: {e}")
     
     # Add persistent views for ticket system
-    from ticket_system import TicketOpenView, TicketControlView, ReopenTicketView
-    bot.add_view(TicketOpenView("persistent"))
-    bot.add_view(TicketControlView())
-    bot.add_view(ReopenTicketView())
-    print("✅ Persistent views added for ticket system")
+    try:
+        from ticket_system import TicketOpenView, TicketControlView, ReopenTicketView
+        bot.add_view(TicketOpenView("persistent"))
+        bot.add_view(TicketControlView())
+        bot.add_view(ReopenTicketView())
+        print("✅ Persistent views added for ticket system")
+    except Exception as e:
+        print(f"❌ Failed to add persistent views: {e}")
     
     # Start MongoDB ping task
     if mongo_client:
         bot.loop.create_task(ping_mongodb())
+        print("✅ MongoDB ping task started")
+    
+    print("🎉 Bot startup complete! All systems ready.")
 
 @bot.event
 async def on_guild_join(guild):
@@ -1112,23 +1133,33 @@ from ticket_system import *
 from timeout_system import *
 
 # Import new features - ensure they load properly
+print("🔄 Loading new features...")
+
 try:
     from timed_roles import *
-    print("✅ Timed roles system loaded")
+    print("✅ Timed roles system loaded (commands: giverole, removerole, timedroles)")
 except Exception as e:
     print(f"❌ Failed to load timed roles: {e}")
+    import traceback
+    traceback.print_exc()
 
 try:
     from pet_system import *
-    print("✅ Pet system loaded")
+    print("✅ Pet system loaded (commands: adoptpet, petinfo, feedpet, playpet, dailypet)")
 except Exception as e:
     print(f"❌ Failed to load pet system: {e}")
+    import traceback
+    traceback.print_exc()
 
 try:
     from profile_cards import *
-    print("✅ Profile cards system loaded")
+    print("✅ Profile cards system loaded (commands: profile, profilesetup)")
 except Exception as e:
     print(f"❌ Failed to load profile cards: {e}")
+    import traceback
+    traceback.print_exc()
+
+print("✅ All new features import complete!")
 
 from autorole import *
 
