@@ -26,9 +26,10 @@ KARMA_QUOTES = [
 @bot.tree.command(name="givekarma", description="Give karma points to another user for their positive contribution")
 @app_commands.describe(
     user="User to give karma to",
+    amount="Amount of karma to give (Server Owner: unlimited, Main Mod: 1-2, Junior Mod: can't give)",
     reason="Reason for giving karma (optional but recommended)"
 )
-async def give_karma(interaction: discord.Interaction, user: discord.Member, reason: str = None):
+async def give_karma(interaction: discord.Interaction, user: discord.Member, amount: int = None, reason: str = None):
     # Prevent self-karma
     if user.id == interaction.user.id:
         embed = discord.Embed(
@@ -39,7 +40,45 @@ async def give_karma(interaction: discord.Interaction, user: discord.Member, rea
         await interaction.response.send_message(embed=embed, ephemeral=True)
         return
     
-    # Check cooldown (5 minutes between giving karma to same user)
+    # Check permissions and set karma limits
+    is_owner = interaction.user.id == interaction.guild.owner_id
+    is_main_mod = await has_permission(interaction, "main_moderator")
+    is_junior_mod = await has_permission(interaction, "junior_moderator")
+    
+    # Junior moderators cannot give karma
+    if not is_owner and not is_main_mod and is_junior_mod:
+        embed = discord.Embed(
+            title="❌ Insufficient Permissions",
+            description="Junior Moderators cannot give karma! Only regular members, Main Moderators, and Server Owner can give karma.",
+            color=0xe74c3c
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+        return
+    
+    # Determine karma amount based on role
+    if is_owner:
+        # Server owner can give unlimited karma (if amount not specified, give 1-2)
+        if amount is None:
+            karma_points = random.randint(1, 2)
+        else:
+            if amount < 1 or amount > 100:  # Reasonable limit even for owner
+                await interaction.response.send_message("❌ Please specify karma amount between 1-100!", ephemeral=True)
+                return
+            karma_points = amount
+    elif is_main_mod:
+        # Main moderators can give 1-2 karma only
+        if amount is not None and amount not in [1, 2]:
+            await interaction.response.send_message("❌ Main Moderators can only give 1-2 karma points!", ephemeral=True)
+            return
+        karma_points = amount if amount in [1, 2] else random.randint(1, 2)
+    else:
+        # Regular members can give 1-2 karma only
+        if amount is not None and amount not in [1, 2]:
+            await interaction.response.send_message("❌ You can only give 1-2 karma points!", ephemeral=True)
+            return
+        karma_points = amount if amount in [1, 2] else random.randint(1, 2)
+    
+    # Check cooldown (1 minute for main mods, 5 minutes for others)
     current_time = time.time()
     giver_id = interaction.user.id
     receiver_id = user.id
@@ -48,9 +87,10 @@ async def give_karma(interaction: discord.Interaction, user: discord.Member, rea
         karma_cooldowns[giver_id] = {}
     
     last_given = karma_cooldowns[giver_id].get(receiver_id, 0)
-    cooldown_time = 300  # 5 minutes
+    cooldown_time = 60 if is_main_mod else 300  # 1 minute for main mods, 5 minutes for others
     
-    if current_time - last_given < cooldown_time:
+    # Server owner has no cooldown
+    if not is_owner and current_time - last_given < cooldown_time:
         remaining = int(cooldown_time - (current_time - last_given))
         minutes = remaining // 60
         seconds = remaining % 60
@@ -63,8 +103,9 @@ async def give_karma(interaction: discord.Interaction, user: discord.Member, rea
         await interaction.response.send_message(embed=embed, ephemeral=True)
         return
     
-    # Update cooldown
-    karma_cooldowns[giver_id][receiver_id] = current_time
+    # Update cooldown (except for owner)
+    if not is_owner:
+        karma_cooldowns[giver_id][receiver_id] = current_time
     
     # Add karma to database
     if db is None:
@@ -77,7 +118,6 @@ async def give_karma(interaction: discord.Interaction, user: discord.Member, rea
         user_data = {'user_id': str(receiver_id), 'guild_id': str(interaction.guild.id), 'karma': 0}
     
     old_karma = user_data.get('karma', 0)
-    karma_points = random.randint(1, 2)  # Give 1-2 karma points
     new_karma = old_karma + karma_points
     user_data['karma'] = new_karma
     
@@ -89,9 +129,11 @@ async def give_karma(interaction: discord.Interaction, user: discord.Member, rea
     
     # Create response embed
     reason_text = f" for **{reason}**" if reason else ""
+    role_text = "👑 Server Owner" if is_owner else "🔴 Main Moderator" if is_main_mod else "🟢 Member"
+    
     embed = discord.Embed(
         title="✨ Karma Given!",
-        description=f"**{interaction.user.mention}** gave **+{karma_points} karma** to **{user.mention}**{reason_text}!",
+        description=f"**{interaction.user.mention}** ({role_text}) gave **+{karma_points} karma** to **{user.mention}**{reason_text}!",
         color=0x43b581
     )
     embed.add_field(name="New Karma Total", value=f"{new_karma} points", inline=True)
@@ -99,8 +141,11 @@ async def give_karma(interaction: discord.Interaction, user: discord.Member, rea
     
     await interaction.response.send_message(embed=embed)
     
-    # Check for level up (every 5 karma)
-    if new_karma % 5 == 0 and new_karma > old_karma:
+    # Check for level up (every 5 karma) - FIXED: Check if milestone reached
+    old_milestone = (old_karma // 5) * 5
+    new_milestone = (new_karma // 5) * 5
+    
+    if new_milestone > old_milestone and new_karma >= 5:
         await send_karma_levelup(interaction.guild, user, new_karma)
     
     await log_action(interaction.guild.id, "karma", f"✨ [KARMA] {interaction.user} gave +{karma_points} karma to {user}")
@@ -264,7 +309,7 @@ async def reset_karma(interaction: discord.Interaction, scope: str, user: discor
     await log_action(interaction.guild.id, "moderation", f"🔄 [KARMA RESET] {scope} reset by {interaction.user}")
 
 async def send_karma_levelup(guild, user, karma):
-    """Send karma level-up announcement"""
+    """Send karma level-up announcement with animated GIF and motivational quotes"""
     server_data = await get_server_data(guild.id)
     karma_channel_id = server_data.get('karma_channel')
     
@@ -282,21 +327,45 @@ async def send_karma_levelup(guild, user, karma):
             progress = karma % 5
             progress_bar = "█" * progress + "░" * (5 - progress)
             
+            # Select celebration GIF based on milestone level
+            celebration_gifs = [
+                "https://media.giphy.com/media/3oz8xAFtqoOUUrsh7W/giphy.gif",  # Confetti
+                "https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif",  # Party
+                "https://media.giphy.com/media/g9582DNuQppxC/giphy.gif",      # Celebration
+                "https://media.giphy.com/media/26u4cqiYI30juCOGY/giphy.gif",  # Fireworks
+                "https://media.giphy.com/media/3o6fJ1BM7R2EBRDnxK/giphy.gif", # Victory
+                "https://media.giphy.com/media/l0HlNQ03J5JxX6lva/giphy.gif",  # Achievement
+                "https://media.giphy.com/media/3o7absbD7PbTFQa0c8/giphy.gif", # Success
+                "https://media.giphy.com/media/3o6ZtaO9BZHcOjmErm/giphy.gif"  # Celebration dance
+            ]
+            
+            selected_gif = random.choice(celebration_gifs)
+            
             embed = discord.Embed(
-                title="🎉 **Karma Milestone Reached!** ✨",
-                description=f"**{user.mention} reached {karma} karma points!** 🚀\n\n*{quote}*",
+                title="🎉 **KARMA MILESTONE CELEBRATION!** ✨🎊",
+                description=f"🌟 **{user.mention} just reached {karma} karma points!** 🚀\n\n💫 **Milestone:** {milestone} karma achieved!\n\n🎯 *{quote}*",
                 color=0xf39c12
             )
             embed.set_thumbnail(url=user.display_avatar.url)
             embed.add_field(
                 name="📊 Progress to Next Milestone",
-                value=f"`{progress_bar}` {progress}/5\n*Next milestone: {next_milestone} karma*",
+                value=f"`{progress_bar}` {progress}/5\n🎯 *Next celebration at: {next_milestone} karma*",
                 inline=False
             )
-            embed.set_image(url="https://media.giphy.com/media/3oz8xAFtqoOUUrsh7W/giphy.gif")  # Celebration GIF
-            embed.set_footer(text="🌟 Keep spreading positivity in our community!", icon_url=bot.user.display_avatar.url)
+            embed.add_field(
+                name="🏆 Community Impact",
+                value=f"✨ This member is making our community amazing!\n🌟 Keep up the positive vibes!",
+                inline=False
+            )
+            embed.set_image(url=selected_gif)
+            embed.set_footer(text="🌴 Spreading positivity in our Kerala-style community! 🌟", icon_url=bot.user.display_avatar.url)
             
-            await karma_channel.send(embed=embed)
+            # Send announcement
+            await karma_channel.send(f"🎉 **KARMA CELEBRATION TIME!** 🎊", embed=embed)
+            
+            print(f"✨ [KARMA MILESTONE] {user} reached {karma} karma in {guild.name}")
+    else:
+        print(f"⚠️ [KARMA] No karma channel set for {guild.name}")
 
 # Reaction-based karma system
 @bot.event
@@ -340,7 +409,8 @@ async def on_reaction_add(reaction, user):
         user_data = {'user_id': str(receiver_id), 'guild_id': str(reaction.message.guild.id), 'karma': 0}
     
     old_karma = user_data.get('karma', 0)
-    user_data['karma'] = old_karma + 1
+    new_karma = old_karma + 1
+    user_data['karma'] = new_karma
     
     await db.karma.update_one(
         {'user_id': str(receiver_id), 'guild_id': str(reaction.message.guild.id)},
@@ -348,7 +418,9 @@ async def on_reaction_add(reaction, user):
         upsert=True
     )
     
-    # Check for level up
-    new_karma = user_data['karma']
-    if new_karma % 5 == 0 and new_karma > old_karma:
+    # Check for level up - FIXED: Check if milestone reached
+    old_milestone = (old_karma // 5) * 5
+    new_milestone = (new_karma // 5) * 5
+    
+    if new_milestone > old_milestone and new_karma >= 5:
         await send_karma_levelup(reaction.message.guild, reaction.message.author, new_karma)
