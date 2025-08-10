@@ -347,9 +347,8 @@ async def play_pet(interaction: discord.Interaction):
     embed.set_footer(text="🐾 Your pet had fun! Come back in 1 hour to play again.")
     await interaction.response.send_message(embed=embed)
 
-# Event to give pets XP from messages
-@bot.event
-async def on_message(message):
+# Function to handle pet XP from messages (called from main bot)
+async def handle_pet_message_xp(message):
     if message.author.bot or not message.guild:
         return
     

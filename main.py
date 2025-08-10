@@ -295,6 +295,13 @@ async def on_message(message):
             pass
         return
     
+    # Handle pet XP from messages
+    try:
+        from pet_system import handle_pet_message_xp
+        await handle_pet_message_xp(message)
+    except Exception as e:
+        print(f"Pet XP error: {e}")
+    
     # Karma system is handled via reactions and commands
     
     await bot.process_commands(message)
@@ -995,6 +1002,35 @@ async def serverinfo(interaction: discord.Interaction):
     await interaction.response.send_message(embed=embed)
 
 # Contact info command
+@bot.tree.command(name="synccommands", description="🔄 Manually sync slash commands (Owner only)")
+async def sync_commands(interaction: discord.Interaction):
+    # Check if user is the bot owner
+    bot_owner_id = os.getenv('BOT_OWNER_ID')
+    if bot_owner_id and str(interaction.user.id) != bot_owner_id:
+        await interaction.response.send_message("❌ Only the bot owner can use this command!", ephemeral=True)
+        return
+    
+    await interaction.response.defer()
+    
+    try:
+        synced = await bot.tree.sync()
+        embed = discord.Embed(
+            title="🔄 **Commands Synced Successfully!**",
+            description=f"✅ **Synced {len(synced)} slash commands**\n\nAll commands should now be available! Try using:\n🐾 `/adoptpet`\n⏰ `/giverole`\n🎨 `/profile`",
+            color=0x43b581
+        )
+        embed.set_footer(text="🌴 Commands updated!")
+        await interaction.followup.send(embed=embed)
+        print(f"✅ Manual sync successful: {len(synced)} commands")
+    except Exception as e:
+        embed = discord.Embed(
+            title="❌ **Sync Failed**",
+            description=f"Error syncing commands: {str(e)}",
+            color=0xe74c3c
+        )
+        await interaction.followup.send(embed=embed)
+        print(f"❌ Manual sync failed: {e}")
+
 @bot.tree.command(name="contact", description="📞 Get bot contact information and support details")
 async def contact_info(interaction: discord.Interaction):
     bot_owner_id = os.getenv('BOT_OWNER_ID')
@@ -1074,9 +1110,25 @@ from xp_commands import *  # Karma system only
 from reaction_roles import *
 from ticket_system import *
 from timeout_system import *
-from timed_roles import *
-from pet_system import *
-from profile_cards import *
+
+# Import new features - ensure they load properly
+try:
+    from timed_roles import *
+    print("✅ Timed roles system loaded")
+except Exception as e:
+    print(f"❌ Failed to load timed roles: {e}")
+
+try:
+    from pet_system import *
+    print("✅ Pet system loaded")
+except Exception as e:
+    print(f"❌ Failed to load pet system: {e}")
+
+try:
+    from profile_cards import *
+    print("✅ Profile cards system loaded")
+except Exception as e:
+    print(f"❌ Failed to load profile cards: {e}")
 
 from autorole import *
 
