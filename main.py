@@ -141,6 +141,13 @@ async def on_ready():
     except Exception as e:
         print(f"Failed to sync commands: {e}")
     
+    # Add persistent views for ticket system
+    from ticket_system import TicketOpenView, TicketControlView, ReopenTicketView
+    bot.add_view(TicketOpenView("persistent"))
+    bot.add_view(TicketControlView())
+    bot.add_view(ReopenTicketView())
+    print("✅ Persistent views added for ticket system")
+    
     # Start MongoDB ping task
     if mongo_client:
         bot.loop.create_task(ping_mongodb())

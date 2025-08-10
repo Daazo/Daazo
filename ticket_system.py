@@ -138,7 +138,7 @@ class TicketControlView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
     
-    @discord.ui.button(label='Close Ticket', style=discord.ButtonStyle.danger, emoji='🔒')
+    @discord.ui.button(label='Close Ticket', style=discord.ButtonStyle.danger, emoji='🔒', custom_id='ticket_close_button')
     async def close_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
         if not await has_permission(interaction, "junior_moderator"):
             await interaction.response.send_message("❌ You need Junior Moderator permissions to close tickets!", ephemeral=True)
@@ -182,7 +182,7 @@ class ReopenTicketView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
     
-    @discord.ui.button(label='Reopen Ticket', style=discord.ButtonStyle.success, emoji='🔓')
+    @discord.ui.button(label='Reopen Ticket', style=discord.ButtonStyle.success, emoji='🔓', custom_id='ticket_reopen_button')
     async def reopen_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
         if not await has_permission(interaction, "main_moderator"):
             await interaction.response.send_message("❌ Only Main Moderators can reopen tickets!", ephemeral=True)
@@ -222,9 +222,17 @@ class TicketOpenView(discord.ui.View):
         super().__init__(timeout=None)
         self.category_id = category_id
     
-    @discord.ui.button(label='🎫 Open Support Ticket', style=discord.ButtonStyle.primary, emoji='🎫')
+    @discord.ui.button(label='🎫 Open Support Ticket', style=discord.ButtonStyle.primary, emoji='🎫', custom_id='ticket_open_button')
     async def open_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
-        modal = TicketModal(self.category_id)
+        # Get the actual category from server data since we can't store it persistently
+        server_data = await get_server_data(interaction.guild.id)
+        category_id = server_data.get('ticket_open_category')
+        
+        if not category_id:
+            await interaction.response.send_message("❌ Ticket system not properly configured! Contact an administrator.", ephemeral=True)
+            return
+        
+        modal = TicketModal(category_id)
         await interaction.response.send_modal(modal)
 
 async def has_permission_user(member, guild, permission_level):
