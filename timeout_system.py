@@ -20,7 +20,7 @@ BAD_WORDS = [
     # English terms (censored)
     "ass", "bastard", "basterd", "bullsh*t", "b0llocks",
     "crap", "d*ck", "d1ck", "d!ck", "dick",
-    "f*ck", "f@ck", "fck", "f*kin", "f**kin", "f*cked", "fcked", "fcuk",
+    "f*ck", "f@ck", "fuck", "f*kin", "f**kin", "f*cked", "fcked", "fcuk",
     "motherf*cker", "m0therf*cker", "mf", "mthr fkr", "mother f***er",
     "pr*ck", "p*ss", "piss", "p1ss", "s*hit", "sh*t", "sh1t", "s#it",
     "sl*t", "s1ut", "s!ut", "wh*re", "w#ore", "w0re", "wank", "w@nker",
