@@ -13,3 +13,5 @@ Pillow
 python-dotenv
 requests
 flask
+PyNaCl
+yt-dlp

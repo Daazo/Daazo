@@ -122,76 +122,7 @@ async def has_permission(interaction, permission_level):
     
     return False
 
-# XP System Functions
-async def add_xp(user_id, guild_id, amount):
-    """Add XP to user"""
-    if db is None:
-        return
-    
-    user_data = await db.users.find_one({'user_id': str(user_id), 'guild_id': str(guild_id)})
-    if not user_data:
-        user_data = {'user_id': str(user_id), 'guild_id': str(guild_id), 'xp': 0, 'level': 1, 'last_xp_gain': 0}
-    
-    # Check cooldown (60 seconds)
-    current_time = time.time()
-    if current_time - user_data.get('last_xp_gain', 0) < 60:
-        return False
-    
-    user_data['xp'] += amount
-    user_data['last_xp_gain'] = current_time
-    
-    # Calculate new level
-    old_level = user_data.get('level', 1)
-    new_level = calculate_level(user_data['xp'])
-    level_up = new_level > old_level
-    user_data['level'] = new_level
-    
-    await db.users.update_one(
-        {'user_id': str(user_id), 'guild_id': str(guild_id)},
-        {'$set': user_data},
-        upsert=True
-    )
-    
-    return level_up
-
-def calculate_level(xp):
-    """Calculate level based on XP"""
-    return int((xp / 100) ** 0.5) + 1
-
-def xp_for_level(level):
-    """Calculate XP required for level"""
-    return ((level - 1) ** 2) * 100
-
-async def create_rank_image(user, xp, level, rank=None):
-    """Create rank card image"""
-    try:
-        # Create image
-        img = Image.new('RGB', (800, 200), color='#2f3136')
-        draw = ImageDraw.Draw(img)
-        
-        # Download user avatar
-        avatar_response = requests.get(str(user.display_avatar.url))
-        avatar = Image.open(io.BytesIO(avatar_response.content)).resize((150, 150))
-        
-        # Paste avatar
-        img.paste(avatar, (25, 25))
-        
-        # Draw text
-        draw.text((200, 30), user.display_name, fill='white', font_size=30)
-        draw.text((200, 70), f"Level {level}", fill='#7289da', font_size=25)
-        draw.text((200, 110), f"XP: {xp}/{xp_for_level(level + 1)}", fill='white', font_size=20)
-        
-        if rank:
-            draw.text((200, 140), f"Rank: #{rank}", fill='#43b581', font_size=20)
-        
-        # Save to bytes
-        img_bytes = io.BytesIO()
-        img.save(img_bytes, format='PNG')
-        img_bytes.seek(0)
-        
-        return img_bytes
-    except:
-        return None
+# Karma system will be handled in xp_commands.py (now karma_commands.py)
 
 # Bot Events
 @bot.event
@@ -403,28 +334,7 @@ async def on_message(message):
             pass
         return
     
-    # XP System - Give XP for ALL messages in guilds
-    if not message.author.bot:
-        xp_gain = random.randint(5, 15)
-        level_up = await add_xp(message.author.id, message.guild.id, xp_gain)
-        
-        if level_up and db:
-            xp_channel_id = server_data.get('xp_channel')
-            
-            if xp_channel_id:
-                xp_channel = bot.get_channel(int(xp_channel_id))
-                if xp_channel:
-                    user_data = await db.users.find_one({'user_id': str(message.author.id), 'guild_id': str(message.guild.id)})
-                    level = user_data.get('level', 1)
-                    
-                    embed = discord.Embed(
-                        title="🎉 **Level Up!** ✨",
-                        description=f"**{message.author.mention} reached Level {level}!** 🚀\n\n*Keep chatting to gain more XP!* 💪",
-                        color=0xf39c12
-                    )
-                    embed.set_thumbnail(url=message.author.display_avatar.url)
-                    embed.set_footer(text="🌴 ᴠᴀᴀᴢʜᴀ XP System", icon_url=bot.user.display_avatar.url)
-                    await xp_channel.send(embed=embed)
+    # Karma system is handled via reactions and commands
     
     await bot.process_commands(message)
 
@@ -822,34 +732,44 @@ class HelpView(discord.ui.View):
         embed.set_footer(text="🟢 = Everyone • 🟡 = Junior Moderator • 🔴 = Main Moderator • 👑 = Server Owner")
         await interaction.response.edit_message(embed=embed, view=self)
     
-    @discord.ui.button(label="XP & Ranking", style=discord.ButtonStyle.primary, emoji="📊", row=1)
-    async def xp_help(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(label="Karma System", style=discord.ButtonStyle.primary, emoji="✨", row=1)
+    async def karma_help(self, interaction: discord.Interaction, button: discord.ui.Button):
         embed = discord.Embed(
-            title="📊 **XP & Ranking System**",
-            description="*See who's the most active with rank cards and the server leaderboard. Climb to the top!*\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+            title="✨ **Karma System**",
+            description="*Appreciate community members and earn karma points for positive contributions!*\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
             color=0xf39c12
         )
         embed.add_field(
-            name="🟢 `/rank [user]`", 
-            value="**Usage:** `/rank [user:@member]`\n**Description:** Show beautiful XP rank card with level, XP, and server ranking position\n**Features:** Custom avatars, progress bars, current rank", 
+            name="🟢 `/givekarma @user [reason]`", 
+            value="**Usage:** `/givekarma @member reason:\"helping with code\"`\n**Description:** Give 1-2 karma points to someone for their contribution\n**Cooldown:** 5 minutes between giving karma to same user", 
             inline=False
         )
         embed.add_field(
-            name="🟢 `/leaderboard`", 
-            value="**Usage:** `/leaderboard`\n**Description:** Display top 10 most active users by XP with their levels and rankings\n**Features:** Server-wide leaderboard with detailed stats", 
+            name="🟢 `/karma [user]` & `/mykarma`", 
+            value="**Usage:** `/karma [@member]` or `/mykarma`\n**Description:** Check karma points, server rank, and progress to next milestone\n**Features:** Beautiful progress bars and rankings", 
             inline=False
         )
         embed.add_field(
-            name="📈 **How XP Works**", 
-            value="**XP Gain:** 5-15 XP per message (60 second cooldown per user)\n**Level Formula:** Based on total XP earned\n**Anti-Spam:** Cooldown prevents XP farming\n**Rewards:** Automatic level-up announcements with beautiful rank cards", 
+            name="🟢 `/karmaboard`", 
+            value="**Usage:** `/karmaboard`\n**Description:** Show top 10 karma earners with medals and rankings\n**Features:** Community leaderboard highlighting positive contributors", 
             inline=False
         )
         embed.add_field(
-            name="⚙️ **XP Configuration**", 
-            value="**Setup:** Use `/setup xp channel:#xp-announcements` to set level-up channel\n**Auto Features:** Beautiful rank card generation, progress tracking\n**Per-Server:** Each server has completely separate XP tracking", 
+            name="⭐ **Reaction Karma**", 
+            value="**React with:** 👍 ⭐ ❤️ to give +1 karma automatically\n**Auto-karma:** Reacting to messages gives karma to the author\n**Same cooldown:** 5 minutes between reactions to same user", 
             inline=False
         )
-        embed.set_footer(text="🟢 = Everyone • 🟡 = Junior Moderator • 🔴 = Main Moderator • 👑 = Server Owner")
+        embed.add_field(
+            name="🎉 **Milestones & Rewards**", 
+            value="**Every 5 karma:** Celebration announcement with motivational quotes\n**Animated GIFs:** Level-up messages include celebration animations\n**Progress tracking:** Visual progress bars toward next milestone", 
+            inline=False
+        )
+        embed.add_field(
+            name="🔧 **Setup Commands**", 
+            value="**🔴 `/setkarmachannel #channel`** - Set karma announcement channel\n**🔴 `/resetkarma scope user/server`** - Reset karma data", 
+            inline=False
+        )
+        embed.set_footer(text="🟢 = Everyone • 🔴 = Main Moderator • Anti-abuse: No self-karma, 5min cooldowns")
         await interaction.response.edit_message(embed=embed, view=self)
     
     @discord.ui.button(label="Tickets & Support", style=discord.ButtonStyle.secondary, emoji="🎫", row=1)
@@ -1182,7 +1102,7 @@ async def ping_mongodb():
 from setup_commands import *
 from moderation_commands import *
 from communication_commands import *
-from xp_commands import *
+from xp_commands import *  # Now contains karma system
 from reaction_roles import *
 from ticket_system import *
 from automod import *

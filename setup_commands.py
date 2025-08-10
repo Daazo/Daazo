@@ -164,13 +164,31 @@ async def setup(
 
         embed = discord.Embed(
             title="✅ XP Channel Set",
-            description=f"**Channel:** {channel.mention}\n**Set by:** {interaction.user.mention}",
+            description=f"**XP level-up announcements will be sent to:** {channel.mention}",
             color=0x43b581
         )
         embed.set_footer(text="ᴠᴀᴀᴢʜᴀ")
         await interaction.response.send_message(embed=embed)
-        await log_action(interaction.guild.id, "setup", f"⚙️ [SETUP] XP channel set to {channel.name} by {interaction.user}")
-        
+
+        await log_action(interaction.guild.id, "setup", f"📊 [XP SETUP] XP channel set to {channel} by {interaction.user}")
+
+    elif action == "karma":
+        if not channel:
+            await interaction.response.send_message("❌ Please specify a channel for karma announcements!", ephemeral=True)
+            return
+
+        await update_server_data(interaction.guild.id, {'karma_channel': str(channel.id)})
+
+        embed = discord.Embed(
+            title="✅ Karma Channel Set",
+            description=f"**Karma milestone announcements will be sent to:** {channel.mention}",
+            color=0x43b581
+        )
+        embed.set_footer(text="ᴠᴀᴀᴢʜᴀ")
+        await interaction.response.send_message(embed=embed)
+
+        await log_action(interaction.guild.id, "setup", f"✨ [KARMA SETUP] Karma channel set to {channel} by {interaction.user}")
+
     elif action == "xp_commands_channel":
         if not channel:
             await interaction.response.send_message("❌ Please specify a channel for XP commands!", ephemeral=True)
