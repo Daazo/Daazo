@@ -138,6 +138,18 @@ async def on_ready():
     try:
         synced = await bot.tree.sync()
         print(f"Synced {len(synced)} command(s)")
+        
+        # Debug: List all registered commands
+        all_commands = [cmd.name for cmd in bot.tree.get_commands()]
+        print(f"📋 Registered commands: {', '.join(all_commands)}")
+        
+        # Check specifically for timed role commands
+        timed_role_commands = [cmd for cmd in ['giverole', 'removerole', 'timedroles'] if cmd in all_commands]
+        if timed_role_commands:
+            print(f"✅ Timed role commands registered: {', '.join(timed_role_commands)}")
+        else:
+            print("⚠️ Timed role commands not found in registered commands")
+            
     except Exception as e:
         print(f"Failed to sync commands: {e}")
     
@@ -986,6 +998,26 @@ async def serverinfo(interaction: discord.Interaction):
     await interaction.response.send_message(embed=embed)
 
 # Contact info command
+@bot.tree.command(name="synccommands", description="🔄 Force sync all bot commands (Owner only)")
+async def sync_commands(interaction: discord.Interaction):
+    bot_owner_id = os.getenv('BOT_OWNER_ID')
+    if str(interaction.user.id) != bot_owner_id:
+        await interaction.response.send_message("❌ Only the bot owner can use this command!", ephemeral=True)
+        return
+    
+    try:
+        synced = await bot.tree.sync()
+        all_commands = [cmd.name for cmd in bot.tree.get_commands()]
+        
+        embed = discord.Embed(
+            title="🔄 **Commands Synced Successfully**",
+            description=f"**Synced:** {len(synced)} commands\n**Total Registered:** {len(all_commands)}\n\n**Commands:** {', '.join(all_commands)}",
+            color=0x43b581
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+    except Exception as e:
+        await interaction.response.send_message(f"❌ Sync failed: {str(e)}", ephemeral=True)
+
 @bot.tree.command(name="contact", description="📞 Get bot contact information and support details")
 async def contact_info(interaction: discord.Interaction):
     bot_owner_id = os.getenv('BOT_OWNER_ID')
@@ -1065,9 +1097,10 @@ from xp_commands import *  # Karma system only
 from reaction_roles import *
 from ticket_system import *
 from timeout_system import *
-
 from autorole import *
-from timed_roles import *
+
+# Import timed roles system - ensure commands are loaded
+import timed_roles
 
 # Try to import voice commands
 try:
