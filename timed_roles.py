@@ -11,7 +11,7 @@ from main import bot, has_permission, get_server_data, update_server_data, log_a
 @tasks.loop(minutes=1)
 async def check_expired_roles():
     """Check for expired timed roles every minute"""
-    if not db:
+    if db is None:
         return
     
     try:
@@ -154,7 +154,7 @@ async def give_timed_role(
         await user.add_roles(role, reason=f"Timed role assigned by {interaction.user} for {format_duration(duration_seconds)}")
         
         # Store in database
-        if db:
+        if db is not None:
             await db.timed_roles.insert_one({
                 'guild_id': str(interaction.guild.id),
                 'user_id': str(user.id),
@@ -222,7 +222,7 @@ async def remove_role(
         await user.remove_roles(role, reason=f"Role manually removed by {interaction.user}")
         
         # Remove from timed roles database if it exists
-        if db:
+        if db is not None:
             result = await db.timed_roles.delete_one({
                 'guild_id': str(interaction.guild.id),
                 'user_id': str(user.id),
@@ -267,7 +267,7 @@ async def view_timed_roles(interaction: discord.Interaction):
         await interaction.response.send_message("❌ You need Junior Moderator permissions to use this command!", ephemeral=True)
         return
     
-    if not db:
+    if db is None:
         await interaction.response.send_message("❌ Database not available!", ephemeral=True)
         return
     
