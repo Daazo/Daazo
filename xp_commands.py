@@ -22,6 +22,52 @@ KARMA_QUOTES = [
     "The world needs more people like you! Keep being awesome! 🌍"
 ]
 
+# Define karma levels and their corresponding milestones, titles, and colors
+KARMA_LEVELS = [
+    {"milestone": 0, "title": "🌱 Community Sprout", "color": 0x8bc34a},
+    {"milestone": 50, "title": "🌿 Sapling", "color": 0x6fbf7a},
+    {"milestone": 100, "title": "🌳 Growing Tree", "color": 0x5cb85c},
+    {"milestone": 200, "title": "🌟 Rising Star", "color": 0xffd700},
+    {"milestone": 350, "title": "⭐ Shining Star", "color": 0xffe066},
+    {"milestone": 500, "title": "💎 Community Gem", "color": 0x50c878},
+    {"milestone": 750, "title": "✨ Respected Member", "color": 0x4CAF50},
+    {"milestone": 1000, "title": "🎖️ Community Pillar", "color": 0x3e8e41},
+    {"milestone": 1500, "title": "🏆 Community Hero", "color": 0x2e7d32},
+    {"milestone": 2000, "title": "👑 Community Legend", "color": 0x1b5e20},
+    {"milestone": 2500, "title": "🔮 Elder Sage", "color": 0x795548},
+    {"milestone": 3000, "title": "🌌 Cosmic Contributor", "color": 0x673ab7},
+    {"milestone": 3500, "title": "🚀 Galactic Guardian", "color": 0x3f51b5},
+    {"milestone": 4000, "title": "🌠 Celestial Champion", "color": 0x2196f3},
+    {"milestone": 4500, "title": "✨ Transcendent Master", "color": 0xff4081} # Max level
+]
+
+def get_karma_level_info(karma):
+    """Determines the current and next karma level based on karma points."""
+    current_level = None
+    next_level = None
+
+    # Sort levels by milestone in descending order to find the current level first
+    sorted_levels = sorted(KARMA_LEVELS, key=lambda x: x['milestone'], reverse=True)
+
+    for i, level in enumerate(sorted_levels):
+        if karma >= level["milestone"]:
+            current_level = level
+            # If there's a next level in the sorted list (meaning a higher milestone), assign it
+            if i > 0:
+                next_level = sorted_levels[i-1]
+            break # Found the highest applicable level
+
+    # If no level found (karma is 0 or less), default to the lowest level
+    if current_level is None:
+        current_level = KARMA_LEVELS[0]
+        next_level = KARMA_LEVELS[1] if len(KARMA_LEVELS) > 1 else None
+    elif next_level is None and current_level["title"] == "✨ Transcendent Master":
+        # If the current level is the max, there is no next level
+        pass
+
+    return current_level, next_level
+
+
 @bot.tree.command(name="givekarma", description="Give karma points to another user for their positive contribution")
 @app_commands.describe(
     user="User to give karma to",
@@ -130,11 +176,11 @@ async def give_karma(interaction: discord.Interaction, user: discord.Member, amo
 
     await interaction.response.send_message(embed=embed)
 
-    # Check for level up (every 50 karma)
-    old_milestone = (old_karma // 50) * 50
-    new_milestone = (new_karma // 50) * 50
+    # Check for level up (milestones are now defined in KARMA_LEVELS)
+    old_level_info, _ = get_karma_level_info(old_karma)
+    new_level_info, _ = get_karma_level_info(new_karma)
 
-    if new_milestone > old_milestone and new_karma >= 50:
+    if new_level_info and old_level_info and new_level_info["milestone"] > old_level_info["milestone"]:
         await send_karma_levelup(interaction.guild, user, new_karma)
 
     await log_action(interaction.guild.id, "karma", f"✨ [KARMA] {interaction.user} gave +{karma_points} karma to {user}")
@@ -159,22 +205,45 @@ async def check_karma(interaction: discord.Interaction, user: discord.Member = N
     users_sorted = await db.karma.find({'guild_id': str(interaction.guild.id)}).sort('karma', -1).to_list(None)
     rank = next((i + 1 for i, u in enumerate(users_sorted) if u['user_id'] == str(target_user.id)), len(users_sorted) + 1)
 
-    # Calculate progress to next milestone
-    next_milestone = ((karma // 50) + 1) * 50
-    progress = karma % 50
-    progress_segments = 10  # Show progress in 10 segments (each segment = 5 karma)
-    filled_segments = progress // 5
-    progress_bar = "█" * filled_segments + "░" * (progress_segments - filled_segments)
+    # Get current and next level info
+    current_level, next_level = get_karma_level_info(karma)
+
+    # Calculate progress to next level
+    if next_level:
+        next_milestone = next_level["milestone"]
+        if current_level:
+            progress = karma - current_level["milestone"]
+            max_progress = next_milestone - current_level["milestone"]
+        else:
+            progress = karma
+            max_progress = next_milestone
+
+        progress_segments = 15  # More detailed progress bar
+        filled_segments = min(progress_segments, int((progress / max_progress) * progress_segments))
+        progress_bar = "█" * filled_segments + "░" * (progress_segments - filled_segments)
+        progress_text = f"`{progress_bar}` {progress}/{max_progress}\n*Next level: {next_level['title']} at {next_milestone} karma*"
+    else:
+        progress_text = "🎆 **MAXIMUM LEVEL ACHIEVED!** 🎆\n*You are a Transcendent Master!*"
+
+    # Use current level color or default
+    embed_color = current_level["color"] if current_level else 0x95a5a6
+    level_title = current_level["title"] if current_level else "🌱 New Member"
 
     embed = discord.Embed(
-        title=f"✨ {target_user.display_name}'s Karma",
-        color=0x3498db
+        title=f"✨ {target_user.display_name}'s Karma Profile",
+        description=f"**Current Level:** {level_title}",
+        color=embed_color
     )
     embed.set_thumbnail(url=target_user.display_avatar.url)
     embed.add_field(name="🌟 Karma Points", value=f"**{karma}** points", inline=True)
     embed.add_field(name="🏆 Server Rank", value=f"#{rank}", inline=True)
-    embed.add_field(name="📊 Progress to Next Milestone", value=f"`{progress_bar}` {progress}/50\n*Next milestone: {next_milestone} karma*", inline=False)
-    embed.set_footer(text="🌟 Karma reflects positive contributions!", icon_url=bot.user.display_avatar.url)
+
+    if next_level:
+        embed.add_field(name="📊 Progress to Next Level", value=progress_text, inline=False)
+    else:
+        embed.add_field(name="🎆 Status", value="**TRANSCENDENT MASTER** - Maximum Level!", inline=False)
+
+    embed.set_footer(text="🌟 Karma reflects your positive impact on our community!", icon_url=bot.user.display_avatar.url)
 
     await interaction.response.send_message(embed=embed)
 
@@ -197,22 +266,45 @@ async def my_karma(interaction: discord.Interaction):
     users_sorted = await db.karma.find({'guild_id': str(interaction.guild.id)}).sort('karma', -1).to_list(None)
     rank = next((i + 1 for i, u in enumerate(users_sorted) if u['user_id'] == str(target_user.id)), len(users_sorted) + 1)
 
-    # Calculate progress to next milestone
-    next_milestone = ((karma // 50) + 1) * 50
-    progress = karma % 50
-    progress_segments = 10  # Show progress in 10 segments (each segment = 5 karma)
-    filled_segments = progress // 5
-    progress_bar = "█" * filled_segments + "░" * (progress_segments - filled_segments)
+    # Get current and next level info
+    current_level, next_level = get_karma_level_info(karma)
+
+    # Calculate progress to next level
+    if next_level:
+        next_milestone = next_level["milestone"]
+        if current_level:
+            progress = karma - current_level["milestone"]
+            max_progress = next_milestone - current_level["milestone"]
+        else:
+            progress = karma
+            max_progress = next_milestone
+
+        progress_segments = 15  # More detailed progress bar
+        filled_segments = min(progress_segments, int((progress / max_progress) * progress_segments))
+        progress_bar = "█" * filled_segments + "░" * (progress_segments - filled_segments)
+        progress_text = f"`{progress_bar}` {progress}/{max_progress}\n*Next level: {next_level['title']} at {next_milestone} karma*"
+    else:
+        progress_text = "🎆 **MAXIMUM LEVEL ACHIEVED!** 🎆\n*You are a Transcendent Master!*"
+
+    # Use current level color or default
+    embed_color = current_level["color"] if current_level else 0x95a5a6
+    level_title = current_level["title"] if current_level else "🌱 New Member"
 
     embed = discord.Embed(
-        title=f"✨ {target_user.display_name}'s Karma",
-        color=0x3498db
+        title=f"✨ {target_user.display_name}'s Karma Profile",
+        description=f"**Current Level:** {level_title}",
+        color=embed_color
     )
     embed.set_thumbnail(url=target_user.display_avatar.url)
     embed.add_field(name="🌟 Karma Points", value=f"**{karma}** points", inline=True)
     embed.add_field(name="🏆 Server Rank", value=f"#{rank}", inline=True)
-    embed.add_field(name="📊 Progress to Next Milestone", value=f"`{progress_bar}` {progress}/50\n*Next milestone: {next_milestone} karma*", inline=False)
-    embed.set_footer(text="🌟 Karma reflects positive contributions!", icon_url=bot.user.display_avatar.url)
+
+    if next_level:
+        embed.add_field(name="📊 Progress to Next Level", value=progress_text, inline=False)
+    else:
+        embed.add_field(name="🎆 Status", value="**TRANSCENDENT MASTER** - Maximum Level!", inline=False)
+
+    embed.set_footer(text="🌟 Karma reflects your positive impact on our community!", icon_url=bot.user.display_avatar.url)
 
     await interaction.response.send_message(embed=embed)
 
@@ -241,6 +333,10 @@ async def karma_leaderboard(interaction: discord.Interaction):
         if user:
             karma = user_data.get('karma', 0)
 
+            # Get level info for the user
+            current_level, _ = get_karma_level_info(karma)
+            level_title = current_level["title"] if current_level else "🌱 New Member"
+
             # Medal emojis for top 3
             if i == 0:
                 medal = "🥇"
@@ -251,7 +347,7 @@ async def karma_leaderboard(interaction: discord.Interaction):
             else:
                 medal = f"**{i+1}.**"
 
-            leaderboard_text += f"{medal} **{user.display_name}** - {karma} karma ✨\n"
+            leaderboard_text += f"{medal} **{user.display_name}** ({level_title}) - {karma} karma ✨\n"
 
     embed = discord.Embed(
         title="🏆 **Community Karma Leaderboard** ✨",
@@ -344,17 +440,27 @@ async def send_karma_levelup(guild, user, karma):
             # Get random quote
             quote = random.choice(KARMA_QUOTES)
 
-            # Calculate milestone
-            milestone = (karma // 50) * 50
-            next_milestone = milestone + 50
+            # Get current and next level info
+            current_level, next_level = get_karma_level_info(karma)
 
             # Create progress bar for next milestone
-            progress = karma % 50
-            progress_segments = 10  # Show progress in 10 segments (each segment = 5 karma)
-            filled_segments = progress // 5
-            progress_bar = "█" * filled_segments + "░" * (progress_segments - filled_segments)
+            if next_level:
+                next_milestone = next_level["milestone"]
+                if current_level:
+                    progress = karma - current_level["milestone"]
+                    max_progress = next_milestone - current_level["milestone"]
+                else:
+                    progress = karma
+                    max_progress = next_milestone
 
-            # Select celebration GIF based on milestone level
+                progress_segments = 15
+                filled_segments = min(progress_segments, int((progress / max_progress) * progress_segments))
+                progress_bar = "█" * filled_segments + "░" * (progress_segments - filled_segments)
+                progress_text = f"`{progress_bar}` {progress}/{max_progress}\n*Next level: {next_level['title']} at {next_milestone} karma*"
+            else:
+                progress_text = "🎆 **MAXIMUM LEVEL ACHIEVED!** 🎆\n*You are a Transcendent Master!*"
+
+            # Select celebration GIF based on milestone level (can be expanded)
             celebration_gifs = [
                 "https://media.giphy.com/media/3oz8xAFtqoOUUrsh7W/giphy.gif",  # Confetti
                 "https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif",  # Party
@@ -370,13 +476,13 @@ async def send_karma_levelup(guild, user, karma):
 
             embed = discord.Embed(
                 title="🎉 **KARMA MILESTONE CELEBRATION!** ✨🎊",
-                description=f"🌟 **{user.mention} just reached {karma} karma points!** 🚀\n\n💫 **Milestone:** {milestone} karma achieved!\n\n🎯 *{quote}*",
-                color=0xf39c12
+                description=f"🌟 **{user.mention} just reached {karma} karma points!** 🚀\n\n💫 **Level:** {current_level['title']}!\n\n🎯 *{quote}*",
+                color=current_level["color"] if current_level else 0xf39c12
             )
             embed.set_thumbnail(url=user.display_avatar.url)
             embed.add_field(
-                name="📊 Progress to Next Milestone",
-                value=f"`{progress_bar}` {progress}/50\n*Next milestone: {next_milestone} karma*",
+                name="📊 Progress to Next Level",
+                value=progress_text,
                 inline=False
             )
             embed.add_field(
@@ -456,8 +562,8 @@ async def on_reaction_add(reaction, user):
 
     # Check for level up only on positive karma
     if karma_change > 0:
-        old_milestone = (old_karma // 50) * 50
-        new_milestone = (new_karma // 50) * 50
+        old_level_info, _ = get_karma_level_info(old_karma)
+        new_level_info, _ = get_karma_level_info(new_karma)
 
-        if new_milestone > old_milestone and new_karma >= 50:
+        if new_level_info and old_level_info and new_level_info["milestone"] > old_level_info["milestone"]:
             await send_karma_levelup(reaction.message.guild, reaction.message.author, new_karma)
