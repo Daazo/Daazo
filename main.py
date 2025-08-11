@@ -606,6 +606,11 @@ class HelpView(discord.ui.View):
             value="**`/mute @user`** - Mute user in voice channel\n**`/unmute @user`** - Unmute user in voice channel\n**`/movevc @user #channel`** - Move user to different voice channel\n**`/vckick @user`** - Kick user from voice channel\n**`/vclock`** - Lock current voice channel\n**`/vcunlock`** - Unlock voice channel\n**`/vclimit <0-99>`** - Set voice channel user limit", 
             inline=False
         )
+        embed.add_field(
+            name="🎭 **Timed Role Management**", 
+            value="**🔴 `/giverole @user <role> <duration>`** - Give role for specific time (e.g., 1h30m, 2d)\n**🔴 `/removerole @user <role>`** - Manually remove role (cancels timed roles)\n**🟡 `/timedroles`** - View all active timed roles in server\n**Auto-expiry:** Roles removed automatically when time expires", 
+            inline=False
+        )
         
         embed.set_footer(text="🟢 = Everyone • 🟡 = Junior Moderator • 🔴 = Main Moderator • 👑 = Server Owner")
         await interaction.response.edit_message(embed=embed, view=self)
@@ -1062,6 +1067,7 @@ from ticket_system import *
 from timeout_system import *
 
 from autorole import *
+from timed_roles import *
 
 # Try to import voice commands
 try:
