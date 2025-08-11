@@ -1010,14 +1010,21 @@ async def sync_commands(interaction: discord.Interaction):
         return
     
     try:
-        synced = await bot.tree.sync()
+        # Sync globally
+        synced_global = await bot.tree.sync()
+        
+        # Also sync to current guild for immediate visibility
+        synced_guild = await bot.tree.sync(guild=interaction.guild)
+        
         all_commands = [cmd.name for cmd in bot.tree.get_commands()]
+        timed_role_commands = [cmd for cmd in ['giverole', 'removerole', 'timedroles'] if cmd in all_commands]
         
         embed = discord.Embed(
             title="🔄 **Commands Synced Successfully**",
-            description=f"**Synced:** {len(synced)} commands\n**Total Registered:** {len(all_commands)}\n\n**Commands:** {', '.join(all_commands)}",
+            description=f"**Global Sync:** {len(synced_global)} commands\n**Guild Sync:** {len(synced_guild)} commands\n**Total Registered:** {len(all_commands)}\n\n**Timed Role Commands:** {', '.join(timed_role_commands) if timed_role_commands else 'Not found!'}\n\n**All Commands:** {', '.join(all_commands)}",
             color=0x43b581
         )
+        embed.set_footer(text="Guild sync makes commands appear immediately in this server!")
         await interaction.response.send_message(embed=embed, ephemeral=True)
     except Exception as e:
         await interaction.response.send_message(f"❌ Sync failed: {str(e)}", ephemeral=True)
