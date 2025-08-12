@@ -1133,54 +1133,132 @@ async def contact_info(interaction: discord.Interaction):
     email_text = contact_email if contact_email else "Not available"
     support_text = support_server if support_server else "Contact owner for invite"
     
-    embed = discord.Embed(
-        title="📞 **Contact Information & Support**",
-        description=f"*Need help or want to get in touch? Here's how to reach us!*\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-        color=0x3498db
-    )
-    
-    embed.add_field(
-        name="👨‍💻 **Bot Developer**",
-        value=f"**Name:** {BOT_OWNER_NAME}\n**Discord:** {owner_mention}\n**About:** {BOT_OWNER_DESCRIPTION}",
-        inline=False
-    )
-    
-    embed.add_field(
-        name="📧 **Email Support**",
-        value=f"**Email:** `{email_text}`\n*For business inquiries, partnerships, or detailed support*",
-        inline=False
-    )
-    
-    embed.add_field(
-        name="🏠 **Support Server**",
-        value=f"**Join:** {support_text}\n*Get instant help, report bugs, suggest features, and chat with the community*",
-        inline=False
-    )
-    
-    embed.add_field(
-        name="🤖 **Bot Information**",
-        value=f"**Servers:** {len(bot.guilds)}\n**Invite Bot:** [Click Here](https://discord.com/api/oauth2/authorize?client_id={bot.user.id}&permissions=8&scope=bot%20applications.commands)\n**Version:** Latest",
-        inline=False
-    )
-    
-    embed.add_field(
-        name="⚡ **Quick Support**",
-        value="🔸 **Mention the owner** in any server with the bot\n🔸 **Use `/help`** for command assistance\n🔸 **Check recent updates** with help menu",
-        inline=False
-    )
-    
-    embed.set_thumbnail(url=bot.user.display_avatar.url)
-    embed.set_footer(text="ᴠᴀᴀᴢʜᴀ", icon_url=bot.user.display_avatar.url)
-    
-    view = discord.ui.View()
-    if support_server:
-        support_button = discord.ui.Button(label="🏠 Support Server", style=discord.ButtonStyle.link, url=support_server, emoji="🏠")
-        view.add_item(support_button)
-    
-    invite_button = discord.ui.Button(label="🤖 Invite Bot", style=discord.ButtonStyle.link, url=f"https://discord.com/api/oauth2/authorize?client_id={bot.user.id}&permissions=8&scope=bot%20applications.commands", emoji="🤖")
-    view.add_item(invite_button)
-    
-    await interaction.response.send_message(embed=embed, view=view)
+    # Get owner status if possible
+    owner_status = "Unknown"
+    owner_status_emoji = "⚫"
+    if bot_owner_id:
+        try:
+            if interaction.guild:
+                owner_member = interaction.guild.get_member(int(bot_owner_id))
+                if owner_member:
+                    status_map = {
+                        discord.Status.online: ("🟢", "Online"),
+                        discord.Status.idle: ("🟡", "Idle"),
+                        discord.Status.dnd: ("🔴", "Do Not Disturb"),
+                        discord.Status.offline: ("⚫", "Offline")
+                    }
+                    owner_status_emoji, owner_status = status_map.get(owner_member.status, ("⚫", "Unknown"))
+        except:
+            pass
+
+    # Bot uptime calculation
+    uptime_seconds = time.time() - bot.start_time
+    uptime_str = str(timedelta(seconds=int(uptime_seconds)))
+
+    # Try to create bot profile card
+    try:
+        from profile_cards import create_bot_profile_card
+        await interaction.response.defer()
+        
+        card_image = await create_bot_profile_card(bot, owner_status, owner_status_emoji, uptime_str, len(bot.guilds))
+        
+        if card_image:
+            # Save image to bytes
+            import io
+            img_bytes = io.BytesIO()
+            card_image.save(img_bytes, format='PNG', quality=95)
+            img_bytes.seek(0)
+            
+            # Create Discord file
+            file = discord.File(img_bytes, filename=f"bot_contact_{bot.user.id}.png")
+            
+            embed = discord.Embed(
+                title="🤖 **VAAZHA-BOT Contact & Information**",
+                description=f"*{BOT_TAGLINE}*\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                color=0x43b581
+            )
+            embed.set_image(url=f"attachment://bot_contact_{bot.user.id}.png")
+            
+            embed.add_field(
+                name="📞 **Contact Information**",
+                value=f"**Developer:** {owner_mention} {owner_status_emoji}\n**Status:** {owner_status}\n**Email:** `{email_text}`\n**Support:** {support_text}",
+                inline=False
+            )
+            
+            embed.add_field(
+                name="⚡ **Quick Support**",
+                value="🔸 **Mention the owner** in any server with the bot\n🔸 **Use `/help`** for command assistance\n🔸 **Check recent updates** with help menu",
+                inline=False
+            )
+            
+            embed.set_footer(text="🌴 Made with ❤️ from God's Own Country", icon_url=bot.user.display_avatar.url)
+            
+            view = discord.ui.View()
+            if support_server:
+                support_button = discord.ui.Button(label="🏠 Support Server", style=discord.ButtonStyle.link, url=support_server, emoji="🏠")
+                view.add_item(support_button)
+            
+            invite_button = discord.ui.Button(label="🤖 Invite Bot", style=discord.ButtonStyle.link, url=f"https://discord.com/api/oauth2/authorize?client_id={bot.user.id}&permissions=8&scope=bot%20applications.commands", emoji="🤖")
+            view.add_item(invite_button)
+            
+            await interaction.followup.send(embed=embed, file=file, view=view)
+        else:
+            raise Exception("Failed to generate profile card")
+            
+    except Exception as e:
+        print(f"Error creating bot profile card: {e}")
+        # Fallback to regular embed
+        embed = discord.Embed(
+            title="📞 **Contact Information & Support**",
+            description=f"*Need help or want to get in touch? Here's how to reach us!*\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+            color=0x3498db
+        )
+        
+        embed.add_field(
+            name="🤖 **VAAZHA-BOT Information**",
+            value=f"**Name:** {BOT_NAME}\n**Tagline:** {BOT_TAGLINE}\n**Servers:** {len(bot.guilds)}\n**Uptime:** {uptime_str}\n**Status:** 🟢 Online & Ready",
+            inline=False
+        )
+        
+        embed.add_field(
+            name="👨‍💻 **Bot Developer**",
+            value=f"**Name:** {BOT_OWNER_NAME}\n**Discord:** {owner_mention} {owner_status_emoji}\n**Status:** {owner_status}\n**About:** {BOT_OWNER_DESCRIPTION}",
+            inline=False
+        )
+        
+        embed.add_field(
+            name="📧 **Email Support**",
+            value=f"**Email:** `{email_text}`\n*For business inquiries, partnerships, or detailed support*",
+            inline=False
+        )
+        
+        embed.add_field(
+            name="🏠 **Support Server**",
+            value=f"**Join:** {support_text}\n*Get instant help, report bugs, suggest features, and chat with the community*",
+            inline=False
+        )
+        
+        embed.add_field(
+            name="⚡ **Quick Support**",
+            value="🔸 **Mention the owner** in any server with the bot\n🔸 **Use `/help`** for command assistance\n🔸 **Check recent updates** with help menu",
+            inline=False
+        )
+        
+        embed.set_thumbnail(url=bot.user.display_avatar.url)
+        embed.set_footer(text="🌴 Made with ❤️ from God's Own Country", icon_url=bot.user.display_avatar.url)
+        
+        view = discord.ui.View()
+        if support_server:
+            support_button = discord.ui.Button(label="🏠 Support Server", style=discord.ButtonStyle.link, url=support_server, emoji="🏠")
+            view.add_item(support_button)
+        
+        invite_button = discord.ui.Button(label="🤖 Invite Bot", style=discord.ButtonStyle.link, url=f"https://discord.com/api/oauth2/authorize?client_id={bot.user.id}&permissions=8&scope=bot%20applications.commands", emoji="🤖")
+        view.add_item(invite_button)
+        
+        if not interaction.response.is_done():
+            await interaction.response.send_message(embed=embed, view=view)
+        else:
+            await interaction.followup.send(embed=embed, view=view)
 
 # MongoDB keep-alive function
 async def ping_mongodb():
