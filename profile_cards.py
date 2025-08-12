@@ -168,7 +168,7 @@ async def create_profile_card(user, guild, karma_data, economy_data):
     status_y = CARD_HEIGHT - 80
     
     # Server rank based on karma
-    if db:
+    if db is not None:
         users_sorted = await db.karma.find({'guild_id': str(guild.id)}).sort('karma', -1).to_list(None)
         rank = next((i + 1 for i, u in enumerate(users_sorted) if u['user_id'] == str(user.id)), "Unranked")
     else:
@@ -188,17 +188,6 @@ async def create_profile_card(user, guild, karma_data, economy_data):
 @bot.tree.command(name="profile", description="🎨 Show a beautiful profile card with user stats and avatar")
 @app_commands.describe(user="User to show profile for (optional)")
 async def profile_card(interaction: discord.Interaction, user: discord.Member = None):
-    # Check if command is used in correct channel
-    server_data = await get_server_data(interaction.guild.id)
-    karma_channels = server_data.get('karma_channels', {})
-    karma_zone_channel_id = karma_channels.get('karma_zone_channel')
-    
-    if karma_zone_channel_id and str(interaction.channel.id) != karma_zone_channel_id:
-        karma_zone_channel = bot.get_channel(int(karma_zone_channel_id))
-        channel_mention = karma_zone_channel.mention if karma_zone_channel else "#karma-zone"
-        await interaction.response.send_message(f"❌ This command can only be used in {channel_mention}!", ephemeral=True)
-        return
-    
     target_user = user or interaction.user
     
     # Defer response as image generation takes time
@@ -209,7 +198,7 @@ async def profile_card(interaction: discord.Interaction, user: discord.Member = 
         karma_data = None
         economy_data = None
         
-        if db:
+        if db is not None:
             karma_data = await db.karma.find_one({'user_id': str(target_user.id), 'guild_id': str(interaction.guild.id)})
             economy_data = await get_user_economy(target_user.id, interaction.guild.id)
         
@@ -241,9 +230,9 @@ async def profile_card(interaction: discord.Interaction, user: discord.Member = 
         print(f"Error creating profile card: {e}")
         
         # Fallback embed if image generation fails
-        karma_data = await db.karma.find_one({'user_id': str(target_user.id), 'guild_id': str(interaction.guild.id)}) if db else None
+        karma_data = await db.karma.find_one({'user_id': str(target_user.id), 'guild_id': str(interaction.guild.id)}) if db is not None else None
         karma = karma_data.get('karma', 0) if karma_data else 0
-        economy_data = await get_user_economy(target_user.id, interaction.guild.id) if db else None
+        economy_data = await get_user_economy(target_user.id, interaction.guild.id) if db is not None else None
         coins = economy_data.get('coins', 0) + economy_data.get('bank', 0) if economy_data else 0
         
         embed = discord.Embed(
