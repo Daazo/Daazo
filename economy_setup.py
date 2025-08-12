@@ -11,6 +11,9 @@ async def setup_economy_category(interaction: discord.Interaction, category: dis
         await interaction.response.send_message("❌ You need Main Moderator permissions to use this command!", ephemeral=True)
         return
     
+    # Defer the response to prevent timeout
+    await interaction.response.defer()
+    
     try:
         # Store the category
         await update_server_data(interaction.guild.id, {'economy_category': str(category.id)})
@@ -134,12 +137,12 @@ async def setup_economy_category(interaction: discord.Interaction, category: dis
             color=0xf1c40f
         )
         embed.set_footer(text="🌴 Economy system organized and ready!")
-        await interaction.response.send_message(embed=embed)
+        await interaction.followup.send(embed=embed)
         
         await log_action(interaction.guild.id, "setup", f"🪙 [ECONOMY SETUP] Economy category set up by {interaction.user}")
         
     except Exception as e:
-        await interaction.response.send_message(f"❌ Error setting up economy category: {str(e)}", ephemeral=True)
+        await interaction.followup.send(f"❌ Error setting up economy category: {str(e)}", ephemeral=True)
 
 @bot.tree.command(name="setgamecategory", description="🎮 Setup game category with mini-game channels")
 @app_commands.describe(category="Category to organize game channels")
@@ -147,6 +150,9 @@ async def setup_game_category(interaction: discord.Interaction, category: discor
     if not await has_permission(interaction, "main_moderator"):
         await interaction.response.send_message("❌ You need Main Moderator permissions to use this command!", ephemeral=True)
         return
+    
+    # Defer the response to prevent timeout
+    await interaction.response.defer()
     
     try:
         # Store the category
@@ -192,12 +198,12 @@ async def setup_game_category(interaction: discord.Interaction, category: discor
             color=0xe67e22
         )
         embed.set_footer(text="🎮 Game zone ready for action!")
-        await interaction.response.send_message(embed=embed)
+        await interaction.followup.send(embed=embed)
         
         await log_action(interaction.guild.id, "setup", f"🎮 [GAME SETUP] Game category set up by {interaction.user}")
         
     except Exception as e:
-        await interaction.response.send_message(f"❌ Error setting up game category: {str(e)}", ephemeral=True)
+        await interaction.followup.send(f"❌ Error setting up game category: {str(e)}", ephemeral=True)
 
 @bot.tree.command(name="setbankcategory", description="🏦 Setup bank category with financial channels")
 @app_commands.describe(category="Category to organize banking channels")
@@ -205,6 +211,9 @@ async def setup_bank_category(interaction: discord.Interaction, category: discor
     if not await has_permission(interaction, "main_moderator"):
         await interaction.response.send_message("❌ You need Main Moderator permissions to use this command!", ephemeral=True)
         return
+    
+    # Defer the response to prevent timeout
+    await interaction.response.defer()
     
     try:
         # Store the category
@@ -253,12 +262,12 @@ async def setup_bank_category(interaction: discord.Interaction, category: discor
             color=0x2ecc71
         )
         embed.set_footer(text="🏦 Banking system organized and secure!")
-        await interaction.response.send_message(embed=embed)
+        await interaction.followup.send(embed=embed)
         
         await log_action(interaction.guild.id, "setup", f"🏦 [BANK SETUP] Bank category set up by {interaction.user}")
         
     except Exception as e:
-        await interaction.response.send_message(f"❌ Error setting up bank category: {str(e)}", ephemeral=True)
+        await interaction.followup.send(f"❌ Error setting up bank category: {str(e)}", ephemeral=True)
 
 @bot.tree.command(name="setkarmacategory", description="✨ Setup karma category with organized channels")
 @app_commands.describe(category="Category to organize karma channels")
@@ -266,6 +275,9 @@ async def setup_karma_category(interaction: discord.Interaction, category: disco
     if not await has_permission(interaction, "main_moderator"):
         await interaction.response.send_message("❌ You need Main Moderator permissions to use this command!", ephemeral=True)
         return
+    
+    # Defer the response to prevent timeout
+    await interaction.response.defer()
     
     try:
         # Store the category
@@ -384,9 +396,9 @@ async def setup_karma_category(interaction: discord.Interaction, category: disco
             color=0xf39c12
         )
         embed.set_footer(text="✨ Karma system organized and ready for appreciation!")
-        await interaction.response.send_message(embed=embed)
+        await interaction.followup.send(embed=embed)
         
         await log_action(interaction.guild.id, "setup", f"✨ [KARMA SETUP] Karma category set up by {interaction.user}")
         
     except Exception as e:
-        await interaction.response.send_message(f"❌ Error setting up karma category: {str(e)}", ephemeral=True)
+        await interaction.followup.send(f"❌ Error setting up karma category: {str(e)}", ephemeral=True)
