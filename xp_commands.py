@@ -3,7 +3,7 @@ from discord.ext import commands
 from discord import app_commands
 import time
 import random
-from main import bot, db, has_permission, log_action, get_server_data
+from main import bot, db, has_permission, log_action, get_server_data, update_server_data
 
 # Karma cooldown tracking (user_id -> {target_user_id: last_time})
 karma_cooldowns = {}
@@ -357,25 +357,116 @@ async def karma_leaderboard(interaction: discord.Interaction):
     embed.set_footer(text="🌟 These members are making our community amazing!", icon_url=bot.user.display_avatar.url)
     await interaction.response.send_message(embed=embed)
 
-@bot.tree.command(name="setkarmachannel", description="Set karma announcement channel (Main Moderator only)")
-@app_commands.describe(channel="Channel for karma level-up announcements")
-async def set_karma_channel(interaction: discord.Interaction, channel: discord.TextChannel):
+@bot.tree.command(name="setkarmacategory", description="Sets up the karma category and its channels")
+@app_commands.describe(
+    category_name="Name for the karma category (e.g., 'Karma Zone')",
+    rules_channel_name="Name for the karma rules channel (e.g., '📜 karma-rules')",
+    levelup_channel_name="Name for the karma level-up announcement channel (e.g., '🎉 karma-celebrations')",
+    member_channels_name="Name for channels like /karma, /karmaboard (e.g., '⭐ karma-hub')"
+)
+async def set_karma_category(interaction: discord.Interaction, category_name: str, rules_channel_name: str, levelup_channel_name: str, member_channels_name: str):
     if not await has_permission(interaction, "main_moderator"):
         await interaction.response.send_message("❌ You need Main Moderator permissions to use this command!", ephemeral=True)
         return
 
-    from main import update_server_data
-    await update_server_data(interaction.guild.id, {'karma_channel': str(channel.id)})
+    guild = interaction.guild
+    permissions = guild.default_for_new_channels
+    overwrites = {
+        guild.default_role: discord.PermissionOverwrite(read_messages=False),
+        guild.me: discord.PermissionOverwrite(read_messages=True)
+    }
 
-    embed = discord.Embed(
-        title="✅ Karma Channel Set",
-        description=f"**Karma announcements will be sent to:** {channel.mention}",
-        color=0x43b581
-    )
-    embed.set_footer(text="🌟 Karma system configured!", icon_url=bot.user.display_avatar.url)
-    await interaction.response.send_message(embed=embed)
+    try:
+        # Create Category
+        category = await guild.create_category(
+            category_name,
+            overwrites=overwrites,
+            reason=f"Karma category setup by {interaction.user.name}"
+        )
 
-    await log_action(interaction.guild.id, "setup", f"✨ [KARMA SETUP] Karma channel set to {channel} by {interaction.user}")
+        # Create Karma Rules Channel
+        rules_channel = await guild.create_text_channel(
+            rules_channel_name,
+            category=category,
+            overwrites=overwrites,
+            reason=f"Karma rules channel setup by {interaction.user.name}"
+        )
+
+        # Create Karma Level Up Announcement Channel
+        levelup_channel = await guild.create_text_channel(
+            levelup_channel_name,
+            category=category,
+            overwrites=overwrites,
+            reason=f"Karma level-up channel setup by {interaction.user.name}"
+        )
+
+        # Create Member Channels (/karma, /karmaboard)
+        member_channel = await guild.create_text_channel(
+            member_channels_name,
+            category=category,
+            overwrites=overwrites,
+            reason=f"Karma member channels setup by {interaction.user.name}"
+        )
+
+        # Store channel IDs
+        karma_channels = {
+            'category_id': str(category.id),
+            'rules_channel': str(rules_channel.id),
+            'levelup_channel': str(levelup_channel.id),
+            'member_channel': str(member_channel.id)
+        }
+        await update_server_data(guild.id, {'karma_channels': karma_channels})
+
+        # Send welcome message to rules channel
+        rules_embed = discord.Embed(
+            title="✨ Welcome to the Karma Zone! ✨",
+            description=(
+                "This is where your positive contributions are tracked and celebrated!\n\n"
+                "**How Karma Works:**\n"
+                "• React with positive emojis (👍, ⭐, ❤️, etc.) to posts to give karma.\n"
+                "• Give karma to others using `/givekarma` for their helpfulness.\n\n"
+                "**Karma Levels:**\n"
+                "• Earn karma to level up and unlock new titles and recognition!\n"
+                "• Check your progress with `/karma` or `/mykarma`.\n\n"
+                "**Leaderboard:**\n"
+                "• See who's making the biggest impact on the leaderboards with `/karmaboard`.\n\n"
+                "**Buying Karma:** (Future Feature - Placeholder)\n"
+                "• *(Currently unavailable, but you'll be able to buy karma with Vaazha Coins soon!)*\n\n"
+                "**Rules:**\n"
+                "• Be respectful and positive.\n"
+                "• No spamming karma reactions.\n"
+                "• Follow all server rules.\n\n"
+                "Let's build a positive community together! 🚀"
+            ),
+            color=0x3498db
+        )
+        rules_embed.set_footer(text="🌟 Spread good vibes!", icon_url=bot.user.display_avatar.url)
+        await rules_channel.send(embed=rules_embed)
+
+        success_embed = discord.Embed(
+            title="✅ Karma Category Setup Complete!",
+            description=(
+                f"Karma category '**{category.name}**' created successfully.\n\n"
+                f"• Rules Channel: {rules_channel.mention}\n"
+                f"• Level Up Announcements: {levelup_channel.mention}\n"
+                f"• Member Commands Channel: {member_channel.mention}\n\n"
+                f"**Next Steps:**\n"
+                "• Ensure the channels in the Karma Category have the correct permissions for your members.\n"
+                "• The bot will automatically post level-up announcements in the Level Up channel."
+            ),
+            color=0x43b581
+        )
+        success_embed.set_footer(text="🌟 Karma system configured!", icon_url=bot.user.display_avatar.url)
+        await interaction.response.send_message(embed=success_embed)
+
+        await log_action(guild.id, "setup", f"✨ [KARMA CATEGORY] Setup complete by {interaction.user}")
+
+    except discord.Forbidden:
+        await interaction.response.send_message("❌ I don't have the necessary permissions to create channels. Please check my role permissions.", ephemeral=True)
+    except Exception as e:
+        await interaction.response.send_message(f"❌ An error occurred while setting up the karma category: {e}", ephemeral=True)
+        await log_action(guild.id, "error", f"❌ Error setting up karma category: {e}")
+
 
 @bot.tree.command(name="resetkarma", description="Reset karma data for user or entire server (Main Moderator only)")
 @app_commands.describe(
@@ -432,11 +523,12 @@ async def reset_karma(interaction: discord.Interaction, scope: str, user: discor
 async def send_karma_levelup(guild, user, karma):
     """Send karma level-up announcement with animated GIF and motivational quotes"""
     server_data = await get_server_data(guild.id)
-    karma_channel_id = server_data.get('karma_channel')
+    karma_channels = server_data.get('karma_channels', {})
+    levelup_channel_id = karma_channels.get('levelup_channel')
 
-    if karma_channel_id:
-        karma_channel = bot.get_channel(int(karma_channel_id))
-        if karma_channel:
+    if levelup_channel_id:
+        levelup_channel = bot.get_channel(int(levelup_channel_id))
+        if levelup_channel:
             # Get random quote
             quote = random.choice(KARMA_QUOTES)
 
@@ -494,11 +586,11 @@ async def send_karma_levelup(guild, user, karma):
             embed.set_footer(text="🌴 Spreading positivity in our Kerala-style community! 🌟", icon_url=bot.user.display_avatar.url)
 
             # Send announcement
-            await karma_channel.send(f"🎉 **KARMA CELEBRATION TIME!** 🎊", embed=embed)
+            await levelup_channel.send(f"🎉 **KARMA CELEBRATION TIME!** 🎊", embed=embed)
 
             print(f"✨ [KARMA MILESTONE] {user} reached {karma} karma in {guild.name}")
     else:
-        print(f"⚠️ [KARMA] No karma channel set for {guild.name}")
+        print(f"⚠️ [KARMA] No karma level-up channel set for {guild.name}")
 
 # Reaction-based karma system
 @bot.event

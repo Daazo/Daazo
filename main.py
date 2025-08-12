@@ -669,8 +669,8 @@ class HelpView(discord.ui.View):
             inline=False
         )
         embed.add_field(
-            name="🔴 **Economy Category Setup**", 
-            value="**`/setecocategory #category`** - Setup organized economy channels\n**`/setgamecategory #category`** - Setup game channels for slots/trivia\n**`/setbankcategory #category`** - Setup banking channels for deposits/trades\n**Auto-creates:** Themed channels with proper permissions", 
+            name="🔴 **Category Setup Commands**", 
+            value="**`/setecocategory #category`** - Setup organized economy channels\n**`/setgamecategory #category`** - Setup game channels for slots/trivia\n**`/setbankcategory #category`** - Setup banking channels for deposits/trades\n**`/setkarmacategory #category`** - Setup karma system channels\n**Auto-creates:** Themed channels with proper permissions", 
             inline=False
         )
         embed.set_footer(text="🟢 = Everyone • 🟡 = Junior Moderator • 🔴 = Main Moderator • 👑 = Server Owner")
@@ -750,7 +750,7 @@ class HelpView(discord.ui.View):
         )
         embed.add_field(
             name="🔧 **Admin Setup Commands**", 
-            value="**🔴 `/setkarmachannel channel:#channel`** - Set karma announcement channel\n**🔴 `/resetkarma scope:user user:@member`** - Reset specific user's karma\n**🔴 `/resetkarma scope:server`** - Reset all server karma data", 
+            value="**🔴 `/setkarmacategory #category`** - Setup organized karma channels\n**🔴 `/resetkarma scope:user user:@member`** - Reset specific user's karma\n**🔴 `/resetkarma scope:server`** - Reset all server karma data\n**Auto-creates:** Rules, level-ups, and karma zone channels", 
             inline=False
         )
         embed.set_footer(text="🟢 = Everyone • 🔴 = Main Moderator • ⚠️ Old XP system completely removed!")

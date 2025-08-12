@@ -36,15 +36,13 @@ async def setup_economy_category(interaction: discord.Interaction, category: dis
             if not existing_channel:
                 # Create channel with appropriate permissions
                 if bot_only:
-                    # Info channel - only bot can send messages, others can read
+                    # Info channel - inherit category permissions but only bot can send messages
                     info_overwrites = overwrites.copy()
-                    # Remove send_messages permission for all roles that have category access
-                    for role_or_member in info_overwrites:
-                        if info_overwrites[role_or_member].send_messages is not False:
-                            info_overwrites[role_or_member] = discord.PermissionOverwrite(
-                                read_messages=True,
-                                send_messages=False
-                            )
+                    # Set send_messages to False for @everyone and any roles that have category access
+                    info_overwrites[interaction.guild.default_role] = discord.PermissionOverwrite(
+                        read_messages=True,
+                        send_messages=False
+                    )
                     # Give bot send message permission
                     info_overwrites[interaction.guild.me] = discord.PermissionOverwrite(
                         read_messages=True,
@@ -261,3 +259,134 @@ async def setup_bank_category(interaction: discord.Interaction, category: discor
         
     except Exception as e:
         await interaction.response.send_message(f"❌ Error setting up bank category: {str(e)}", ephemeral=True)
+
+@bot.tree.command(name="setkarmacategory", description="✨ Setup karma category with organized channels")
+@app_commands.describe(category="Category to organize karma channels")
+async def setup_karma_category(interaction: discord.Interaction, category: discord.CategoryChannel):
+    if not await has_permission(interaction, "main_moderator"):
+        await interaction.response.send_message("❌ You need Main Moderator permissions to use this command!", ephemeral=True)
+        return
+    
+    try:
+        # Store the category
+        await update_server_data(interaction.guild.id, {'karma_category': str(category.id)})
+        
+        # Get category permissions to inherit
+        overwrites = category.overwrites
+        
+        # Create karma channels with cool names and emojis
+        channels_to_create = [
+            ("📜-karma-rules", "Karma system rules and how it works! ✨", True),  # Bot-only channel
+            ("🎉-karma-levelups", "Karma level-up announcements and celebrations! 🌟", False),
+            ("🏆-karma-zone", "Check karma, rankings, and leaderboards! 📊", False)
+        ]
+        
+        created_channels = []
+        rules_channel = None
+        
+        for channel_name, description, bot_only in channels_to_create:
+            # Check if channel already exists
+            existing_channel = discord.utils.get(category.channels, name=channel_name)
+            if not existing_channel:
+                # Create channel with appropriate permissions
+                if bot_only:
+                    # Rules channel - inherit category permissions but only bot can send messages
+                    rules_overwrites = overwrites.copy()
+                    # Set send_messages to False for @everyone and any roles that have category access
+                    rules_overwrites[interaction.guild.default_role] = discord.PermissionOverwrite(
+                        read_messages=True,
+                        send_messages=False
+                    )
+                    # Give bot send message permission
+                    rules_overwrites[interaction.guild.me] = discord.PermissionOverwrite(
+                        read_messages=True,
+                        send_messages=True
+                    )
+                    
+                    channel = await interaction.guild.create_text_channel(
+                        name=channel_name,
+                        category=category,
+                        overwrites=rules_overwrites,
+                        topic=description
+                    )
+                    rules_channel = channel
+                else:
+                    # Regular channels inherit category permissions
+                    channel = await interaction.guild.create_text_channel(
+                        name=channel_name,
+                        category=category,
+                        overwrites=overwrites,
+                        topic=description
+                    )
+                created_channels.append(channel)
+            else:
+                if bot_only:
+                    rules_channel = existing_channel
+        
+        # Update server data with channel IDs
+        karma_channels = {
+            'rules_channel': discord.utils.get(category.channels, name="📜-karma-rules"),
+            'levelup_channel': discord.utils.get(category.channels, name="🎉-karma-levelups"),
+            'karma_zone_channel': discord.utils.get(category.channels, name="🏆-karma-zone")
+        }
+        
+        channel_ids = {k: str(v.id) if v else None for k, v in karma_channels.items()}
+        await update_server_data(interaction.guild.id, {'karma_channels': channel_ids})
+        
+        # Send Karma Rules embed to the rules channel
+        if rules_channel:
+            rules_embed = discord.Embed(
+                title="✨ **KARMA SYSTEM RULES & GUIDE** 🌟",
+                description="*Welcome to our community appreciation system!*\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                color=0xf39c12
+            )
+            rules_embed.add_field(
+                name="💝 **How to Give Karma**",
+                value="🎯 **Command:** `/givekarma @user reason:\"helping with code\"`\n⭐ **Reactions:** React with 👍 ⭐ ❤️ 🔥 💯 ✨ to give +1 karma\n👎 **Negative:** React with 👎 💀 😴 🤮 🗿 to remove karma\n⏰ **Cooldown:** 3 minutes between giving karma to same user\n🚫 **No Self-Karma:** Can't give karma to yourself!",
+                inline=False
+            )
+            rules_embed.add_field(
+                name="🏆 **Karma Milestones & Levels**",
+                value="🎉 **Every 5 Karma:** Level-up celebration with GIFs!\n📊 **Progress Tracking:** Visual progress bars to next milestone\n🏅 **Rankings:** Compete with others on the leaderboard\n✨ **Motivational Quotes:** Inspiring messages with each level-up",
+                inline=False
+            )
+            rules_embed.add_field(
+                name="💰 **Karma & Vaazha Coins Integration**",
+                value="🪙 **Buy Karma:** `/buykarma <amount>` - 1 karma = 10 Vaazha Coins\n💎 **Strategic Value:** Balance economy progression with karma advancement\n🌟 **Double Benefits:** Earn coins, buy karma, boost server rank!\n📈 **Smart Investment:** Use coins to climb the karma leaderboard",
+                inline=False
+            )
+            rules_embed.add_field(
+                name="📋 **Available Commands**",
+                value="🟢 **`/karma @user`** - Check someone's karma and rank\n🟢 **`/mykarma`** - Check your own karma progress\n🟢 **`/karmaboard`** - View top karma earners (🥇🥈🥉)\n🟢 **`/givekarma @user reason`** - Give karma with reason\n🪙 **`/buykarma <amount>`** - Buy karma with Vaazha Coins",
+                inline=False
+            )
+            rules_embed.add_field(
+                name="⚠️ **Important Rules**",
+                value="🚫 **No Abuse:** Don't spam reactions or commands\n🤝 **Be Genuine:** Give karma for real contributions\n⏰ **Respect Cooldowns:** Wait 3 minutes between karma actions\n🎯 **Use Proper Channels:** Use designated karma channels\n🛡️ **Fair Play:** Admins monitor all karma activity",
+                inline=False
+            )
+            rules_embed.add_field(
+                name="🎯 **What Earns Karma**",
+                value="💡 **Helping Others:** Answering questions, solving problems\n🎨 **Creative Content:** Art, memes, interesting discussions\n🤝 **Community Spirit:** Being friendly, welcoming newcomers\n🏆 **Event Participation:** Joining server activities\n✨ **Positive Vibes:** Spreading good energy in the community",
+                inline=False
+            )
+            rules_embed.set_footer(text="✨ Spread positivity and earn karma! • Made with ❤️ for our amazing community", icon_url=interaction.guild.me.display_avatar.url)
+            rules_embed.set_thumbnail(url="https://i.imgur.com/9KnWQfX.png")  # Karma/star themed image
+            
+            await rules_channel.send(embed=rules_embed)
+        
+        embed = discord.Embed(
+            title="✅ Karma Category Setup Complete!",
+            description=f"**Category:** {category.mention}\n**Channels Created:** {len(created_channels)}\n\n✨ **Karma Channels:**\n" +
+                       f"📜 Rules & Guide: {karma_channels['rules_channel'].mention if karma_channels['rules_channel'] else 'Already exists'}\n" +
+                       f"🎉 Level-up Announcements: {karma_channels['levelup_channel'].mention if karma_channels['levelup_channel'] else 'Already exists'}\n" +
+                       f"🏆 Karma Zone: {karma_channels['karma_zone_channel'].mention if karma_channels['karma_zone_channel'] else 'Already exists'}",
+            color=0xf39c12
+        )
+        embed.set_footer(text="✨ Karma system organized and ready for appreciation!")
+        await interaction.response.send_message(embed=embed)
+        
+        await log_action(interaction.guild.id, "setup", f"✨ [KARMA SETUP] Karma category set up by {interaction.user}")
+        
+    except Exception as e:
+        await interaction.response.send_message(f"❌ Error setting up karma category: {str(e)}", ephemeral=True)
