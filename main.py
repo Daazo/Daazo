@@ -903,31 +903,31 @@ class HelpView(discord.ui.View):
     @discord.ui.button(label="Recent Updates", style=discord.ButtonStyle.success, emoji="🌴", row=3)
     async def recent_updates_help(self, interaction: discord.Interaction, button: discord.ui.Button):
         embed = discord.Embed(
-            title="🌴 **Recent Updates & Poli Fixes** ✨",
-            description="*Hey everyone! I've been fine-tuned by my creator, Daazo chettan, to work even better. Here's what's new:*\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+            title="🌴 **Latest Features & Updates** ✨",
+            description="*Hey everyone! Here are the major features now available in VAAZHA-BOT:*\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
             color=0x43b581
         )
         embed.add_field(
-            name="🆕 **Enhanced Reaction Karma System** (Latest!)", 
-            value="**NEW:** Added negative reactions (👎 💀 😴 🤮 🗿) that remove karma!\n**UPDATED:** Reduced cooldown from 5 minutes to 3 minutes\n**IMPROVED:** More positive reactions added (🔥 💯 ✨)", 
+            name="✨ **Karma System** (Community Recognition)", 
+            value="**🟢 `/givekarma @user [reason]`** - Give karma points to members\n**⭐ Reaction Karma** - Positive reactions (👍 ⭐ ❤️ 🔥 💯) give karma\n**📊 `/karmaboard`** - View server's top karma earners\n**🎉 Level-up celebrations** with motivational quotes and GIFs", 
             inline=False
         )
         embed.add_field(
-            name="🆕 **Regular Members Can Now Give Karma** (Latest!)", 
-            value="**CHANGED:** All members can now give karma using `/givekarma`!\n**FAIR:** 3-minute cooldown for everyone (1 minute for main mods)\n**DEMOCRATIC:** Community-driven karma system for all!", 
+            name="🪙 **Economy System** (Vaazha Coins)", 
+            value="**🌅 `/daily` & `/weekly`** - Claim coin rewards with streak bonuses\n**💼 `/work`** - Kerala-themed jobs for earning coins\n**🎰 `/slots` & `/trivia`** - Fun mini-games to test your luck\n**🏦 Banking system** with `/deposit`, `/withdraw`, `/trade`\n**⭐ `/buykarma`** - Purchase karma points with coins", 
             inline=False
         )
         embed.add_field(
-            name="🆕 **Welcome System Enhanced** (Latest!)", 
-            value="**FIXED:** Welcome images/GIFs now display properly in announcements\n**PROFESSIONAL:** Beautiful welcome embeds with member count\n**PERSONAL:** Welcome DMs sent to new members with bot info", 
+            name="🎨 **Profile & Server Cards** (Visual Stats)", 
+            value="**🟢 `/profile [user]`** - Beautiful profile cards with avatar, karma, coins\n**🏰 `/servercard`** - Generate server overview cards with statistics\n**🤖 Contact cards** with bot info and owner status\n**Circular avatars** with progress bars and Kerala theme", 
             inline=False
         )
         embed.add_field(
-            name="✅ **Previous Updates**", 
-            value="🔧 **Mention Replies Fixed** - Bot and owner mentions work perfectly\n🧹 **Slash Commands Only** - Cleaner command system\n🤖 **Smoother Automod** - Better integration without conflicts", 
+            name="🔧 **How to Get Started**", 
+            value="**Step 1:** Use `/givekarma` to appreciate helpful members\n**Step 2:** Try `/daily` to start earning Vaazha Coins\n**Step 3:** Generate your `/profile` to see your beautiful stats card\n**Step 4:** Use `/help` to explore all available commands!", 
             inline=False
         )
-        embed.set_footer(text="🌴 Made with ❤️ by Daazo from God's Own Country • Last updated today!", icon_url=bot.user.display_avatar.url)
+        embed.set_footer(text="🌴 Made with ❤️ by Daazo from God's Own Country • Ready to serve!", icon_url=bot.user.display_avatar.url)
         embed.set_thumbnail(url=bot.user.display_avatar.url)
         await interaction.response.edit_message(embed=embed, view=self)
 
