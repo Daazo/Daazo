@@ -199,21 +199,42 @@ async def on_message(message):
     
     # Check for owner mention - Add animated emoji reactions
     owner_id = os.getenv('BOT_OWNER_ID')
-    if owner_id and (f"<@{owner_id}>" in message.content or 
-                    f"<@!{owner_id}>" in message.content or 
-                    "daazo" in message.content.lower()):
-        try:
-            # Add two animated emoji reactions
-            emoji_1 = "<a:emoji_2:1404843587048575150>"
-            emoji_2 = "<a:emoji_1:1404843564835536997>"
-            
-            await message.add_reaction(emoji_1)
-            await asyncio.sleep(0.5)  # Small delay between reactions
-            await message.add_reaction(emoji_2)
-        except discord.HTTPException:
-            # If emoji reactions fail, silently pass
-            pass
-        return
+    if owner_id:
+        # Check if the bot owner is mentioned in the message
+        if (f"<@{owner_id}>" in message.content or 
+            f"<@!{owner_id}>" in message.content or 
+            "daazo" in message.content.lower() or
+            "@daazo" in message.content.lower()):
+            try:
+                # Add two animated emoji reactions
+                emoji_1 = "1404843587048575150"  # ID only for custom emoji
+                emoji_2 = "1404843564835536997"  # ID only for custom emoji
+                
+                # Try to get the emoji objects first
+                try:
+                    emoji_obj_1 = bot.get_emoji(int(emoji_1))
+                    emoji_obj_2 = bot.get_emoji(int(emoji_2))
+                    
+                    if emoji_obj_1:
+                        await message.add_reaction(emoji_obj_1)
+                        await asyncio.sleep(0.5)  # Small delay between reactions
+                    
+                    if emoji_obj_2:
+                        await message.add_reaction(emoji_obj_2)
+                        
+                except (ValueError, discord.HTTPException):
+                    # Fallback to default emojis if custom ones fail
+                    await message.add_reaction("👑")
+                    await asyncio.sleep(0.5)
+                    await message.add_reaction("🔥")
+                    
+                print(f"🎯 Bot owner mentioned by {message.author} in {message.guild.name}")
+                
+            except discord.HTTPException as e:
+                print(f"Failed to add reaction: {e}")
+                # If reactions fail, silently pass
+                pass
+            return
     
     # Karma system is handled via reactions and commands
     
