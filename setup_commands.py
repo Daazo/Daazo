@@ -100,7 +100,7 @@ async def setup(
         # Test welcome functionality
         test_embed = discord.Embed(
             title="✅ Welcome System Test",
-            description=f"**Channel:** {channel.mention}\n**Message:** {welcome_data['welcome_message']}\n" +
+            description=f"**Channel:** {channel.mention}\n**Message:** {welcome_data['welcome_message']}\n" + 
                        (f"**Image/GIF:** ✅ Working properly" if welcome_data.get('welcome_image') else "**Image/GIF:** None set"),
             color=0x43b581
         )
@@ -333,6 +333,3 @@ async def setup(
 
         except Exception as e:
             await interaction.followup.send(f"❌ Error setting up log category: {str(e)}", ephemeral=True)
-
-# Command syncing and reaction role functionality is handled in separate modules
-# The autoremoverole command is defined in autorole_system.py to avoid duplication
