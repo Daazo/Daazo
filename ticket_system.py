@@ -224,8 +224,8 @@ class ReopenTicketView(discord.ui.View):
             color=0x43b581
         )
 
-        # Add close button back to the reopened ticket
-        close_view = TicketControlView()
+        # Add specialized close button for reopened tickets
+        close_view = CloseReopenedTicketView()
         await interaction.response.send_message(embed=embed, view=close_view)
 
         await log_action(interaction.guild.id, "tickets", f"🔓 [TICKET REOPENED] {interaction.channel.name} by {interaction.user}")
