@@ -98,13 +98,15 @@ async def security_settings(
 @app_commands.describe(
     channel="Channel where verification button will be posted",
     verified_role="Role to give verified members",
-    message="Custom verification message"
+    message="Custom verification message",
+    remove_role="Role to remove from user when they verify (optional)"
 )
 async def verification_setup(
     interaction: discord.Interaction,
     channel: discord.TextChannel,
     verified_role: discord.Role,
-    message: str = "Click the button below to verify and gain access to the server!"
+    message: str = "Click the button below to verify and gain access to the server!",
+    remove_role: discord.Role = None
 ):
     if not await has_permission(interaction, "main_moderator"):
         await interaction.response.send_message("❌ You need Main Moderator permissions to use this command!", ephemeral=True)
@@ -113,11 +115,15 @@ async def verification_setup(
     # Update security settings
     server_data = await get_server_data(interaction.guild.id)
     security_settings = server_data.get('security_settings', {})
-    security_settings['verification_system'] = {
+    verification_config = {
         'enabled': True,
         'verified_role': str(verified_role.id),
         'channel': str(channel.id)
     }
+    if remove_role:
+        verification_config['remove_role'] = str(remove_role.id)
+    
+    security_settings['verification_system'] = verification_config
     await update_server_data(interaction.guild.id, {'security_settings': security_settings})
 
     # Create verification embed and button
@@ -128,21 +134,27 @@ async def verification_setup(
     )
     embed.set_footer(text="🌴 ᴠᴀᴀᴢʜᴀ Security System", icon_url=bot.user.display_avatar.url)
 
-    view = VerificationView(verified_role.id)
+    view = VerificationView(verified_role.id, remove_role.id if remove_role else None)
     await channel.send(embed=embed, view=view)
 
+    description = f"**Channel:** {channel.mention}\n**Verified Role:** {verified_role.mention}"
+    if remove_role:
+        description += f"\n**Remove Role:** {remove_role.mention}"
+    description += f"\n**Status:** Active\n\n*New members will need to verify before accessing the server.*"
+    
     response_embed = discord.Embed(
         title="✅ **Verification System Setup Complete**",
-        description=f"**Channel:** {channel.mention}\n**Verified Role:** {verified_role.mention}\n**Status:** Active\n\n*New members will need to verify before accessing the server.*",
+        description=description,
         color=0x43b581
     )
     await interaction.response.send_message(embed=response_embed)
     await log_action(interaction.guild.id, "security", f"✅ [VERIFICATION] Verification system setup by {interaction.user}")
 
 class VerificationView(discord.ui.View):
-    def __init__(self, verified_role_id):
+    def __init__(self, verified_role_id, remove_role_id=None):
         super().__init__(timeout=None)
         self.verified_role_id = verified_role_id
+        self.remove_role_id = remove_role_id
 
     @discord.ui.button(label='✅ Verify Me', style=discord.ButtonStyle.success, emoji='✅', custom_id='verify_member')
     async def verify_member(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -156,6 +168,13 @@ class VerificationView(discord.ui.View):
             return
 
         try:
+            # Remove the specified role if user has it and remove_role is set
+            if self.remove_role_id:
+                remove_role = interaction.guild.get_role(self.remove_role_id)
+                if remove_role and remove_role in interaction.user.roles:
+                    await interaction.user.remove_roles(remove_role, reason="Role removed during verification")
+            
+            # Add verified role
             await interaction.user.add_roles(verified_role, reason="Member verification")
             
             embed = discord.Embed(
