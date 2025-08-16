@@ -226,12 +226,12 @@ async def log_global_activity(activity_type: str, guild_id: int, user_id: int, d
         await log_to_global(channel_name, embed)
 
 async def log_bot_command_activity(guild_id: int, command_type: str, user, details: str):
-    """Log ALL bot command activities to per-server channel"""
+    """Log ALL bot command activities to SINGLE per-server channel"""
     guild = bot.get_guild(guild_id)
     if not guild or guild.id == SUPPORT_SERVER_ID:
         return
     
-    # Use clean server name for channel
+    # Use clean server name for channel - ONE CHANNEL PER SERVER
     clean_name = guild.name.lower().replace(" ", "-").replace("_", "-")
     clean_name = ''.join(c for c in clean_name if c.isalnum() or c == '-')[:45]
     channel_name = f"{clean_name}-logs"
@@ -374,7 +374,7 @@ async def log_bot_content_shared(guild_id: int, command_used: str, user, content
     if not guild or guild.id == SUPPORT_SERVER_ID:
         return
     
-    # Use clean server name for channel
+    # Use clean server name for channel - SINGLE CHANNEL PER SERVER
     clean_name = guild.name.lower().replace(" ", "-").replace("_", "-")
     clean_name = ''.join(c for c in clean_name if c.isalnum() or c == '-')[:45]
     log_channel_name = f"{clean_name}-logs"
@@ -390,6 +390,30 @@ async def log_bot_content_shared(guild_id: int, command_used: str, user, content
         embed.set_thumbnail(url=guild.icon.url)
     
     await log_to_global(log_channel_name, embed)
+
+async def log_all_server_activity(guild_id: int, activity_type: str, user, details: str):
+    """Log ANY server activity to the single server channel"""
+    guild = bot.get_guild(guild_id)
+    if not guild or guild.id == SUPPORT_SERVER_ID:
+        return
+    
+    # Use clean server name for channel - ONE CHANNEL FOR EVERYTHING
+    clean_name = guild.name.lower().replace(" ", "-").replace("_", "-")
+    clean_name = ''.join(c for c in clean_name if c.isalnum() or c == '-')[:45]
+    channel_name = f"{clean_name}-logs"
+    
+    # Simple unified log format
+    embed = discord.Embed(
+        title=f"📋 **{activity_type}**",
+        description=f"**User:** {user}\n**Details:** {details}",
+        color=0x3498db,
+        timestamp=datetime.now()
+    )
+    embed.set_footer(text=f"Server: {guild.name} (ID: {guild.id})")
+    if guild.icon:
+        embed.set_thumbnail(url=guild.icon.url)
+    
+    await log_to_global(channel_name, embed)
 
 # Event handlers
 async def global_on_message(message):
