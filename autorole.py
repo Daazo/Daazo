@@ -60,4 +60,4 @@ async def autorole_setup(
         embed.set_footer(text="ᴠᴀᴀᴢʜᴀ")
         await interaction.response.send_message(embed=embed)
     
-    await log_action(interaction.guild.id, "setup", f"🎭 [AUTO ROLE] {action} by {interaction.user}")
+    await log_action(interaction.guild.id, "autorole", f"🎭 [AUTO ROLE] {action} by {interaction.user}")

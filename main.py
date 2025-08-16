@@ -66,22 +66,21 @@ async def log_action(guild_id, log_type, message):
     """Log actions to appropriate channels"""
     server_data = await get_server_data(guild_id)
 
-    # Send to global logging system for specific command types only
-    command_types = ['economy', 'karma', 'security', 'moderation', 'voice', 'general', 'communication']
-    if log_type.lower() in command_types:
-        try:
-            from global_logging import log_bot_command_activity
-            # Extract user from message if possible
-            user_info = "System"
-            if "] " in message and " by " in message:
-                parts = message.split(" by ")
-                if len(parts) > 1:
-                    user_info = parts[1].split(" ")[0]
-            
-            await log_bot_command_activity(guild_id, log_type, user_info, message)
-        except Exception as e:
-            print(f"Global logging error: {e}")
-            pass
+    # Send ALL actions to global logging system (not just specific types)
+    try:
+        from global_logging import log_bot_command_activity
+        # Extract user from message if possible
+        user_info = "System"
+        if "] " in message and " by " in message:
+            parts = message.split(" by ")
+            if len(parts) > 1:
+                user_info = parts[1].split(" ")[0]
+        
+        # Log ALL command types to global system
+        await log_bot_command_activity(guild_id, log_type, user_info, message)
+    except Exception as e:
+        print(f"Global logging error: {e}")
+        pass
 
     # Check for organized logging system first
     organized_logs = server_data.get('organized_log_channels', {})
