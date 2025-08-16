@@ -763,17 +763,22 @@ class HelpView(discord.ui.View):
         )
         embed.add_field(
             name="🔴 `/setup welcome channel value`",
-            value="**Usage:** `/setup welcome channel:#channel value:\"Welcome {user}!\"`\n**Description:** Configure welcome messages and channel\n**Variables:** {user}, {server}",
+            value="**Usage:** `/setup welcome channel:#channel value:\"Welcome {user}!\"`\n**Description:** Configure welcome messages and channel\n**Variables:** {user}, {server}\n**Image support:** Add image URLs for welcome cards",
+            inline=False
+        )
+        embed.add_field(
+            name="🔴 `/autorole action role`",
+            value="**Usage:** `/autorole action:set role:@role` or `/autorole action:remove`\n**Description:** Set or remove auto role for new members\n**Auto-assigns:** Role given to all new members on join",
             inline=False
         )
         embed.add_field(
             name="🔴 `/setup logs value channel`",
-            value="**Usage:** `/setup logs value:all channel:#logs`\n**Types:** all, moderation, xp, communication, tickets\n**Description:** Set up logging channels for different bot activities",
+            value="**Usage:** `/setup logs value:all channel:#logs`\n**Types:** all, moderation, karma, communication, tickets\n**Description:** Set up logging channels for different bot activities\n**Advanced:** Use `/setup log_category #category` for organized logs",
             inline=False
         )
         embed.add_field(
-            name="🔴 `/setup xp channel`",
-            value="**Usage:** `/setup xp channel:#xp-announcements`\n**Description:** Set channel for XP level-up announcements",
+            name="🔴 `/setup karma_channel channel`",
+            value="**Usage:** `/setup karma_channel channel:#karma`\n**Description:** Set channel for karma level-up announcements and milestones",
             inline=False
         )
         embed.add_field(
@@ -783,7 +788,7 @@ class HelpView(discord.ui.View):
         )
         embed.add_field(
             name="🔴 **Category Setup Commands**",
-            value="**`/setecocategory #category`** - Setup organized economy channels\n**`/setgamecategory #category`** - Setup game channels for slots/trivia\n**`/setbankcategory #category`** - Setup banking channels for deposits/trades\n**`/setkarmacategory #category`** - Setup karma system channels\n**Auto-creates:** Themed channels with proper permissions",
+            value="**`/setecocategory #category`** - Setup organized economy channels\n**`/setgamecategory #category`** - Setup game channels for slots/trivia\n**`/setbankcategory #category`** - Setup banking channels for deposits/trades\n**`/setkarmacategory #category`** - Setup karma system channels\n**Auto-creates:** Themed channels with proper permissions and topics",
             inline=False
         )
         embed.set_footer(text="🟢 = Everyone • 🟡 = Junior Moderator • 🔴 = Main Moderator • 👑 = Server Owner")
@@ -862,8 +867,8 @@ class HelpView(discord.ui.View):
             inline=False
         )
         embed.add_field(
-            name="🎨 **Profile Cards** (NEW!)",
-            value="**🟢 `/profile [user]`** - Generate beautiful profile card with avatar, karma, coins\n**🟡 `/servercard`** - Create server overview card with stats and info\n**Features:** Circular avatars, progress bars, karma levels, wealth display",
+            name="🎨 **Profile & Visual Cards**",
+            value="**🟢 `/profile [user]`** - Generate beautiful profile card with avatar, karma, coins\n**🟡 `/servercard`** - Create server overview card with stats and member info\n**🟢 `/botprofile`** - View bot information card with system status\n**Features:** Circular avatars, progress bars, karma levels, wealth display, server stats\n**Design:** Kerala-themed with coconut trees and professional layouts",
             inline=False
         )
         embed.add_field(
@@ -933,7 +938,7 @@ class HelpView(discord.ui.View):
         )
         embed.add_field(
             name="🔧 **Admin Commands**",
-            value="**🔴 `/addcoins @user <amount>`** - Give coins to users (1-10,000)\n**🔴 `/removecoins @user <amount>`** - Remove coins from users\n**🔴 Category Setup:** `/setecocategory`, `/setgamecategory`, `/setbankcategory`\n**Full logging:** All economy actions logged automatically",
+            value="**🔴 `/addcoins @user <amount>`** - Give coins to users (1-10,000)\n**🔴 `/removecoins @user <amount>`** - Remove coins from users\n**🔴 `/createeconomychannels`, `/create_game_channels`, `/create_bank_channels`** - Manual channel creation\n**🔴 Category Setup:** `/setecocategory`, `/setgamecategory`, `/setbankcategory`\n**Full logging:** All economy actions logged automatically",
             inline=False
         )
         embed.add_field(
@@ -977,8 +982,8 @@ class HelpView(discord.ui.View):
             inline=False
         )
         embed.add_field(
-            name="🤖 **Bot & Role Whitelist**",
-            value="**🔴 `/whitelist add/remove bot/role @target`** - Manage security whitelist\n**Approved bots only** - Only whitelisted bots can perform sensitive actions\n**Role protection** - Whitelist high-permission roles\n**View current whitelist** with `/whitelist list`",
+            name="🤖 **Security Whitelist System**",
+            value="**🔴 `/whitelist action:add type:bot target:@bot`** - Add bot to whitelist\n**🔴 `/whitelist action:add type:role target:@role`** - Add role to whitelist\n**🔴 `/whitelist action:remove type:bot target:@bot`** - Remove from whitelist\n**🔴 `/whitelist action:list`** - View current whitelisted bots/roles\n**Protection:** Only whitelisted bots can perform sensitive actions",
             inline=False
         )
         embed.add_field(
@@ -997,13 +1002,13 @@ class HelpView(discord.ui.View):
             color=0xe67e22
         )
         embed.add_field(
-            name="🎭 **Multi-Reaction Role System** (NEW!)",
-            value="**🔴 `/reactionrole`** - Setup multiple emoji/role pairs in one message (up to 10)\n**🔴 `/quickreactionrole`** - Quick single reaction role setup\n**🟡 `/listreactionroles`** - View all active reaction role setups\n**Features:** Multiple roles per message, auto-remove roles, interactive setup",
+            name="🎭 **Multi-Reaction Role System**",
+            value="**🔴 `/reactionrole message emoji role channel [remove_role]`** - Setup single reaction role\n**🔴 `/quickreactionrole`** - Interactive multi-role setup (up to 10 pairs)\n**🟡 `/listreactionroles`** - View all active reaction role setups\n**Features:** Multiple roles per message, auto-remove roles, persistent storage",
             inline=False
         )
         embed.add_field(
-            name="✨ **New Reaction Role Features**",
-            value="**Multiple Emoji/Roles:** Up to 10 emoji:role pairs per message\n**Auto-Remove Role:** Automatically remove specified role when user gets any reaction role\n**Interactive Setup:** User-friendly form for multiple pairs\n**Format:** 🎯:@Role1 (one per line in setup form)",
+            name="✨ **Reaction Role Features**",
+            value="**Multiple Emoji/Roles:** Up to 10 emoji:role pairs per message\n**Auto-Remove Role:** Automatically remove specified role when user gets any reaction role\n**Interactive Setup:** User-friendly forms for complex setups\n**Persistent:** Survives bot restarts with database storage\n**Format:** Supports both single and batch reaction role creation",
             inline=False
         )
 
