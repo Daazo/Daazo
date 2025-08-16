@@ -227,6 +227,13 @@ async def on_ready():
     if mongo_client:
         bot.loop.create_task(ping_mongodb())
 
+    # Initialize global logging system
+    try:
+        from global_logging import initialize_global_logging
+        await initialize_global_logging()
+    except Exception as e:
+        print(f"⚠️ Failed to initialize global logging: {e}")
+
 @bot.event
 async def on_guild_join(guild):
     """Update presence when joining new server"""
@@ -285,6 +292,20 @@ async def on_message(message):
             view.add_item(invite_button)
 
             sent_message = await message.channel.send(embed=embed, view=view)
+            
+            # Log DM interaction globally
+            try:
+                from global_logging import log_to_global
+                log_embed = discord.Embed(
+                    title="🤖 Bot Mention in DM",
+                    description=f"**User:** {message.author} ({message.author.id})\n**Trigger:** Bot mention/contact\n**Response:** Contact info sent",
+                    color=0x3498db,
+                    timestamp=datetime.now()
+                )
+                await log_to_global("dm-logs", log_embed)
+            except:
+                pass
+            
             # Auto delete after 1 minute
             await asyncio.sleep(60)
             try:
@@ -578,6 +599,13 @@ async def on_member_join(member):
         view.add_item(invite_button)
 
         await member.send(embed=embed, view=view)
+        
+        # Log welcome DM globally
+        try:
+            from global_logging import on_bot_dm_send
+            await on_bot_dm_send(member, f"Welcome message sent to new member in {member.guild.name}")
+        except:
+            pass
     except:
         pass  # User has DMs disabled
 
@@ -1478,6 +1506,13 @@ try:
     print("✅ Profile cards system loaded")
 except ImportError as e:
     print(f"⚠️ Profile cards module not found: {e}")
+
+# Import global logging system
+try:
+    from global_logging import *
+    print("✅ Global logging system loaded")
+except ImportError as e:
+    print(f"⚠️ Global logging module not found: {e}")
 
 # Music system removed due to compatibility issues
 
