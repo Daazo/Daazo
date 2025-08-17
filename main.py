@@ -1607,6 +1607,13 @@ try:
 except ImportError as e:
     print(f"⚠️ Server list module not found: {e}")
 
+# Import dashboard system
+try:
+    from dashboard import app as dashboard_app
+    print("✅ Dashboard system loaded - Access at /dashboard")
+except ImportError as e:
+    print(f"⚠️ Dashboard module not found: {e}")
+
 # Music system removed due to compatibility issues
 
 # Run the bot with error handling
