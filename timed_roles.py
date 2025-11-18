@@ -4,7 +4,9 @@ from discord import app_commands
 import asyncio
 from datetime import datetime, timedelta
 import re
-from main import bot, has_permission, get_server_data, update_server_data, log_action, db
+from main import bot
+from brand_config import BOT_FOOTER, BrandColors
+from main import has_permission, get_server_data, update_server_data, log_action, db
 
 # Background task to check for expired roles
 @tasks.loop(minutes=1)
@@ -38,7 +40,7 @@ async def check_expired_roles():
                         embed = discord.Embed(
                             title="⏰ **Timed Role Expired**",
                             description=f"Your **{role.name}** role in **{guild.name}** has expired and been removed.",
-                            color=0xf39c12
+                            color=BrandColors.WARNING
                         )
                         embed.set_footer(text="ᴠᴀᴀᴢʜᴀ Timed Roles", icon_url=bot.user.display_avatar.url)
                         await member.send(embed=embed)
@@ -156,7 +158,7 @@ async def give_timed_role(
             embed = discord.Embed(
                 title="✅ **Permanent Role Assigned**",
                 description=f"**User:** {user.mention}\n**Role:** {role.mention}\n**Type:** `Permanent`\n**Assigned by:** {interaction.user.mention}\n\n*This role will remain until manually removed.*",
-                color=0x43b581
+                color=BrandColors.SUCCESS
             )
             embed.set_footer(text="ᴠᴀᴀᴢʜᴀ Role Management", icon_url=bot.user.display_avatar.url)
             await interaction.response.send_message(embed=embed)
@@ -166,7 +168,7 @@ async def give_timed_role(
                 dm_embed = discord.Embed(
                     title="🎭 **You've been given a permanent role!**",
                     description=f"**Server:** {interaction.guild.name}\n**Role:** {role.name}\n**Type:** Permanent\n\n*This role will remain until a moderator removes it.*",
-                    color=0x43b581
+                    color=BrandColors.SUCCESS
                 )
                 dm_embed.set_footer(text="ᴠᴀᴀᴢʜᴀ Role Management", icon_url=bot.user.display_avatar.url)
                 await user.send(embed=dm_embed)
@@ -198,7 +200,7 @@ async def give_timed_role(
             embed = discord.Embed(
                 title="✅ **Timed Role Assigned**",
                 description=f"**User:** {user.mention}\n**Role:** {role.mention}\n**Duration:** `{format_duration(duration_seconds)}`\n**Expires:** {discord.utils.format_dt(expires_at, style='R')}\n**Assigned by:** {interaction.user.mention}",
-                color=0x43b581
+                color=BrandColors.SUCCESS
             )
             embed.set_footer(text="ᴠᴀᴀᴢʜᴀ Timed Roles", icon_url=bot.user.display_avatar.url)
             await interaction.response.send_message(embed=embed)
@@ -208,7 +210,7 @@ async def give_timed_role(
                 dm_embed = discord.Embed(
                     title="🎭 **You've been given a timed role!**",
                     description=f"**Server:** {interaction.guild.name}\n**Role:** {role.name}\n**Duration:** `{format_duration(duration_seconds)}`\n**Expires:** {discord.utils.format_dt(expires_at, style='F')}\n\n*This role will be automatically removed when it expires.*",
-                    color=0x43b581
+                    color=BrandColors.SUCCESS
                 )
                 dm_embed.set_footer(text="ᴠᴀᴀᴢʜᴀ Timed Roles", icon_url=bot.user.display_avatar.url)
                 await user.send(embed=dm_embed)
@@ -265,7 +267,7 @@ async def remove_role(
         embed = discord.Embed(
             title="✅ **Role Removed**",
             description=f"**User:** {user.mention}\n**Role:** {role.mention}\n**Removed by:** {interaction.user.mention}" + (f"\n**Note:** This was a timed role that has been cancelled." if was_timed else ""),
-            color=0xf39c12
+            color=BrandColors.WARNING
         )
         embed.set_footer(text="ᴠᴀᴀᴢʜᴀ Role Management", icon_url=bot.user.display_avatar.url)
         await interaction.response.send_message(embed=embed)
@@ -275,7 +277,7 @@ async def remove_role(
             dm_embed = discord.Embed(
                 title="🗑️ **Role Removed**",
                 description=f"Your **{role.name}** role has been removed from **{interaction.guild.name}**" + (f" (timed role cancelled)" if was_timed else "") + f".\n\n**Removed by:** {interaction.user}",
-                color=0xf39c12
+                color=BrandColors.WARNING
             )
             dm_embed.set_footer(text="ᴠᴀᴀᴢʜᴀ Role Management", icon_url=bot.user.display_avatar.url)
             await user.send(embed=dm_embed)
@@ -320,7 +322,7 @@ async def view_timed_roles(interaction: discord.Interaction):
         embed = discord.Embed(
             title="📋 **Active Timed Roles**",
             description=f"*Showing {len(timed_roles)} active timed role(s)*\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-            color=0x3498db
+            color=BrandColors.INFO
         )
 
         for i, role_data in enumerate(timed_roles[:10]):  # Show max 10 to avoid embed limits

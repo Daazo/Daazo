@@ -3,7 +3,9 @@ from discord.ext import commands
 from discord import app_commands
 import time
 import random
-from main import bot, db, has_permission, log_action, get_server_data, update_server_data
+from main import bot
+from brand_config import BOT_FOOTER, BrandColors
+from main import db, has_permission, log_action, get_server_data, update_server_data
 
 # Karma cooldown tracking (user_id -> {target_user_id: last_time})
 karma_cooldowns = {}
@@ -80,7 +82,7 @@ async def give_karma(interaction: discord.Interaction, user: discord.Member, amo
         embed = discord.Embed(
             title="❌ Cannot Give Self-Karma",
             description="You cannot give karma to yourself! Ask others to appreciate your contributions instead.",
-            color=0xe74c3c
+            color=BrandColors.DANGER
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)
         return
@@ -133,7 +135,7 @@ async def give_karma(interaction: discord.Interaction, user: discord.Member, amo
         embed = discord.Embed(
             title="⏰ Karma Cooldown",
             description=f"You can give karma to {user.mention} again in **{minutes}m {seconds}s**",
-            color=0xf39c12
+            color=BrandColors.WARNING
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)
         return
@@ -169,7 +171,7 @@ async def give_karma(interaction: discord.Interaction, user: discord.Member, amo
     embed = discord.Embed(
         title="✨ Karma Given!",
         description=f"**{interaction.user.mention}** ({role_text}) gave **+{karma_points} karma** to **{user.mention}**{reason_text}!",
-        color=0x43b581
+        color=BrandColors.SUCCESS
     )
     embed.add_field(name="New Karma Total", value=f"{new_karma} points", inline=True)
     embed.set_footer(text="🌟 Keep spreading positivity!", icon_url=bot.user.display_avatar.url)
@@ -353,7 +355,7 @@ async def karma_leaderboard(interaction: discord.Interaction):
         embed = discord.Embed(
             title="🏆 Karma Leaderboard",
             description="No karma has been given yet! Start appreciating community members!",
-            color=0xe74c3c
+            color=BrandColors.DANGER
         )
         embed.set_footer(text="🌟 Be the first to spread positivity!", icon_url=bot.user.display_avatar.url)
         await interaction.response.send_message(embed=embed)
@@ -385,7 +387,7 @@ async def karma_leaderboard(interaction: discord.Interaction):
     embed = discord.Embed(
         title="🏆 **Community Karma Leaderboard** ✨",
         description=leaderboard_text,
-        color=0xf39c12
+        color=BrandColors.WARNING
     )
     embed.set_footer(text="🌟 These members are making our community amazing!", icon_url=bot.user.display_avatar.url)
     await interaction.response.send_message(embed=embed)
@@ -422,13 +424,13 @@ async def reset_karma(interaction: discord.Interaction, scope: str, user: discor
             embed = discord.Embed(
                 title="✅ User Karma Reset",
                 description=f"**User:** {user.mention}\n**Action:** Karma data has been reset\n**Reset by:** {interaction.user.mention}",
-                color=0x43b581
+                color=BrandColors.SUCCESS
             )
         else:
             embed = discord.Embed(
                 title="❌ User Not Found",
                 description=f"{user.mention} has no karma data to reset.",
-                color=0xe74c3c
+                color=BrandColors.DANGER
             )
 
     elif scope == "server":
@@ -437,7 +439,7 @@ async def reset_karma(interaction: discord.Interaction, scope: str, user: discor
         embed = discord.Embed(
             title="✅ Server Karma Reset",
             description=f"**Action:** All karma data has been reset\n**Users affected:** {result.deleted_count}\n**Reset by:** {interaction.user.mention}",
-            color=0x43b581
+            color=BrandColors.SUCCESS
         )
 
     embed.set_footer(text="🌟 Fresh start for karma system!", icon_url=bot.user.display_avatar.url)

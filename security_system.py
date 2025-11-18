@@ -5,7 +5,9 @@ from discord import app_commands
 import asyncio
 import time
 from datetime import datetime, timedelta
-from main import bot, has_permission, get_server_data, update_server_data, log_action
+from main import bot
+from brand_config import BOT_FOOTER, BrandColors
+from main import has_permission, get_server_data, update_server_data, log_action
 import json
 
 # Security tracking data
@@ -86,7 +88,7 @@ async def security_settings(
     embed = discord.Embed(
         title="🛡️ **Security Settings Updated**",
         description=f"**Feature:** {feature_names.get(feature, feature)}\n**Status:** {status}{extra_info}",
-        color=0x43b581 if enabled else 0xe74c3c
+        color=BrandColors.SUCCESS if enabled else 0xe74c3c
     )
     embed.set_footer(text="🌴 ᴠᴀᴀᴢʜᴀ Security System", icon_url=bot.user.display_avatar.url)
 
@@ -130,7 +132,7 @@ async def verification_setup(
     embed = discord.Embed(
         title="✅ **Server Verification Required**",
         description=f"**{message}**\n\n🔒 You must verify to access all channels and features.\n\n📋 **What verification gives you:**\n• Access to all server channels\n• Ability to participate in discussions\n• Full server member privileges",
-        color=0x43b581
+        color=BrandColors.SUCCESS
     )
     embed.set_footer(text="🌴 ᴠᴀᴀᴢʜᴀ Security System", icon_url=bot.user.display_avatar.url)
 
@@ -145,7 +147,7 @@ async def verification_setup(
     response_embed = discord.Embed(
         title="✅ **Verification System Setup Complete**",
         description=description,
-        color=0x43b581
+        color=BrandColors.SUCCESS
     )
     await interaction.response.send_message(embed=response_embed)
     await log_action(interaction.guild.id, "security", f"✅ [VERIFICATION] Verification system setup by {interaction.user}")
@@ -196,7 +198,7 @@ class VerificationView(discord.ui.View):
             embed = discord.Embed(
                 title="✅ **Verification Successful!**",
                 description="**Welcome to the server!** 🎉\n\nYou now have access to all channels and can participate fully in our community.\n\n*Enjoy your stay!* 🌴",
-                color=0x43b581
+                color=BrandColors.SUCCESS
             )
             embed.set_footer(text="🌴 ᴠᴀᴀᴢʜᴀ Security", icon_url=bot.user.display_avatar.url)
             
@@ -245,7 +247,7 @@ async def whitelist_command(
         
         embed = discord.Embed(
             title="🤖 **Security Whitelist**",
-            color=0x3498db
+            color=BrandColors.INFO
         )
         embed.add_field(
             name="🤖 Whitelisted Bots",
@@ -278,14 +280,14 @@ async def whitelist_command(
             embed = discord.Embed(
                 title="✅ **Added to Whitelist**",
                 description=f"**{target_type.title()}:** {target.mention}\n**Action:** Added to security whitelist",
-                color=0x43b581
+                color=BrandColors.SUCCESS
             )
             await log_action(interaction.guild.id, "security", f"🤖 [WHITELIST] {target} added to {target_type} whitelist by {interaction.user}")
         else:
             embed = discord.Embed(
                 title="⚠️ **Already Whitelisted**",
                 description=f"{target.mention} is already in the {target_type} whitelist.",
-                color=0xf39c12
+                color=BrandColors.WARNING
             )
     
     elif action == "remove":
@@ -297,14 +299,14 @@ async def whitelist_command(
             embed = discord.Embed(
                 title="✅ **Removed from Whitelist**",
                 description=f"**{target_type.title()}:** {target.mention}\n**Action:** Removed from security whitelist",
-                color=0xe74c3c
+                color=BrandColors.DANGER
             )
             await log_action(interaction.guild.id, "security", f"🤖 [WHITELIST] {target} removed from {target_type} whitelist by {interaction.user}")
         else:
             embed = discord.Embed(
                 title="⚠️ **Not Whitelisted**",
                 description=f"{target.mention} is not in the {target_type} whitelist.",
-                color=0xf39c12
+                color=BrandColors.WARNING
             )
 
     await interaction.response.send_message(embed=embed)
@@ -372,7 +374,7 @@ async def handle_raid_detection(guild, join_count):
         embed = discord.Embed(
             title="🚨 **RAID ALERT**",
             description=f"**Potential raid detected!**\n\n**Members joined:** {join_count}\n**Time frame:** Last 60 seconds\n**Action recommended:** Review recent joins and take appropriate action",
-            color=0xe74c3c
+            color=BrandColors.DANGER
         )
         embed.set_footer(text="🌴 ᴠᴀᴀᴢʜᴀ Security Alert")
         await alert_channel.send(embed=embed)

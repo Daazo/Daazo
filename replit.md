@@ -1,0 +1,116 @@
+# RXT ENGINE Discord Bot
+
+## Overview
+RXT ENGINE is a powerful multi-function Discord bot focused on automation, moderation, and server management. Completely rebranded from the previous Kerala-themed "VAAZHA" bot to a futuristic cyberpunk aesthetic.
+
+**Current Version:** 2.0.0  
+**Tagline:** "Powering the future of Discord automation"  
+**Status:** ✅ Fully operational (requires Discord bot token to run)
+
+## Recent Changes (November 18, 2025)
+### Complete Rebrand to RXT ENGINE
+- ✅ Deleted all economy system files (economy_system.py, economy_setup.py)
+- ✅ Created brand_config.py with new color scheme and branding constants
+- ✅ Updated all 15+ command modules with new RXT ENGINE branding
+- ✅ Removed all Kerala/VAAZHA references from codebase
+- ✅ New color scheme: Quantum Purple (#8A4FFF) primary, Hyper Blue (#4F8CFF) secondary
+- ✅ Updated footer to "RXT ENGINE • Powered by R!O</>"
+- ✅ Fixed all import errors and circular dependencies
+- ✅ Bot successfully loads all modules
+
+## Project Architecture
+
+### Core Files
+- **main.py** - Main bot entry point, event handlers, help command system
+- **brand_config.py** - Centralized branding configuration (colors, constants, footer)
+- **keep_alive.py** - Flask web server for bot uptime monitoring
+
+### Command Modules
+- **xp_commands.py** - XP/leveling system with rank cards
+- **moderation_commands.py** - Moderation tools (ban, kick, mute, warn)
+- **setup_commands.py** - Server configuration and setup
+- **communication_commands.py** - Announcements, messages, DM tools
+- **ticket_commands.py** - Support ticket system
+- **reaction_roles.py** - Reaction role management
+- **security_commands.py** - Anti-raid, anti-nuke, verification
+
+### Visual Systems
+- **profile_cards.py** - PIL-based profile card generation with futuristic design
+- **global_logging.py** - Centralized logging system
+
+### Dependencies
+- discord.py - Discord API wrapper
+- motor - Async MongoDB driver
+- Pillow (PIL) - Image generation
+- Flask - Web server for keep-alive
+
+## Brand Configuration
+
+### Colors (BrandColors class)
+- **PRIMARY**: #8A4FFF (Quantum Purple) - Main accent color
+- **SECONDARY**: #4F8CFF (Hyper Blue) - Secondary highlights
+- **ACCENT**: #00E68A (Neon Green) - Success/positive actions
+- **WARNING**: #FFD700 (Gold) - Warnings and cautions
+- **ERROR**: #FF4444 (Red) - Errors and destructive actions
+- **BACKGROUND**: #0A0A0F (Deep Space) - Dark backgrounds
+- **TEXT**: #E0E0E0 (Silver) - Primary text
+
+### Constants
+- **BOT_NAME**: "RXT ENGINE"
+- **BOT_VERSION**: "2.0.0"
+- **BOT_TAGLINE**: "Powering the future of Discord automation"
+- **BOT_FOOTER**: "RXT ENGINE • Powered by R!O</>"
+- **BOT_OWNER_NAME**: "R!O</>"
+- **BOT_OWNER_DESCRIPTION**: "Creator and developer of RXT ENGINE bot..."
+
+### Owner Mentions
+- Bot uses `BOT_OWNER_ID` environment variable for clickable mentions
+- DM detection keywords: "@owner", "daazo" (legacy keyword maintained for compatibility)
+- Owner mentions are clickable using Discord's `<@{user_id}>` format
+
+## User Preferences
+- Professional futuristic cyberpunk aesthetic
+- Clean, modern UI without emojis in code
+- Consolidated branding through brand_config.py
+- Economy features removed (focus on automation/moderation)
+
+## Environment Variables Required
+- `DISCORD_BOT_TOKEN` - Discord bot authentication token
+- `MONGO_URI` - MongoDB connection string
+- `BOT_OWNER_ID` - Discord user ID of bot owner (for clickable mentions)
+
+## Running the Bot
+The workflow "RXT ENGINE Bot" runs: `python main.py`
+
+Expected startup sequence:
+```
+✅ Profile cards system loaded
+✅ Global logging system loaded
+✅ Server list monitoring system loaded
+⚡ RXT ENGINE is starting...
+```
+
+If no token is configured, will show: `❌ Invalid bot token!` (this is normal)
+
+## Database
+- MongoDB database name: `rxt_engine_bot` (changed from vaazha_bot)
+- Collections: servers, users, tickets, logs, reactions, warnings
+
+## Features
+### Active Systems
+- ⚡ **Karma/XP System** - Community recognition and leveling
+- 🛡️ **Security** - Anti-raid, anti-nuke, verification
+- 🎫 **Ticket System** - Support ticket management
+- 🎭 **Reaction Roles** - Role assignment via reactions
+- 📊 **Logging** - Comprehensive server event logging
+- 🎨 **Visual Cards** - Profile and server cards with PIL
+
+### Removed Features
+- ❌ Economy system (coins, bank, games) - Deleted completely
+- ❌ Kerala-themed elements - Replaced with cyberpunk theme
+
+## Architecture Decisions
+- Centralized branding via brand_config.py to avoid scattered constants
+- PIL image generation uses BrandColorsRGB for compatibility
+- Clickable owner mentions using BOT_OWNER_ID environment variable
+- Professional modern theme replacing cultural/regional branding

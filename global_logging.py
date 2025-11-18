@@ -5,6 +5,8 @@ import asyncio
 from datetime import datetime
 import os
 from main import bot, get_server_data
+from brand_config import BOT_NAME
+from brand_config import BOT_FOOTER, BrandColors
 
 # ==== GLOBAL LOGGING CONFIGURATION ====
 SUPPORT_SERVER_ID = int(os.getenv('SUPPORT_SERVER_ID', '1404842638615777331'))
@@ -43,7 +45,7 @@ async def get_or_create_global_channel(channel_name: str):
         channel = await support_guild.create_text_channel(
             name=channel_name.lower(),
             category=category,
-            topic=f"Global logs for {channel_name} - VAAZHA Bot"
+            topic=f"Global logs for {channel_name} - RXT ENGINE"
         )
         global_log_channels[channel_name] = channel.id
         return channel
@@ -97,7 +99,7 @@ async def log_dm_received(message):
     embed = discord.Embed(
         title="📥 DM Received",
         description=f"**From:** {message.author} ({message.author.id})\n**Content:** {message.content[:1000]}",
-        color=0x3498db,
+        color=BrandColors.INFO,
         timestamp=datetime.now()
     )
     embed.set_footer(text=f"User ID: {message.author.id}")
@@ -113,7 +115,7 @@ async def log_dm_sent(recipient, content):
     embed = discord.Embed(
         title="📤 DM Sent By Bot", 
         description=f"**To:** {recipient} ({recipient.id})\n**Content:** {content[:1000]}",
-        color=0x43b581,
+        color=BrandColors.SUCCESS,
         timestamp=datetime.now()
     )
     embed.set_footer(text=f"Recipient ID: {recipient.id}")
@@ -126,10 +128,10 @@ async def log_console_event(event_type: str, message: str):
     embed = discord.Embed(
         title=f"🖥️ Console Event: {event_type}",
         description=message,
-        color=0x9b59b6,
+        color=BrandColors.PRIMARY,
         timestamp=datetime.now()
     )
-    embed.set_footer(text="VAAZHA Bot Console")
+    embed.set_footer(text=BOT_FOOTER)
     await log_to_global("live-console", embed)
 
 async def log_command_error(interaction_or_ctx, error):
@@ -149,7 +151,7 @@ async def log_command_error(interaction_or_ctx, error):
                    f"**User:** {user} ({user.id if user else 'N/A'})\n"
                    f"**Command:** {command}\n"
                    f"**Error:** {str(error)[:1000]}",
-        color=0xe74c3c,
+        color=BrandColors.DANGER,
         timestamp=datetime.now()
     )
     embed.set_footer(text=f"Error Type: {type(error).__name__}")
@@ -167,7 +169,7 @@ async def log_guild_join_global(guild):
     embed = discord.Embed(
         title="🎉 Bot Joined New Server",
         description=f"**Server:** {guild.name}\n**ID:** {guild.id}\n**Owner:** {guild.owner}\n**Members:** {guild.member_count}\n**Log Channel:** {channel_name}",
-        color=0x43b581,
+        color=BrandColors.SUCCESS,
         timestamp=datetime.now()
     )
     if guild.icon:
@@ -197,7 +199,7 @@ async def log_guild_remove_global(guild):
     embed = discord.Embed(
         title="👋 Bot Left Server",
         description=f"**Server:** {guild.name}\n**ID:** {guild.id}\n**Members:** {guild.member_count}\n**Log Channel:** {channel_name} (deleted)",
-        color=0xe74c3c,
+        color=BrandColors.DANGER,
         timestamp=datetime.now()
     )
     if guild.icon:
@@ -214,7 +216,7 @@ async def log_global_activity(activity_type: str, guild_id: int, user_id: int, d
         description=f"**Server:** {guild.name if guild else 'Unknown'} ({guild_id})\n"
                    f"**User:** {user if user else 'Unknown'} ({user_id})\n"
                    f"**Details:** {details}",
-        color=0x9b59b6,
+        color=BrandColors.PRIMARY,
         timestamp=datetime.now()
     )
     
@@ -382,7 +384,7 @@ async def log_bot_content_shared(guild_id: int, command_used: str, user, content
     embed = discord.Embed(
         title=f"📢 Bot Content Shared - {command_used.upper()}",
         description=f"**Command:** {command_used}\n**User:** {user}\n**Channel:** {channel_name if channel_name else 'Current channel'}\n**Content:** {content[:800]}{'...' if len(content) > 800 else ''}",
-        color=0x43b581,
+        color=BrandColors.SUCCESS,
         timestamp=datetime.now()
     )
     embed.set_footer(text=f"Server: {guild.name} (ID: {guild.id})")
@@ -406,7 +408,7 @@ async def log_all_server_activity(guild_id: int, activity_type: str, user, detai
     embed = discord.Embed(
         title=f"📋 **{activity_type}**",
         description=f"**User:** {user}\n**Details:** {details}",
-        color=0x3498db,
+        color=BrandColors.INFO,
         timestamp=datetime.now()
     )
     embed.set_footer(text=f"Server: {guild.name} (ID: {guild.id})")
@@ -547,7 +549,7 @@ async def initialize_global_logging():
     hook_into_events()
     
     # Log bot startup
-    await log_console_event("Bot Startup", f"✅ VAAZHA Bot started successfully!\n**Servers:** {len(bot.guilds)}\n**Commands:** {len(bot.tree.get_commands())}")
+    await log_console_event("Bot Startup", f"✅ {BOT_NAME} started successfully!\n**Servers:** {len(bot.guilds)}\n**Commands:** {len(bot.tree.get_commands())}")
 
 # Add logging status command
 @bot.tree.command(name="logging-status", description="🔍 View comprehensive logging system status (Bot Owner only)")
@@ -576,9 +578,9 @@ async def logging_status(interaction: discord.Interaction):
         global_channels = [ch for ch in category.channels if not ch.name.endswith('-logs')]
         
         embed = discord.Embed(
-            title="🔍 **VAAZHA Bot Global Logging Status**",
+            title=f"🔍 **{BOT_NAME} Global Logging Status**",
             description=f"**Comprehensive logging system monitoring {total_servers} servers**\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-            color=0x43b581
+            color=BrandColors.SUCCESS
         )
         
         embed.add_field(

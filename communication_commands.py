@@ -2,7 +2,9 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 import asyncio
-from main import bot, has_permission, log_action
+from main import bot
+from brand_config import BOT_FOOTER, BrandColors
+from main import has_permission, log_action
 import os
 from datetime import datetime, timedelta
 import time
@@ -26,7 +28,7 @@ async def say(interaction: discord.Interaction, message: str, channel: discord.T
         embed = discord.Embed(
             title=heading if heading else None,
             description=message,
-            color=0x3498db
+            color=BrandColors.INFO
         )
         if image:
             # Basic URL validation
@@ -36,7 +38,7 @@ async def say(interaction: discord.Interaction, message: str, channel: discord.T
                 await interaction.response.send_message("❌ Invalid image URL! Please provide a valid image URL.", ephemeral=True)
                 return
         
-        embed.set_footer(text="ᴠᴀᴀᴢʜᴀ", icon_url=bot.user.display_avatar.url)
+        embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
         await target_channel.send(embed=embed)
     else:
         await target_channel.send(message)
@@ -44,9 +46,9 @@ async def say(interaction: discord.Interaction, message: str, channel: discord.T
     embed = discord.Embed(
         title="✅ Message Sent",
         description=f"Message sent to {target_channel.mention}",
-        color=0x43b581
+        color=BrandColors.SUCCESS
     )
-    embed.set_footer(text="ᴠᴀᴀᴢʜᴀ")
+    embed.set_footer(text=BOT_FOOTER)
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
     # Log to global system
@@ -122,16 +124,16 @@ async def embed_command(
             await interaction.response.send_message("❌ Invalid image URL! Please provide a valid image URL.", ephemeral=True)
             return
     
-    embed.set_footer(text="ᴠᴀᴀᴢʜᴀ", icon_url=bot.user.display_avatar.url)
+    embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
 
     await target_channel.send(embed=embed)
 
     response_embed = discord.Embed(
         title="✅ Embed Sent",
         description=f"Embed sent to {target_channel.mention}",
-        color=0x43b581
+        color=BrandColors.SUCCESS
     )
-    response_embed.set_footer(text="ᴠᴀᴀᴢʜᴀ")
+    response_embed.set_footer(text=BOT_FOOTER)
     await interaction.response.send_message(embed=response_embed, ephemeral=True)
 
     # Log to global system
@@ -189,7 +191,7 @@ async def announce(
     embed = discord.Embed(
         title=announcement_title,
         description=message,
-        color=0xf39c12
+        color=BrandColors.WARNING
     )
     
     if image:
@@ -200,7 +202,7 @@ async def announce(
             await interaction.response.send_message("❌ Invalid image URL! Please provide a valid image URL.", ephemeral=True)
             return
     
-    embed.set_footer(text="ᴠᴀᴀᴢʜᴀ", icon_url=bot.user.display_avatar.url)
+    embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
 
     await channel.send(announcement_content, embed=embed)
 
@@ -223,9 +225,9 @@ async def announce(
     response_embed = discord.Embed(
         title="✅ Announcement Sent",
         description=f"Announcement sent to {channel.mention}",
-        color=0x43b581
+        color=BrandColors.SUCCESS
     )
-    response_embed.set_footer(text="ᴠᴀᴀᴢʜᴀ")
+    response_embed.set_footer(text=BOT_FOOTER)
     await interaction.response.send_message(embed=response_embed, ephemeral=True)
 
     await log_action(interaction.guild.id, "communication", f"📢 [ANNOUNCEMENT] Announcement sent to {channel.name} by {interaction.user}")
@@ -259,9 +261,9 @@ async def poll(
     embed = discord.Embed(
         title="📊 Poll",
         description=f"**{question}**\n\n" + "\n".join([f"{chr(0x1f1e6 + i)} {option}" for i, option in enumerate(options)]),
-        color=0x3498db
+        color=BrandColors.INFO
     )
-    embed.set_footer(text="ᴠᴀᴀᴢʜᴀ", icon_url=bot.user.display_avatar.url)
+    embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
 
     await interaction.response.send_message(embed=embed)
     message = await interaction.original_response()
@@ -310,9 +312,9 @@ async def reminder(interaction: discord.Interaction, message: str, time: str):
     embed = discord.Embed(
         title="⏰ Reminder Set",
         description=f"I'll remind you about: **{message}**\nIn: **{time}**",
-        color=0x43b581
+        color=BrandColors.SUCCESS
     )
-    embed.set_footer(text="ᴠᴀᴀᴢʜᴀ")
+    embed.set_footer(text=BOT_FOOTER)
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
     # Set reminder
@@ -321,9 +323,9 @@ async def reminder(interaction: discord.Interaction, message: str, time: str):
     reminder_embed = discord.Embed(
         title="⏰ Reminder",
         description=f"**{message}**",
-        color=0xf39c12
+        color=BrandColors.WARNING
     )
-    reminder_embed.set_footer(text="ᴠᴀᴀᴢʜᴀ")
+    reminder_embed.set_footer(text=BOT_FOOTER)
 
     try:
         await interaction.user.send(embed=reminder_embed)
@@ -345,9 +347,9 @@ async def dm_command(interaction: discord.Interaction, user: discord.Member, mes
         embed = discord.Embed(
             title=f"📩 Message from {interaction.guild.name}",
             description=message,
-            color=0x3498db
+            color=BrandColors.INFO
         )
-        embed.set_footer(text="ᴠᴀᴀᴢʜᴀ")
+        embed.set_footer(text=BOT_FOOTER)
 
         await user.send(embed=embed)
 
@@ -361,9 +363,9 @@ async def dm_command(interaction: discord.Interaction, user: discord.Member, mes
         response_embed = discord.Embed(
             title="✅ DM Sent",
             description=f"DM sent to {user.mention}",
-            color=0x43b581
+            color=BrandColors.SUCCESS
         )
-        response_embed.set_footer(text="ᴠᴀᴀᴢʜᴀ")
+        response_embed.set_footer(text=BOT_FOOTER)
         await interaction.response.send_message(embed=response_embed, ephemeral=True)
 
         await log_action(interaction.guild.id, "communication", f"📨 [DM] DM sent to {user} by {interaction.user}")

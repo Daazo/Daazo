@@ -3,7 +3,9 @@ from discord.ext import commands
 from discord import app_commands
 import asyncio
 from datetime import datetime, timedelta
-from main import bot, has_permission, get_server_data, update_server_data, log_action
+from main import bot
+from brand_config import BOT_FOOTER, BrandColors
+from main import has_permission, get_server_data, update_server_data, log_action
 
 class TicketModal(discord.ui.Modal, title='🎫 Create Support Ticket'):
     def __init__(self, category_id):
@@ -44,7 +46,7 @@ class TicketModal(discord.ui.Modal, title='🎫 Create Support Ticket'):
                 embed = discord.Embed(
                     title="⏳ Ticket Cooldown",
                     description="You must wait 10 minutes between creating tickets!",
-                    color=0xf39c12
+                    color=BrandColors.WARNING
                 )
                 await interaction.response.send_message(embed=embed, ephemeral=True)
                 return
@@ -127,7 +129,7 @@ class TicketModal(discord.ui.Modal, title='🎫 Create Support Ticket'):
         response_embed = discord.Embed(
             title="✅ Ticket Created Successfully",
             description=f"Your support ticket has been created: {ticket_channel.mention}\nOur team will assist you shortly!",
-            color=0x43b581
+            color=BrandColors.SUCCESS
         )
         await interaction.response.send_message(embed=response_embed, ephemeral=True)
 
@@ -181,7 +183,7 @@ class TicketControlView(discord.ui.View):
         embed = discord.Embed(
             title="🔒 Ticket Closed",
             description=f"This ticket has been closed by {interaction.user.mention}",
-            color=0xe74c3c
+            color=BrandColors.DANGER
         )
 
         reopen_view = ReopenTicketView()
@@ -221,7 +223,7 @@ class ReopenTicketView(discord.ui.View):
         embed = discord.Embed(
             title="🔓 Ticket Reopened",
             description=f"This ticket has been reopened by {interaction.user.mention}",
-            color=0x43b581
+            color=BrandColors.SUCCESS
         )
 
         # Add specialized close button for reopened tickets
@@ -277,7 +279,7 @@ class CloseReopenedTicketView(discord.ui.View):
         embed = discord.Embed(
             title="🔒 Ticket Closed",
             description=f"This ticket has been closed by {interaction.user.mention}",
-            color=0xe74c3c
+            color=BrandColors.DANGER
         )
 
         reopen_view = ReopenTicketView()
@@ -364,7 +366,7 @@ async def ticket_setup(
         embed = discord.Embed(
             title="🎫 Support Tickets",
             description=f"{description}\n\n**Need help?** Click the button below to create a support ticket!\nOur team will assist you as soon as possible.",
-            color=0x3498db
+            color=BrandColors.INFO
         )
         embed.set_footer(text="🌴 ᴠᴀᴀᴢʜᴀ Support System")
 
@@ -374,7 +376,7 @@ async def ticket_setup(
         response_embed = discord.Embed(
             title="✅ Ticket System Setup Complete",
             description=f"**Open Category:** {category.mention}\n**Button Channel:** {channel.mention}",
-            color=0x43b581
+            color=BrandColors.SUCCESS
         )
         await interaction.response.send_message(embed=response_embed)
 
@@ -384,7 +386,7 @@ async def ticket_setup(
         response_embed = discord.Embed(
             title="✅ Ticket Close Category Set",
             description=f"**Close Category:** {category.mention}",
-            color=0x43b581
+            color=BrandColors.SUCCESS
         )
         await interaction.response.send_message(embed=response_embed)
 

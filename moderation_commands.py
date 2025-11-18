@@ -2,7 +2,9 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 import asyncio
-from main import bot, has_permission, log_action
+from main import bot
+from brand_config import BOT_FOOTER, BrandColors
+from main import has_permission, log_action
 
 @bot.tree.command(name="kick", description="👢 Kick a user from the server")
 @app_commands.describe(user="User to kick", reason="Reason for kick")
@@ -21,7 +23,7 @@ async def kick(interaction: discord.Interaction, user: discord.Member, reason: s
             dm_embed = discord.Embed(
                 title=f"👢 You were kicked from {interaction.guild.name}",
                 description=f"**Reason:** {reason}\n**Moderator:** {interaction.user}",
-                color=0xf39c12
+                color=BrandColors.WARNING
             )
             await user.send(embed=dm_embed)
         except:
@@ -32,7 +34,7 @@ async def kick(interaction: discord.Interaction, user: discord.Member, reason: s
         embed = discord.Embed(
             title="👢 User Kicked",
             description=f"**User:** {user.mention}\n**Moderator:** {interaction.user.mention}\n**Reason:** {reason}",
-            color=0xf39c12
+            color=BrandColors.WARNING
         )
         await interaction.response.send_message(embed=embed)
 
@@ -60,7 +62,7 @@ async def ban(interaction: discord.Interaction, user: discord.Member, reason: st
             dm_embed = discord.Embed(
                 title=f"🔨 You were banned from {interaction.guild.name}",
                 description=f"**Reason:** {reason}\n**Moderator:** {interaction.user}",
-                color=0xe74c3c
+                color=BrandColors.DANGER
             )
             await user.send(embed=dm_embed)
         except:
@@ -71,7 +73,7 @@ async def ban(interaction: discord.Interaction, user: discord.Member, reason: st
         embed = discord.Embed(
             title="🔨 User Banned",
             description=f"**User:** {user.mention}\n**Moderator:** {interaction.user.mention}\n**Reason:** {reason}",
-            color=0xe74c3c
+            color=BrandColors.DANGER
         )
         await interaction.response.send_message(embed=embed)
 
@@ -92,7 +94,7 @@ async def nuke(interaction: discord.Interaction):
     embed = discord.Embed(
         title="⚠️ **DANGER: CHANNEL NUKE** ⚠️",
         description=f"**This will DELETE ALL messages in {interaction.channel.mention}!**\n\n**❌ This action CANNOT be undone!**\n**💀 All chat history will be permanently lost!**\n\n**Are you absolutely sure?**",
-        color=0xe74c3c
+        color=BrandColors.DANGER
     )
 
     view = NukeConfirmView()
@@ -132,7 +134,7 @@ class NukeConfirmView(discord.ui.View):
             embed = discord.Embed(
                 title="💥 **Channel Nuked Successfully** 💥",
                 description=f"**All messages have been deleted!**\n\n**Moderator:** {interaction.user.mention}\n**Time:** {discord.utils.format_dt(discord.utils.utcnow())}\n\n*This channel has been completely reset.*",
-                color=0xe74c3c
+                color=BrandColors.DANGER
             )
             embed.set_footer(text="🌴 ᴠᴀᴀᴢʜᴀ Moderation", icon_url=interaction.client.user.display_avatar.url)
 
@@ -148,6 +150,6 @@ class NukeConfirmView(discord.ui.View):
         embed = discord.Embed(
             title="✅ **Nuke Cancelled**",
             description="The channel nuke has been cancelled. No messages were deleted.",
-            color=0x43b581
+            color=BrandColors.SUCCESS
         )
         await interaction.response.edit_message(embed=embed, view=None)

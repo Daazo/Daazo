@@ -4,7 +4,9 @@ from discord import app_commands
 import asyncio
 import time
 from datetime import datetime, timedelta
-from main import bot, has_permission, get_server_data, update_server_data, log_action, has_permission_user
+from main import bot
+from brand_config import BOT_FOOTER, BrandColors
+from main import has_permission, get_server_data, update_server_data, log_action, has_permission_user
 import re
 
 # Bad words list (comprehensive but family-friendly for code)
@@ -184,7 +186,7 @@ async def timeout_user(member, guild, timeout_duration, offense_type, message_co
             dm_embed = discord.Embed(
                 title="⏰ You've been timed out",
                 description=f"**Server:** {guild.name}\n**Reason:** {offense_type.title()} violation\n**Duration:** {timeout_duration} minutes",
-                color=0xf39c12
+                color=BrandColors.WARNING
             )
             dm_embed.add_field(
                 name="⚠️ Warning",
@@ -200,7 +202,7 @@ async def timeout_user(member, guild, timeout_duration, offense_type, message_co
         if log_channel:
             log_embed = discord.Embed(
                 title="🔇 Auto-Timeout Applied",
-                color=0xf39c12
+                color=BrandColors.WARNING
             )
             log_embed.add_field(name="User", value=f"{member.mention} ({member})", inline=True)
             log_embed.add_field(name="Reason", value=offense_type.title(), inline=True)
@@ -262,7 +264,7 @@ async def timeout_settings(
     embed = discord.Embed(
         title="⚙️ **Timeout Settings Updated**",
         description=f"**Feature:** {feature_names.get(feature, feature)}\n**Status:** {status}",
-        color=0x43b581 if enabled else 0xe74c3c
+        color=BrandColors.SUCCESS if enabled else 0xe74c3c
     )
     embed.set_footer(text="🤖 ᴠᴀᴀᴢʜᴀ Auto-Moderation", icon_url=bot.user.display_avatar.url)
 
@@ -286,7 +288,7 @@ async def remove_timeout(interaction: discord.Interaction, user: discord.Member)
         embed = discord.Embed(
             title="🔓 **Timeout Removed**",
             description=f"**User:** {user.mention}\n**Removed by:** {interaction.user.mention}\n**Action:** Timeout has been lifted early",
-            color=0x43b581
+            color=BrandColors.SUCCESS
         )
         embed.set_footer(text="🤖 ᴠᴀᴀʀᴀ Moderation", icon_url=bot.user.display_avatar.url)
 
@@ -298,7 +300,7 @@ async def remove_timeout(interaction: discord.Interaction, user: discord.Member)
             dm_embed = discord.Embed(
                 title="🔓 **Timeout Removed**",
                 description=f"**Server:** {interaction.guild.name}\n**Removed by:** {interaction.user}\n**Status:** You can now participate normally in the server",
-                color=0x43b581
+                color=BrandColors.SUCCESS
             )
             dm_embed.set_footer(text="ᴠᴀᴀʀᴀ Moderation", icon_url=bot.user.display_avatar.url)
             await user.send(embed=dm_embed)
@@ -326,7 +328,7 @@ async def timeout_stats(interaction: discord.Interaction, user: discord.Member =
 
         embed = discord.Embed(
             title=f"📊 **Timeout Stats for {user.display_name}**",
-            color=0x3498db
+            color=BrandColors.INFO
         )
         embed.set_thumbnail(url=user.display_avatar.url)
 
@@ -350,7 +352,7 @@ async def timeout_stats(interaction: discord.Interaction, user: discord.Member =
         embed = discord.Embed(
             title=f"📊 **Timeout Stats for {user.display_name}**",
             description="✅ **Clean Record!**\nThis user has no timeout offenses.",
-            color=0x43b581
+            color=BrandColors.SUCCESS
         )
         embed.set_thumbnail(url=user.display_avatar.url)
         embed.set_footer(text="🤖 ᴠᴀᴀʀᴀ Auto-Moderation Stats", icon_url=bot.user.display_avatar.url)

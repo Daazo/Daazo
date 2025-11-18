@@ -2,7 +2,9 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
-from main import bot, has_permission, get_server_data, update_server_data, log_action
+from main import bot
+from brand_config import BOT_FOOTER, BrandColors
+from main import has_permission, get_server_data, update_server_data, log_action
 
 @bot.tree.command(name="autorole", description="🎭 Configure auto role for new members")
 @app_commands.describe(
@@ -39,9 +41,9 @@ async def autorole_setup(
         embed = discord.Embed(
             title="✅ Auto Role Set",
             description=f"**Auto Role:** {role.mention}\n**Action:** New members will automatically receive this role\n**Set by:** {interaction.user.mention}",
-            color=0x43b581
+            color=BrandColors.SUCCESS
         )
-        embed.set_footer(text="ᴠᴀᴀᴢʜᴀ")
+        embed.set_footer(text=BOT_FOOTER)
         await interaction.response.send_message(embed=embed)
         
     elif action == "remove":
@@ -55,9 +57,9 @@ async def autorole_setup(
         embed = discord.Embed(
             title="✅ Auto Role Removed",
             description=f"**Action:** Auto role has been disabled\n**Removed by:** {interaction.user.mention}",
-            color=0xf39c12
+            color=BrandColors.WARNING
         )
-        embed.set_footer(text="ᴠᴀᴀᴢʜᴀ")
+        embed.set_footer(text=BOT_FOOTER)
         await interaction.response.send_message(embed=embed)
     
     # Log to global system directly

@@ -2,7 +2,9 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
-from main import bot, has_permission, get_server_data, update_server_data, log_action
+from main import bot
+from brand_config import BOT_FOOTER, BrandColors
+from main import has_permission, get_server_data, update_server_data, log_action
 
 @bot.tree.command(name="reactionrole", description="🎭 Setup reaction roles with multiple emoji/role pairs")
 @app_commands.describe(
@@ -84,7 +86,7 @@ async def reaction_role_setup(
                 embed = discord.Embed(
                     title=f"🎭 {self.embed_title}",
                     description=self.embed_description,
-                    color=0x9b59b6
+                    color=BrandColors.PRIMARY
                 )
 
                 # Add field showing available roles
@@ -135,7 +137,7 @@ async def reaction_role_setup(
                 success_embed = discord.Embed(
                     title="✅ Reaction Role Setup Complete",
                     description=f"**Message:** {self.channel.mention}\n**Emoji/Role Pairs:** {len(pairs)}\n**Auto-Remove Role:** {self.auto_remove_role.mention if self.auto_remove_role else 'None'}",
-                    color=0x43b581
+                    color=BrandColors.SUCCESS
                 )
 
                 success_embed.add_field(
@@ -144,7 +146,7 @@ async def reaction_role_setup(
                     inline=False
                 )
 
-                success_embed.set_footer(text="ᴠᴀᴀᴢʜᴀ")
+                success_embed.set_footer(text=BOT_FOOTER)
                 await modal_interaction.followup.send(embed=success_embed)
 
                 await log_action(modal_interaction.guild.id, "reaction_role", f"🎭 [REACTION ROLE] Multi-setup by {modal_interaction.user} - {len(pairs)} pairs in {self.channel.name}")
@@ -182,7 +184,7 @@ async def quick_reaction_role_setup(
         embed = discord.Embed(
             title="🎭 Reaction Roles",
             description=message,
-            color=0x9b59b6
+            color=BrandColors.PRIMARY
         )
 
         if auto_remove_role:
@@ -192,7 +194,7 @@ async def quick_reaction_role_setup(
                 inline=False
             )
 
-        embed.set_footer(text="ᴠᴀᴀᴢʜᴀ")
+        embed.set_footer(text=BOT_FOOTER)
 
         sent_message = await channel.send(embed=embed)
 
@@ -216,9 +218,9 @@ async def quick_reaction_role_setup(
         response_embed = discord.Embed(
             title="✅ Quick Reaction Role Setup Complete",
             description=f"**Message:** {channel.mention}\n**Emoji:** {emoji}\n**Role:** {role.mention}\n**Auto-Remove Role:** {auto_remove_role.mention if auto_remove_role else 'None'}",
-            color=0x43b581
+            color=BrandColors.SUCCESS
         )
-        response_embed.set_footer(text="ᴠᴀᴀᴢʜᴀ")
+        response_embed.set_footer(text=BOT_FOOTER)
         await interaction.response.send_message(embed=response_embed)
 
         await log_action(interaction.guild.id, "reaction_role", f"🎭 [QUICK REACTION ROLE] Setup by {interaction.user} - {emoji} → {role.name}")
@@ -349,16 +351,16 @@ async def list_reaction_roles(interaction: discord.Interaction):
         embed = discord.Embed(
             title="📋 No Reaction Roles Found",
             description="No reaction role setups are currently active in this server.\n\nUse `/reactionrole` or `/quickreactionrole` to create one!",
-            color=0xf39c12
+            color=BrandColors.WARNING
         )
-        embed.set_footer(text="ᴠᴀᴀᴢʜᴀ")
+        embed.set_footer(text=BOT_FOOTER)
         await interaction.response.send_message(embed=embed)
         return
 
     embed = discord.Embed(
         title="📋 **Active Reaction Role Setups**",
         description=f"*Found {len(reaction_roles)} reaction role setup(s)*\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-        color=0x9b59b6
+        color=BrandColors.PRIMARY
     )
 
     count = 0

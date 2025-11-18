@@ -16,18 +16,19 @@ from PIL import Image, ImageDraw, ImageFont
 import io
 import requests
 
-# Bot configuration
-BOT_NAME = "ᴠᴀᴀᴢʜᴀ"
-BOT_VERSION = "v3.2.1"  # Update this version with each major update
-BOT_TAGLINE = "Your friendly server assistant from God's Own Country"
-BOT_OWNER_NAME = "Daazo|Rio"
-BOT_OWNER_DESCRIPTION = "Creator and developer of ᴠᴀᴀᴢʜᴀ bot. Passionate developer from Kerala, India 🇮🇳"
+# Bot configuration - Import from brand config
+from brand_config import BOT_NAME, BOT_VERSION, BOT_TAGLINE, BOT_DESCRIPTION, BOT_FOOTER, BrandColors
+
+# Owner configuration
+BOT_OWNER_ID = os.getenv('BOT_OWNER_ID')  # Get owner ID from environment
+BOT_OWNER_NAME = "R!O</>"
+BOT_OWNER_DESCRIPTION = "Creator and developer of RXT ENGINE bot. Powering automation and security for Discord communities."
 
 # MongoDB setup
 MONGO_URI = os.getenv('MONGO_URI')
 if MONGO_URI:
     mongo_client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_URI)
-    db = mongo_client.vaazha_bot
+    db = mongo_client.rxt_engine_bot
 else:
     mongo_client = None
     db = None
@@ -111,27 +112,27 @@ async def log_action(guild_id, log_type, message):
             if channel:
                 # Determine embed color based on log type
                 colors = {
-                    "general": 0x3498db,
-                    "moderation": 0xe74c3c,
-                    "setup": 0xf39c12,
-                    "communication": 0x43b581,
-                    "karma": 0x9b59b6,
-                    "economy": 0xf1c40f,
-                    "tickets": 0x3498db,
-                    "reaction_role": 0xe67e22,
-                    "welcome": 0x43b581,
-                    "voice": 0x9b59b6,
-                    "timed_roles": 0xf39c12,
-                    "timeout": 0xe74c3c,
-                    "security": 0xff0000  # Red color for security alerts
+                    "general": BrandColors.INFO,
+                    "moderation": BrandColors.DANGER,
+                    "setup": BrandColors.WARNING,
+                    "communication": BrandColors.SUCCESS,
+                    "karma": BrandColors.PRIMARY,
+                    "economy": BrandColors.WARNING,
+                    "tickets": BrandColors.INFO,
+                    "reaction_role": BrandColors.ACCENT,
+                    "welcome": BrandColors.SUCCESS,
+                    "voice": BrandColors.PRIMARY,
+                    "timed_roles": BrandColors.WARNING,
+                    "timeout": BrandColors.DANGER,
+                    "security": BrandColors.DANGER
                 }
 
                 embed = discord.Embed(
                     description=message,
-                    color=colors.get(log_type, 0x3498db),
+                    color=colors.get(log_type, BrandColors.INFO),
                     timestamp=datetime.now()
                 )
-                embed.set_footer(text="🌴 ᴠᴀᴀᴢʜᴀ Logs", icon_url=bot.user.display_avatar.url)
+                embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
                 await channel.send(embed=embed)
                 return
 
@@ -144,10 +145,10 @@ async def log_action(guild_id, log_type, message):
         if channel:
             embed = discord.Embed(
                 description=message,
-                color=0x3498db,
+                color=BrandColors.INFO,
                 timestamp=datetime.now()
             )
-            embed.set_footer(text="ᴠᴀᴀᴢʜᴀ Logs", icon_url=bot.user.display_avatar.url)
+            embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
             await channel.send(embed=embed)
 
     # Send to combined logs if set
@@ -156,10 +157,10 @@ async def log_action(guild_id, log_type, message):
         if channel:
             embed = discord.Embed(
                 description=message,
-                color=0x3498db,
+                color=BrandColors.INFO,
                 timestamp=datetime.now()
             )
-            embed.set_footer(text="ᴠᴀᴀᴢʜᴀ Logs", icon_url=bot.user.display_avatar.url)
+            embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
             await channel.send(embed=embed)
 
 async def has_permission(interaction, permission_level):
@@ -197,11 +198,11 @@ async def has_permission(interaction, permission_level):
 # Bot Events
 @bot.event
 async def on_ready():
-    print(f'{bot.user} has landed in Kerala! 🌴')
+    print(f'⚡ {bot.user} | RXT ENGINE Online')
     await bot.change_presence(
         activity=discord.Activity(
             type=discord.ActivityType.watching,
-            name=f"{len(bot.guilds)} servers"
+            name=f"{len(bot.guilds)} servers | Powered by R!O</>"
         )
     )
 
@@ -318,10 +319,10 @@ async def on_message(message):
             embed = discord.Embed(
                 title="📞 **Contact Information & Support**",
                 description=f"*Hello! Here's how to get help or get in touch:*\n\n**👨‍💻 Developer:** {owner_mention}\n**📧 Email:** `{email_text}`\n**🏠 Support Server:** {support_text}\n\n*Need quick help? Use `/help` in any server!*",
-                color=0x3498db
+                color=BrandColors.PRIMARY
             )
             embed.set_thumbnail(url=bot.user.display_avatar.url)
-            embed.set_footer(text="ᴠᴀᴀᴢʜᴀ", icon_url=bot.user.display_avatar.url)
+            embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
 
             view = discord.ui.View()
             if support_server:
@@ -361,11 +362,11 @@ async def on_message(message):
                         "daazo" in message.content.lower()):
             owner_mention = f"<@{owner_id}>" if owner_id else "Contact via server"
             embed = discord.Embed(
-                title="📢 DEVELOPER MENTION",
-                description=f"✨DAAZO ne vilicho: {owner_mention} aanu Vaazha Bot inte Developer🚀.\n🛠 For support, `/help` use cheyyu allenkil 💬 ee bot-ne DM cheyyu.",
-                color=0x3498db
+                title="📢 **Developer Mention**",
+                description=f"**Developer:** {owner_mention}\n\n**About:** {BOT_OWNER_DESCRIPTION}\n\n**Need Help?** Use `/help` or contact the support server.",
+                color=BrandColors.ACCENT
             )
-            embed.set_footer(text="ᴠᴀᴀᴢʜᴀ-ʙᴏᴛ", icon_url=bot.user.display_avatar.url)
+            embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
             embed.set_thumbnail(url=bot.user.display_avatar.url)
             sent_message = await message.channel.send(embed=embed)
             # Auto delete after 1 minute
@@ -387,11 +388,11 @@ async def on_message(message):
                     "daazo" in message.content.lower()):
         owner_mention = f"<@{owner_id}>" if owner_id else "Contact via server"
         embed = discord.Embed(
-            title="📢 DEVELOPER MENTION",
-                description=f"✨DAAZO ne vilicho: {owner_mention} aanu Vaazha Bot inte Developer🚀.\n🛠 For support, `/help` use cheyyu allenkil 💬 ee bot-ne DM cheyyu.",
-            color=0x3498db
+            title="📢 **Developer Mention**",
+            description=f"**Developer:** {owner_mention}\n\n**About:** {BOT_OWNER_DESCRIPTION}\n\n**Need Help?** Use `/help` or contact the support server.",
+            color=BrandColors.ACCENT
         )
-        embed.set_footer(text="ᴠᴀᴀᴢʜᴀ-ʙᴏᴛ", icon_url=bot.user.display_avatar.url)
+        embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
         embed.set_thumbnail(url=bot.user.display_avatar.url)
         sent_message = await message.channel.send(embed=embed)
         # Auto delete after 1 minute
@@ -410,12 +411,12 @@ async def on_message(message):
         owner_mention = f"<@{owner_id}>" if owner_id else "Contact via server"
 
         embed = discord.Embed(
-            title="👋🏼 Hello, I'm Vaazha Bot",
-                description=f"🍁Vaazha Bot anne – your server's assistant.\n🌴 Enthenkilum help venel, type /help.\nNeed assistance? Contact: {owner_mention}",
-            color=0x43b581
+            title=f"👋 **Hello, I'm {BOT_NAME}**",
+            description=f"**{BOT_TAGLINE}**\n\n**Need help?** Type `/help`\n**Developer:** {owner_mention}\n\n⚡ Fast. Powerful. Engineered for your server.",
+            color=BrandColors.PRIMARY
         )
         embed.set_thumbnail(url=bot.user.display_avatar.url)
-        embed.set_footer(text="ᴠᴀᴀᴢʜᴀ-ʙᴏᴛ", icon_url=bot.user.display_avatar.url)
+        embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
 
         view = discord.ui.View()
         help_button = discord.ui.Button(label="📋 Commands", style=discord.ButtonStyle.primary, emoji="📋")
@@ -470,17 +471,17 @@ async def on_app_command_error(interaction: discord.Interaction, error: app_comm
     """Handle slash command errors and provide help"""
     if isinstance(error, app_commands.MissingPermissions):
         embed = discord.Embed(
-            title="❌ **Missing Permissions**",
-            description="You don't have the required permissions to use this command!",
-            color=0xe74c3c
+            title="❌ **Access Denied**",
+            description="**Missing Permissions**\nYou don't have the required permissions to use this command.",
+            color=BrandColors.DANGER
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
     elif isinstance(error, app_commands.CommandOnCooldown):
         embed = discord.Embed(
-            title="⏳ **Command on Cooldown**",
-            description=f"Please wait {error.retry_after:.2f} seconds before using this command again!",
-            color=0xf39c12
+            title="⏳ **Cooldown Active**",
+            description=f"**Please wait {error.retry_after:.1f}s** before using this command again.\n\n⚡ RXT ENGINE optimizes command usage.",
+            color=BrandColors.WARNING
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -761,11 +762,11 @@ async def on_member_update(before, after):
 async def help_command_callback(interaction):
     """Callback for help button"""
     embed = discord.Embed(
-        title=f"🌴 **VAAZHA-BOT {BOT_VERSION} Command Center** 🌴",
-        description=f"**Machanne! 🤙🏼**\n\nNeed some help? I'm Vaazha-Bot, ready to assist!\n\nSelect a category from the buttons below to explore my commands. For details on any specific command, just type `/` followed by the command name (e.g., `/userinfo`).\n\n**🚦 Aarkokke Enthokke Cheyyam? (Permission Levels)**\n\n🟢 **Everyone** - Can use all general, karma, and ticket commands\n🟡 **Junior Moderator (Cheriya Muthalali)** - Limited moderation access (use /setup and select junior moderator and select the role you want has junior moderator)\n🔴 **Main Moderator (Valiya Muthalali)** - Full access to moderation and setup (use /setup then main moderator and select the role you want has main moderator)\n👑 **Server Owner** - God-level. Ellam cheyyam! (Can do everything!)",
+        title=f"⚡ **{BOT_NAME} Command Center** ⚡",
+        description=f"**Welcome!**\n\nNeed some help? I'm RXT ENGINE, ready to assist!\n\nSelect a category from the buttons below to explore my commands. For details on any specific command, just type `/` followed by the command name (e.g., `/userinfo`).\n\n**🚦 Aarkokke Enthokke Cheyyam? (Permission Levels)**\n\n🟢 **Everyone** - Can use all general, karma, and ticket commands\n🟡 **Junior Moderator (Cheriya Muthalali)** - Limited moderation access (use /setup and select junior moderator and select the role you want has junior moderator)\n🔴 **Main Moderator (Valiya Muthalali)** - Full access to moderation and setup (use /setup then main moderator and select the role you want has main moderator)\n👑 **Server Owner** - God-level. Complete control (Can do everything!)",
         color=0x43b581
     )
-    embed.set_footer(text=f"VAAZHA-BOT {BOT_VERSION} • Your friendly Kerala assistant 🌴 Made with ❤️ by Daazo", icon_url=bot.user.display_avatar.url)
+    embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
     embed.set_thumbnail(url=bot.user.display_avatar.url)
 
     view = HelpView()
@@ -983,7 +984,7 @@ class HelpView(discord.ui.View):
         )
         embed.add_field(
             name="🎨 **Profile & Visual Cards**",
-            value="**🟢 `/profile [user]`** - Generate beautiful profile card with avatar, karma, coins\n**🟡 `/servercard`** - Create server overview card with stats and member info\n**🟢 `/botprofile`** - View bot information card with system status\n**Features:** Circular avatars, progress bars, karma levels, wealth display, server stats\n**Design:** Kerala-themed with coconut trees and professional layouts",
+            value="**🟢 `/profile [user]`** - Generate beautiful profile card with avatar, karma, coins\n**🟡 `/servercard`** - Create server overview card with stats and member info\n**🟢 `/botprofile`** - View bot information card with system status\n**Features:** Circular avatars, progress bars, karma levels, wealth display, server stats\n**Design:** Modern futuristic design with professional UI",
             inline=False
         )
         embed.add_field(
@@ -1027,18 +1028,18 @@ class HelpView(discord.ui.View):
     @discord.ui.button(label="Economy System", style=discord.ButtonStyle.success, emoji="🪙", row=1)
     async def economy_help(self, interaction: discord.Interaction, button: discord.ui.Button):
         embed = discord.Embed(
-            title="🪙 **Vaazha Coins Economy System** 🍌",
-            description="*Earn, spend, and trade Vaazha Coins in our Kerala-themed economy! Fully integrated with karma system.*\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+            title="⚡ **Coming Soon: Enhanced Features** ⚡",
+            description="*Earn, spend, and trade RXT Credits in our futuristic economy! Fully integrated with karma system.*\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
             color=0xf1c40f
         )
         embed.add_field(
             name="💰 **Basic Economy Commands**",
-            value="**🟢 `/balance [user]`** - Check coin wallet and bank balance\n**🟢 `/daily`** - Claim daily reward (50+ coins, streak bonus)\n**🟢 `/weekly`** - Claim weekly jackpot (300+ coins)\n**🟢 `/work`** - Work Kerala-themed jobs for coins (1h cooldown)",
+            value="**🟢 `/balance [user]`** - Check coin wallet and bank balance\n**🟢 `/daily`** - Claim daily reward (50+ coins, streak bonus)\n**🟢 `/weekly`** - Claim weekly jackpot (300+ coins)\n**🟢 `/work`** - Work futuristic jobs for coins (1h cooldown)",
             inline=False
         )
         embed.add_field(
             name="🎮 **Mini-Games & Fun**",
-            value="**🟢 `/slots <bet>`** - Play banana-themed slot machine (10-500 coins)\n**🟢 `/trivia`** - Answer Kerala trivia questions for rewards\n**🟢 `/richest`** - View top coin holders leaderboard",
+            value="**🟢 `/slots <bet>`** - Play slot machine for credits (10-500 coins)\n**🟢 `/trivia`** - Answer trivia questions for rewards\n**🟢 `/richest`** - View top credit holders leaderboard",
             inline=False
         )
         embed.add_field(
@@ -1057,11 +1058,11 @@ class HelpView(discord.ui.View):
             inline=False
         )
         embed.add_field(
-            name="🍌 **Special Features**",
-            value="**Daily Streaks:** Consecutive daily claims = bonus coins\n**Kerala Theme:** Banana harvesting, coconut selling, backwater tours\n**Smart Economics:** Interest, taxes, anti-inflation measures\n**Random Events:** Bonus rewards, special messages, monkey mischief!",
+            name="⚡ **Special Features**",
+            value="**Daily Streaks:** Consecutive daily claims = bonus coins\n**Futuristic Theme:** Advanced earning mechanics and rewards\n**Smart Economics:** Interest, taxes, anti-inflation measures\n**Random Events:** Bonus rewards and special messages!",
             inline=False
         )
-        embed.set_footer(text="🟢 = Everyone • 🔴 = Main Moderator • 🌴 Welcome to God's Own Economy!")
+        embed.set_footer(text="🟢 = Everyone • 🔴 = Main Moderator • ⚡ Welcome to RXT ENGINE!")
         await interaction.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(label="Security & Safety", style=discord.ButtonStyle.danger, emoji="🛡️", row=2)
@@ -1151,7 +1152,7 @@ class HelpView(discord.ui.View):
         owner_mention = f"<@{bot_owner_id}>" if bot_owner_id else "Contact via server"
 
         embed = discord.Embed(
-            title="🤖 **About VAAZHA-BOT**",
+            title="🤖 **About RXT ENGINE**",
             description="*Learn more about me, my creator, and my current status.*\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
             color=0x3498db
         )
@@ -1167,15 +1168,15 @@ class HelpView(discord.ui.View):
         )
         embed.add_field(
             name="✨ **What Makes Me Special**",
-            value="🇮🇳 **Made in Kerala, India (God's Own Country)**\n🌴 **Malayalam phrases and cultural touch**\n🏆 **Professional moderation & XP system**\n🎫 **Advanced ticket system with interactive forms**\n🛡️ **Smart auto-moderation that learns**\n📊 **Persistent database - never lose data**\n🎭 **Reaction roles and advanced features**",
+            value="⚡ **Futuristic cyberpunk design and interface**\n🏆 **Professional moderation & XP system**\n🎫 **Advanced ticket system with interactive forms**\n🛡️ **Smart auto-moderation that learns**\n📊 **Persistent database - never lose data**\n🎭 **Reaction roles and advanced features**",
             inline=False
         )
         embed.add_field(
             name="🔗 **Important Links**",
-            value=f"**🤖 Invite Me:** [Add VAAZHA-BOT to Your Server](https://discord.com/api/oauth2/authorize?client_id={bot.user.id}&permissions=8&scope=bot%20applications.commands)\n**💬 Support:** Mention {owner_mention} in any server I'm in\n**❤️ Made with love from Kerala 🌴**",
+            value=f"**🤖 Invite Me:** [Add RXT ENGINE to Your Server](https://discord.com/api/oauth2/authorize?client_id={bot.user.id}&permissions=8&scope=bot%20applications.commands)\n**💬 Support:** Mention {owner_mention} in any server I'm in\n**⚡ Powered by R!O</>**",
             inline=False
         )
-        embed.set_footer(text="🌴 VAAZHA-BOT - Your friendly Kerala assistant, ready to help! Chill aanu! 😎")
+        embed.set_footer(text=BOT_FOOTER)
         embed.set_thumbnail(url=bot.user.display_avatar.url)
         await interaction.response.edit_message(embed=embed, view=self)
 
@@ -1187,7 +1188,7 @@ class HelpView(discord.ui.View):
     async def recent_updates_help(self, interaction: discord.Interaction, button: discord.ui.Button):
         embed = discord.Embed(
             title="🌴 **Latest Features & Updates** ✨",
-            description="*Hey everyone! Here are the major features now available in VAAZHA-BOT:*\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+            description="*Hey everyone! Here are the major features now available in RXT ENGINE:*\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
             color=0x43b581
         )
         embed.add_field(
@@ -1196,21 +1197,21 @@ class HelpView(discord.ui.View):
             inline=False
         )
         embed.add_field(
-            name="🪙 **Economy System** (Vaazha Coins)",
-            value="**🌅 `/daily` & `/weekly`** - Claim coin rewards with streak bonuses\n**💼 `/work`** - Kerala-themed jobs for earning coins\n**🎰 `/slots` & `/trivia`** - Fun mini-games to test your luck\n**🏦 Banking system** with `/deposit`, `/withdraw`, `/trade`\n**⭐ `/buykarma`** - Purchase karma points with coins",
+            name="🪙 **Economy System** (RXT Credits)",
+            value="**🌅 `/daily` & `/weekly`** - Claim coin rewards with streak bonuses\n**💼 `/work`** - futuristic jobs for earning coins\n**🎰 `/slots` & `/trivia`** - Fun mini-games to test your luck\n**🏦 Banking system** with `/deposit`, `/withdraw`, `/trade`\n**⭐ `/buykarma`** - Purchase karma points with coins",
             inline=False
         )
         embed.add_field(
             name="🎨 **Profile & Server Cards** (Visual Stats)",
-            value="**🟢 `/profile [user]`** - Beautiful profile cards with avatar, karma, coins\n**🏰 `/servercard`** - Generate server overview cards with statistics\n**🤖 Contact cards** with bot info and owner status\n**Circular avatars** with progress bars and Kerala theme",
+            value="**🟢 `/profile [user]`** - Beautiful profile cards with avatar, karma, coins\n**🏰 `/servercard`** - Generate server overview cards with statistics\n**🤖 Contact cards** with bot info and owner status\n**Circular avatars** with progress bars and modern theme",
             inline=False
         )
         embed.add_field(
             name="🔧 **How to Get Started**",
-            value="**Step 1:** Use `/givekarma` to appreciate helpful members\n**Step 2:** Try `/daily` to start earning Vaazha Coins\n**Step 3:** Generate your `/profile` to see your beautiful stats card\n**Step 4:** Use `/help` to explore all available commands!",
+            value="**Step 1:** Use `/givekarma` to appreciate helpful members\n**Step 2:** Try `/daily` to start earning RXT Credits\n**Step 3:** Generate your `/profile` to see your beautiful stats card\n**Step 4:** Use `/help` to explore all available commands!",
             inline=False
         )
-        embed.set_footer(text="🌴 Made with ❤️ by Daazo from God's Own Country • Ready to serve!", icon_url=bot.user.display_avatar.url)
+        embed.set_footer(text="🌴 Made with ❤️ by Daazo from Advanced Community Management • Ready to serve!", icon_url=bot.user.display_avatar.url)
         embed.set_thumbnail(url=bot.user.display_avatar.url)
         await interaction.response.edit_message(embed=embed, view=self)
 
@@ -1465,7 +1466,7 @@ async def contact_info(interaction: discord.Interaction):
             file = discord.File(img_bytes, filename=f"bot_contact_{bot.user.id}.png")
 
             embed = discord.Embed(
-                title="🤖 **VAAZHA-BOT Contact & Information**",
+                title="🤖 **RXT ENGINE Contact & Information**",
                 description=f"*{BOT_TAGLINE}*\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
                 color=0x43b581
             )
@@ -1483,7 +1484,7 @@ async def contact_info(interaction: discord.Interaction):
                 inline=False
             )
 
-            embed.set_footer(text="🌴 Made with ❤️ from God's Own Country", icon_url=bot.user.display_avatar.url)
+            embed.set_footer(text="🌴 Made with ❤️ from Advanced Community Management", icon_url=bot.user.display_avatar.url)
 
             view = discord.ui.View()
             if support_server:
@@ -1507,7 +1508,7 @@ async def contact_info(interaction: discord.Interaction):
         )
 
         embed.add_field(
-            name="🤖 **VAAZHA-BOT Information**",
+            name="🤖 **RXT ENGINE Information**",
             value=f"**Name:** {BOT_NAME}\n**Version:** {BOT_VERSION}\n**Tagline:** {BOT_TAGLINE}\n**Servers:** {len(bot.guilds)}\n**Uptime:** {uptime_str}\n**Status:** 🟢 Online & Ready",
             inline=False
         )
@@ -1537,7 +1538,7 @@ async def contact_info(interaction: discord.Interaction):
         )
 
         embed.set_thumbnail(url=bot.user.display_avatar.url)
-        embed.set_footer(text="🌴 Made with ❤️ from God's Own Country", icon_url=bot.user.display_avatar.url)
+        embed.set_footer(text="🌴 Made with ❤️ from Advanced Community Management", icon_url=bot.user.display_avatar.url)
 
         view = discord.ui.View()
         if support_server:
@@ -1573,8 +1574,6 @@ from reaction_roles import *
 from ticket_system import *
 from timeout_system import *
 from autorole import *
-from economy_system import *  # Vaazha Coins economy
-from economy_setup import *  # Economy category setup
 from security_system import *  # Security features
 
 # Import timed roles system - ensure commands are loaded
@@ -1617,7 +1616,7 @@ if __name__ == "__main__":
         sys.exit(1)
     else:
         try:
-            print("🌴 VAAZHA Bot is starting...")
+            print(f"⚡ {BOT_NAME} is starting...")
             bot.run(token)
         except discord.LoginFailure:
             print("❌ Invalid bot token! Please check your DISCORD_BOT_TOKEN.")

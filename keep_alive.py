@@ -10,17 +10,18 @@ def home():
     return '''
     <html>
         <head>
-            <title>VAAZHA Bot Status</title>
+            <title>RXT ENGINE Status</title>
             <style>
                 body { 
-                    font-family: Arial, sans-serif; 
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
                     text-align: center; 
-                    background: #2f3136; 
+                    background: linear-gradient(135deg, #8A4FFF 0%, #4F8CFF 100%); 
                     color: white; 
                     padding: 50px; 
                 }
                 .status { 
-                    background: #43b581; 
+                    background: rgba(0, 230, 138, 0.2); 
+                    border: 2px solid #00E68A;
                     padding: 20px; 
                     border-radius: 10px; 
                     display: inline-block; 
@@ -30,12 +31,12 @@ def home():
             </style>
         </head>
         <body>
-            <div class="emoji">🌴</div>
-            <h1>VAAZHA Bot is Online!</h1>
+            <div class="emoji">⚡</div>
+            <h1>RXT ENGINE is Online!</h1>
             <div class="status">
-                <h2>✅ Bot Status: Running</h2>
-                <p>Your Discord bot is currently active and serving servers.</p>
-                <p>Made with ❤️ by Daazo from God's Own Country</p>
+                <h2>✅ Status: Running</h2>
+                <p>Discord bot is currently active and serving servers.</p>
+                <p>⚡ Powered by R!O</></p>
             </div>
         </body>
     </html>
@@ -43,14 +44,14 @@ def home():
 
 @app.route('/ping')
 def ping():
-    return "Bot is alive! 🌴"
+    return "Bot is alive! ⚡"
 
 @app.route('/status')
 def status():
     return {
         "status": "online",
-        "bot": "VAAZHA Bot",
-        "message": "Bot is running successfully! 🌴"
+        "bot": "RXT ENGINE",
+        "message": "Bot is running successfully! ⚡"
     }
 
 def run():
@@ -62,4 +63,4 @@ def keep_alive():
     t = Thread(target=run)
     t.daemon = True
     t.start()
-    print("🌐 Keep-alive server started on port 5000")
+    print("⚡ Keep-alive server started on port 5000")
