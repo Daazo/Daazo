@@ -32,6 +32,17 @@ class BrandColors:
     # Utility Colors
     INFO = 0xA66BFF  # Same as Primary
     NEUTRAL = 0x1A1A1D  # Same as Panel
+    
+    # Quantum Purple Gradient (for karma levels and progressive systems)
+    GRADIENT_1 = 0x9370DB  # Medium Purple
+    GRADIENT_2 = 0x9F7FFF  # Light Purple
+    GRADIENT_3 = 0xA66BFF  # Quantum Purple (Primary)
+    GRADIENT_4 = 0xB380FF  # Bright Violet
+    GRADIENT_5 = 0xC78CFF  # Hyper Violet Glow
+    GRADIENT_6 = 0xD6D6FF  # Electric White Glow
+    GRADIENT_7 = 0xE0C9FF  # Neon Edge Lines
+    GRADIENT_8 = 0x8A4FFF  # Deep Quantum
+    GRADIENT_9 = 0x7B3FE4  # Royal Purple
 
 # RGB Colors for Image Generation (PIL) - Quantum Purple Theme
 class BrandColorsRGB:

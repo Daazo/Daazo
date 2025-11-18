@@ -10,37 +10,39 @@ from main import db, has_permission, log_action, get_server_data, update_server_
 # Karma cooldown tracking (user_id -> {target_user_id: last_time})
 karma_cooldowns = {}
 
-# Motivational quotes for level ups
+# Quantum system messages for level advancement
 KARMA_QUOTES = [
-    "Kindness is a language which the deaf can hear and the blind can see! 💫",
-    "Your positive energy is contagious! Keep spreading good vibes! ✨",
-    "Great things happen when good people work together! 🌟",
-    "You're making this community a better place, one act at a time! 🌈",
-    "Your helpfulness doesn't go unnoticed - you're amazing! 🚀",
-    "Community champions like you make all the difference! 🏆",
-    "Your karma reflects your beautiful soul! Keep shining! ⭐",
-    "Positive vibes attract positive lives - and you're proof! 🌻",
-    "You're not just earning karma, you're earning hearts! 💕",
-    "The world needs more people like you! Keep being awesome! 🌍"
+    "Quantum signature amplified — neural network recognizes your contribution ⚡",
+    "Holographic matrix updated — positive energy indexed to core database 💠",
+    "System protocol activated — collaborative patterns detected and logged ◆",
+    "Core enhancement detected — community optimization protocols engaged ⬡",
+    "Neural pathway strengthened — assistance subroutines successfully executed ▲",
+    "Quantum achievement registered — leadership algorithms acknowledged 🟣",
+    "Holographic imprint established — contribution permanently archived ✦",
+    "Matrix resonance detected — positive influence propagated across network ◇",
+    "System elevation confirmed — karma matrix synchronization complete ⚡",
+    "Neural core expansion — advanced contributor status recognized 💠"
 ]
 
-# Define karma levels and their corresponding milestones, titles, and colors
+# Define karma levels with quantum purple gradient theme - using BrandColors
+from brand_config import BrandColors
+
 KARMA_LEVELS = [
-    {"milestone": 0, "title": "🌱 Community Sprout", "color": 0x8bc34a},
-    {"milestone": 50, "title": "🌿 Sapling", "color": 0x6fbf7a},
-    {"milestone": 100, "title": "🌳 Growing Tree", "color": 0x5cb85c},
-    {"milestone": 200, "title": "🌟 Rising Star", "color": 0xffd700},
-    {"milestone": 350, "title": "⭐ Shining Star", "color": 0xffe066},
-    {"milestone": 500, "title": "💎 Community Gem", "color": 0x50c878},
-    {"milestone": 750, "title": "✨ Respected Member", "color": 0x4CAF50},
-    {"milestone": 1000, "title": "🎖️ Community Pillar", "color": 0x3e8e41},
-    {"milestone": 1500, "title": "🏆 Community Hero", "color": 0x2e7d32},
-    {"milestone": 2000, "title": "👑 Community Legend", "color": 0x1b5e20},
-    {"milestone": 2500, "title": "🔮 Elder Sage", "color": 0x795548},
-    {"milestone": 3000, "title": "🌌 Cosmic Contributor", "color": 0x673ab7},
-    {"milestone": 3500, "title": "🚀 Galactic Guardian", "color": 0x3f51b5},
-    {"milestone": 4000, "title": "🌠 Celestial Champion", "color": 0x2196f3},
-    {"milestone": 4500, "title": "✨ Transcendent Master", "color": 0xff4081} # Max level
+    {"milestone": 0, "title": "◇ Quantum Initiate", "color": BrandColors.GRADIENT_1},
+    {"milestone": 50, "title": "⬡ Data Node", "color": BrandColors.GRADIENT_2},
+    {"milestone": 100, "title": "◆ Circuit Runner", "color": BrandColors.GRADIENT_3},
+    {"milestone": 200, "title": "⚡ Voltage Keeper", "color": BrandColors.GRADIENT_4},
+    {"milestone": 350, "title": "💠 Core Fragment", "color": BrandColors.GRADIENT_5},
+    {"milestone": 500, "title": "🟣 Neon Sentinel", "color": BrandColors.GRADIENT_6},
+    {"milestone": 750, "title": "✦ Hologram Architect", "color": BrandColors.GRADIENT_7},
+    {"milestone": 1000, "title": "▲ System Pillar", "color": BrandColors.GRADIENT_5},
+    {"milestone": 1500, "title": "◆ Quantum Guardian", "color": BrandColors.GRADIENT_3},
+    {"milestone": 2000, "title": "⬢ Neural Legend", "color": BrandColors.GRADIENT_1},
+    {"milestone": 2500, "title": "💎 Matrix Sage", "color": BrandColors.GRADIENT_8},
+    {"milestone": 3000, "title": "🌌 Cosmic Operator", "color": BrandColors.GRADIENT_9},
+    {"milestone": 3500, "title": "⚡ Plasma Champion", "color": BrandColors.GRADIENT_2},
+    {"milestone": 4000, "title": "💠 Quantum Sovereign", "color": BrandColors.GRADIENT_5},
+    {"milestone": 4500, "title": "✨ Holographic Master", "color": BrandColors.GRADIENT_7}
 ]
 
 def get_karma_level_info(karma):
@@ -169,12 +171,12 @@ async def give_karma(interaction: discord.Interaction, user: discord.Member, amo
     role_text = "👑 Server Owner" if is_owner else "🔴 Main Moderator" if is_main_mod else "🟡 Junior Moderator" if is_junior_mod else "🟢 Member"
 
     embed = discord.Embed(
-        title="✨ Karma Given!",
-        description=f"**{interaction.user.mention}** ({role_text}) gave **+{karma_points} karma** to **{user.mention}**{reason_text}!",
+        title="⚡ Quantum Karma Transferred",
+        description=f"**{interaction.user.mention}** ({role_text}) transmitted **+{karma_points} karma** to **{user.mention}**{reason_text}\n\n*Neural network updated*",
         color=BrandColors.SUCCESS
     )
-    embed.add_field(name="New Karma Total", value=f"{new_karma} points", inline=True)
-    embed.set_footer(text="🌟 Keep spreading positivity!", icon_url=bot.user.display_avatar.url)
+    embed.add_field(name="◆ New Karma Index", value=f"{new_karma} points", inline=True)
+    embed.set_footer(text="💠 Quantum recognition protocol active", icon_url=bot.user.display_avatar.url)
 
     await interaction.response.send_message(embed=embed)
 
@@ -236,27 +238,27 @@ async def check_karma(interaction: discord.Interaction, user: discord.Member = N
         progress_bar = "█" * filled_segments + "░" * (progress_segments - filled_segments)
         progress_text = f"`{progress_bar}` {progress}/{max_progress}\n*Next level: {next_level['title']} at {next_milestone} karma*"
     else:
-        progress_text = "🎆 **MAXIMUM LEVEL ACHIEVED!** 🎆\n*You are a Transcendent Master!*"
+        progress_text = "⚡ **QUANTUM MAXIMUM ACHIEVED** ⚡\n*Holographic Master — peak neural resonance!*"
 
     # Use current level color or default
-    embed_color = current_level["color"] if current_level else 0x95a5a6
-    level_title = current_level["title"] if current_level else "🌱 New Member"
+    embed_color = current_level["color"] if current_level else BrandColors.NEUTRAL
+    level_title = current_level["title"] if current_level else "◇ Quantum Initiate"
 
     embed = discord.Embed(
-        title=f"✨ {target_user.display_name}'s Karma Profile",
-        description=f"**Current Level:** {level_title}",
+        title=f"💠 {target_user.display_name}'s Quantum Profile",
+        description=f"**Neural Rank:** {level_title}",
         color=embed_color
     )
     embed.set_thumbnail(url=target_user.display_avatar.url)
-    embed.add_field(name="🌟 Karma Points", value=f"**{karma}** points", inline=True)
-    embed.add_field(name="🏆 Server Rank", value=f"#{rank}", inline=True)
+    embed.add_field(name="⚡ Karma Index", value=f"**{karma}** points", inline=True)
+    embed.add_field(name="🏆 Server Position", value=f"#{rank}", inline=True)
 
     if next_level:
-        embed.add_field(name="📊 Progress to Next Level", value=progress_text, inline=False)
+        embed.add_field(name="◆ Quantum Advancement", value=progress_text, inline=False)
     else:
-        embed.add_field(name="🎆 Status", value="**TRANSCENDENT MASTER** - Maximum Level!", inline=False)
+        embed.add_field(name="⚡ Status", value="**HOLOGRAPHIC MASTER** — Maximum quantum level achieved!", inline=False)
 
-    embed.set_footer(text="🌟 Karma reflects your positive impact on our community!", icon_url=bot.user.display_avatar.url)
+    embed.set_footer(text="💠 Karma matrix reflects your quantum contribution index", icon_url=bot.user.display_avatar.url)
 
     await interaction.response.send_message(embed=embed)
 
@@ -308,27 +310,27 @@ async def my_karma(interaction: discord.Interaction):
         progress_bar = "█" * filled_segments + "░" * (progress_segments - filled_segments)
         progress_text = f"`{progress_bar}` {progress}/{max_progress}\n*Next level: {next_level['title']} at {next_milestone} karma*"
     else:
-        progress_text = "🎆 **MAXIMUM LEVEL ACHIEVED!** 🎆\n*You are a Transcendent Master!*"
+        progress_text = "⚡ **QUANTUM MAXIMUM ACHIEVED** ⚡\n*Holographic Master — peak neural resonance!*"
 
     # Use current level color or default
-    embed_color = current_level["color"] if current_level else 0x95a5a6
-    level_title = current_level["title"] if current_level else "🌱 New Member"
+    embed_color = current_level["color"] if current_level else BrandColors.NEUTRAL
+    level_title = current_level["title"] if current_level else "◇ Quantum Initiate"
 
     embed = discord.Embed(
-        title=f"✨ {target_user.display_name}'s Karma Profile",
-        description=f"**Current Level:** {level_title}",
+        title=f"💠 {target_user.display_name}'s Quantum Profile",
+        description=f"**Neural Rank:** {level_title}",
         color=embed_color
     )
     embed.set_thumbnail(url=target_user.display_avatar.url)
-    embed.add_field(name="🌟 Karma Points", value=f"**{karma}** points", inline=True)
-    embed.add_field(name="🏆 Server Rank", value=f"#{rank}", inline=True)
+    embed.add_field(name="⚡ Karma Index", value=f"**{karma}** points", inline=True)
+    embed.add_field(name="🏆 Server Position", value=f"#{rank}", inline=True)
 
     if next_level:
-        embed.add_field(name="📊 Progress to Next Level", value=progress_text, inline=False)
+        embed.add_field(name="◆ Quantum Advancement", value=progress_text, inline=False)
     else:
-        embed.add_field(name="🎆 Status", value="**TRANSCENDENT MASTER** - Maximum Level!", inline=False)
+        embed.add_field(name="⚡ Status", value="**HOLOGRAPHIC MASTER** — Maximum quantum level achieved!", inline=False)
 
-    embed.set_footer(text="🌟 Karma reflects your positive impact on our community!", icon_url=bot.user.display_avatar.url)
+    embed.set_footer(text="💠 Karma matrix reflects your quantum contribution index", icon_url=bot.user.display_avatar.url)
 
     await interaction.response.send_message(embed=embed)
 
@@ -494,9 +496,9 @@ async def send_karma_levelup(guild, user, karma):
             selected_gif = random.choice(celebration_gifs)
 
             embed = discord.Embed(
-                title="🎉 **KARMA MILESTONE CELEBRATION!** ✨🎊",
-                description=f"🌟 **{user.mention} just reached {karma} karma points!** 🚀\n\n💫 **Level:** {current_level['title']}!\n\n🎯 *{quote}*",
-                color=current_level["color"] if current_level else 0xf39c12
+                title="⚡ **QUANTUM MILESTONE ACHIEVED!** 💠",
+                description=f"**{user.mention} neural index elevated to {karma} karma points!**\n\n**◆ Neural Rank:** {current_level['title']}\n\n*{quote}*",
+                color=current_level["color"] if current_level else BrandColors.WARNING
             )
             embed.set_thumbnail(url=user.display_avatar.url)
             embed.add_field(

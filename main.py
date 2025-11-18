@@ -340,9 +340,9 @@ async def on_message(message):
             try:
                 from global_logging import log_to_global
                 log_embed = discord.Embed(
-                    title="🤖 Bot Mention in DM",
-                    description=f"**User:** {message.author} ({message.author.id})\n**Trigger:** Bot mention/contact\n**Response:** Contact info sent",
-                    color=0x3498db,
+                    title="◆ Quantum Core Contact Request",
+                    description=f"**User:** {message.author} ({message.author.id})\n**Protocol:** Direct mention trigger\n**Action:** Contact protocols transmitted",
+                    color=BrandColors.PRIMARY,
                     timestamp=datetime.now()
                 )
                 await log_to_global("dm-logs", log_embed)
@@ -498,53 +498,53 @@ async def send_command_help(interaction: discord.Interaction, command_name: str)
         "kick": {
             "title": "👢 **KICK Command Help**",
             "description": "**Usage:** `/kick @user [reason]`\n\n**What it does:** Removes a user from the server\n**Permission:** 🔴 Main Moderator only\n\n**Example:** `/kick @BadUser Breaking rules`",
-            "color": 0xe74c3c
+            "color": BrandColors.DANGER
         },
         "ban": {
             "title": "🔨 **BAN Command Help**",
             "description": "**Usage:** `/ban @user [reason]`\n\n**What it does:** Permanently bans a user from the server\n**Permission:** 🔴 Main Moderator only\n\n**Example:** `/ban @Spammer Repeated spam messages`",
-            "color": 0xe74c3c
+            "color": BrandColors.DANGER
         },
         "mute": {
             "title": "🔇 **MUTE Command Help**",
             "description": "**Usage:** `/mute @user`\n\n**What it does:** Mutes a user in voice channel\n**Permission:** 🔵 Junior Moderator+\n\n**Example:** `/mute @NoisyUser`",
-            "color": 0xf39c12
+            "color": BrandColors.WARNING
         },
         "unmute": {
             "title": "🔊 **UNMUTE Command Help**",
             "description": "**Usage:** `/unmute @user`\n\n**What it does:** Unmutes a user in voice channel\n**Permission:** 🔵 Junior Moderator+\n\n**Example:** `/unmute @User`",
-            "color": 0x43b581
+            "color": BrandColors.SUCCESS
         },
         "say": {
             "title": "💬 **SAY Command Help**",
             "description": "**Usage:** `/say message:\"text\" [channel:#channel]`\n\n**What it does:** Makes the bot say something\n**Permission:** 🔵 Junior Moderator+\n\n**Example:** `/say message:\"Hello everyone!\" channel:#general`",
-            "color": 0x9b59b6
+            "color": BrandColors.PRIMARY
         },
         "embed": {
             "title": "📋 **EMBED Command Help**",
             "description": "**Usage:** `/embed title:\"Title\" description:\"Text\" [color:blue]`\n\n**What it does:** Sends a rich embedded message\n**Permission:** 🔵 Junior Moderator+\n\n**Example:** `/embed title:\"Rules\" description:\"Be nice to everyone!\" color:green`",
-            "color": 0x3498db
+            "color": BrandColors.PRIMARY
         },
         "announce": {
             "title": "📢 **ANNOUNCE Command Help**",
             "description": "**Usage:** `/announce channel:#channel message:\"text\" [mention:@role]`\n\n**What it does:** Sends official server announcements\n**Permission:** 🔴 Main Moderator only\n\n**Example:** `/announce channel:#announcements message:\"Server update!\" mention:@everyone`",
-            "color": 0xf39c12
+            "color": BrandColors.WARNING
         },
         "poll": {
             "title": "📊 **POLL Command Help**",
             "description": "**Usage:** `/poll question:\"Question?\" option1:\"Yes\" option2:\"No\" [option3] [option4]`\n\n**What it does:** Creates interactive polls with reactions\n**Permission:** 🔵 Junior Moderator+\n\n**Example:** `/poll question:\"Pizza party?\" option1:\"Yes!\" option2:\"No\"`",
-            "color": 0x43b581
+            "color": BrandColors.SUCCESS
         },
         "reactionrole": {
             "title": "🎭 **REACTION ROLE Command Help**",
             "description": "**Usage:** `/reactionrole message:\"text\" emoji:😀 role:@role channel:#channel`\n\n**What it does:** Sets up reaction roles for users\n**Permission:** 🔴 Main Moderator only\n\n**Example:** `/reactionrole message:\"React for roles!\" emoji:😀 role:@Member channel:#roles`",
-            "color": 0x9b59b6
+            "color": BrandColors.PRIMARY
         },
 
         "ticketsetup": {
             "title": "🎫 **TICKET SETUP Command Help**",
             "description": "**Usage:** `/ticketsetup action:open category:#tickets channel:#support description:\"Need help?\"`\n\n**What it does:** Sets up support ticket system\n**Actions:** open, close\n**Permission:** 🔴 Main Moderator only\n\n**Example:** `/ticketsetup action:open category:#tickets channel:#support`",
-            "color": 0x3498db
+            "color": BrandColors.PRIMARY
         }
     }
 
@@ -566,9 +566,9 @@ async def send_command_help(interaction: discord.Interaction, command_name: str)
                 pass
     else:
         embed = discord.Embed(
-            title="❓ **Command Help**",
-            description=f"Use `/help` to see all available commands!\n\n**Tip:** Type `/help` and click the category buttons for detailed command information.",
-            color=0x3498db
+            title="💠 **Quantum Command Help**",
+            description=f"{VisualElements.CIRCUIT_LINE}\nUse `/help` to access the complete quantum command core.\n\n**Tip:** Navigate using category buttons for detailed protocols.",
+            color=BrandColors.PRIMARY
         )
         try:
             await interaction.response.send_message(embed=embed, ephemeral=True)
@@ -618,9 +618,9 @@ async def on_member_join(member):
             formatted_message = welcome_message.replace("{user}", member.mention).replace("{server}", member.guild.name)
 
             embed = discord.Embed(
-                title="👋 **Welcome to the Community!** 🎊",
-                description=f"**{formatted_message}**\n\n*We're excited to have you here!* ✨",
-                color=0x43b581
+                title="⚡ **Quantum Network — New Node Detected**",
+                description=f"{formatted_message}\n\n*Neural connection established* 💠",
+                color=BrandColors.SUCCESS
             )
             embed.set_thumbnail(url=member.display_avatar.url)
 
@@ -637,12 +637,12 @@ async def on_member_join(member):
     # Send DM to new member
     try:
         embed = discord.Embed(
-            title=f"👋 **Hii, I'm {BOT_NAME}** – your helpful assistant! 🤖",
-            description=f"**Welcome to {member.guild.name}** 🎊\n\n*We're thrilled to have you here!*\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🏠 **Get comfy, explore the channels, and feel free to say hi!** 👀\n🤖 **If you ever need help, just mention me or use a command!**\n\n**Let's make this server even more awesome together!** 💫\n\n*{BOT_TAGLINE}*",
-            color=0x3498db
+            title=f"💠 **{BOT_NAME} — Quantum Core Online**",
+            description=f"**Neural connection established with {member.guild.name}**\n\n{VisualElements.CIRCUIT_LINE}\n\n◆ **System initialized — explore quantum channels and protocols**\n◆ **Assistance protocol active — mention core or execute commands**\n◆ **Holographic network operational**\n\n{VisualElements.CIRCUIT_LINE}\n\n*{BOT_TAGLINE}*",
+            color=BrandColors.PRIMARY
         )
         embed.set_thumbnail(url=member.guild.icon.url if member.guild.icon else bot.user.display_avatar.url)
-        embed.set_footer(text="🌴 Welcome to the community!", icon_url=bot.user.display_avatar.url)
+        embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
 
         view = discord.ui.View()
         invite_button = discord.ui.Button(label="🤖 Invite Bot to Other Servers", style=discord.ButtonStyle.link, url=f"https://discord.com/api/oauth2/authorize?client_id={bot.user.id}&permissions=8&scope=bot%20applications.commands", emoji="🤖")
@@ -727,9 +727,9 @@ async def on_member_remove(member):
 
     try:
         embed = discord.Embed(
-            title=f"**Hey {member.display_name}, we noticed you left {member.guild.name}** 😔",
-            description=f"**Just wanted to say thank you for being a part of our community.** 💙\n\n*We hope you had a good time there, and we'll always have a spot saved if you return.*\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n**Take care and stay awesome!** ✨\n\n— **{BOT_NAME}** 🌴",
-            color=0xe74c3c
+            title=f"💠 **Neural Disconnection Detected: {member.display_name}**",
+            description=f"**Quantum core acknowledges departure from {member.guild.name}**\n\n{VisualElements.CIRCUIT_LINE}\n\n**◆ Connection archived to quantum memory banks**\n**◆ Neural pathway preserved for potential reconnection**\n**◆ System status: Nominal**\n\n{VisualElements.CIRCUIT_LINE}\n\n*— {BOT_NAME} Quantum Core*",
+            color=BrandColors.DANGER
         )
         embed.set_thumbnail(url=member.guild.icon.url if member.guild.icon else bot.user.display_avatar.url)
         embed.set_footer(text="🌴 Hope to see you again!", icon_url=bot.user.display_avatar.url)
@@ -904,15 +904,15 @@ class HelpView(discord.ui.View):
             value="**Usage:** `/setup ticket_support_role role:@support`\n**Description:** Set support role to be mentioned when tickets are created",
             inline=False
         )
-        embed.set_footer(text="🟢 = Everyone • 🟡 = Junior Moderator • 🔴 = Main Moderator • 👑 = Server Owner")
+        embed.set_footer(text="🟣 = Everyone • 🟡 = Junior Moderator • 🔴 = Main Moderator • 👑 = Server Owner")
         await interaction.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(label="Messages", style=discord.ButtonStyle.success, emoji="💬", row=0)
     async def communication_help(self, interaction: discord.Interaction, button: discord.ui.Button):
         embed = discord.Embed(
-            title="💬 **Communication & Messaging Commands**",
-            description="*Make announcements, create adipoli polls, or use me to send messages and set reminders.*\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-            color=0x43b581
+            title="💬 **Communication & Messaging**",
+            description=f"*Quantum messaging protocols for announcements, polls, and direct communication.*\n\n{VisualElements.CIRCUIT_LINE}",
+            color=BrandColors.SUCCESS
         )
         embed.add_field(
             name="🟡 `/say message [channel]`",
@@ -944,15 +944,15 @@ class HelpView(discord.ui.View):
             value="**Usage:** `/dm user:@member message:\"Your ticket was closed\"`\n**Description:** Send DM to user from server (staff use) - Professional server-branded DMs",
             inline=False
         )
-        embed.set_footer(text="🟢 = Everyone • 🟡 = Junior Moderator • 🔴 = Main Moderator • 👑 = Server Owner")
+        embed.set_footer(text="🟣 = Everyone • 🟡 = Junior Moderator • 🔴 = Main Moderator • 👑 = Server Owner")
         await interaction.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(label="Karma", style=discord.ButtonStyle.primary, emoji="⭐", row=1)
     async def karma_help(self, interaction: discord.Interaction, button: discord.ui.Button):
         embed = discord.Embed(
-            title="✨ **Karma System** (Replaced XP System)",
-            description="*Appreciate community members and earn karma points for positive contributions! This completely replaces the old XP/ranking system.*\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-            color=0xf39c12
+            title="⭐ **Karma System**",
+            description=f"*Community recognition protocol—appreciate members and earn quantum karma points for positive contributions.*\n\n{VisualElements.CIRCUIT_LINE}",
+            color=BrandColors.SECONDARY
         )
         embed.add_field(
             name="🟢 `/givekarma @user [reason]`",
@@ -989,15 +989,15 @@ class HelpView(discord.ui.View):
             value="**🔴 `/resetkarma scope:user user:@member`** - Reset specific user's karma\n**🔴 `/resetkarma scope:server`** - Reset all server karma data\n**Setup:** Use `/setup karma_channel #channel` for level-up announcements",
             inline=False
         )
-        embed.set_footer(text="🟢 = Everyone • 🔴 = Main Moderator • ⚠️ Old XP system completely removed!")
+        embed.set_footer(text="🟣 = Everyone • 🔴 = Main Moderator")
         await interaction.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(label="Tickets", style=discord.ButtonStyle.secondary, emoji="🎫", row=1)
     async def ticket_help(self, interaction: discord.Interaction, button: discord.ui.Button):
         embed = discord.Embed(
             title="🎫 **Tickets & Support System**",
-            description="*A complete ticket system for users to create tickets and get private support from the staff.*\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-            color=0x9b59b6
+            description=f"*Advanced support protocol for private staff assistance and issue resolution.*\n\n{VisualElements.CIRCUIT_LINE}",
+            color=BrandColors.PRIMARY
         )
         embed.add_field(
             name="🔴 `/ticketsetup action category channel description`",
@@ -1019,15 +1019,15 @@ class HelpView(discord.ui.View):
             value="**Step 1:** `/ticketsetup action:open category:#open-tickets channel:#support`\n**Step 2:** `/ticketsetup action:close category:#closed-tickets`\n**Step 3:** `/setup logs value:tickets channel:#ticket-logs`\n**Step 4:** `/setup ticket_support_role role:@support` (optional)\n**Done!** Users can now create tickets!",
             inline=False
         )
-        embed.set_footer(text="🟢 = Everyone • 🟡 = Junior Moderator • 🔴 = Main Moderator • 👑 = Server Owner")
+        embed.set_footer(text="🟣 = Everyone • 🟡 = Junior Moderator • 🔴 = Main Moderator • 👑 = Server Owner")
         await interaction.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(label="Security", style=discord.ButtonStyle.danger, emoji="🛡️", row=2)
     async def security_help(self, interaction: discord.Interaction, button: discord.ui.Button):
         embed = discord.Embed(
-            title="🛡️ **Security & Safety Features**",
-            description="*Comprehensive security system to protect your server from raids, spam, malicious links, and unauthorized actions.*\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-            color=0xe74c3c
+            title="🛡️ **Security & Safety Protocols**",
+            description=f"*Quantum-grade protection system defending against raids, spam, and unauthorized access.*\n\n{VisualElements.CIRCUIT_LINE}",
+            color=BrandColors.DANGER
         )
         embed.add_field(
             name="🔴 `/security feature enabled [threshold]`",
@@ -1064,15 +1064,15 @@ class HelpView(discord.ui.View):
             value="**Permission Monitoring:** Alerts when users get admin/dangerous permissions\n**Auto-Ban System:** Automatically bans suspicious/new accounts\n**Security Logs:** Detailed logs of all security events and actions\n**Real-time Alerts:** Instant notifications to staff channels",
             inline=False
         )
-        embed.set_footer(text="🟢 = Everyone • 🔴 = Main Moderator • 🛡️ = Advanced Server Protection")
+        embed.set_footer(text="🟣 = Everyone • 🔴 = Main Moderator • 🛡️ = Advanced Protection")
         await interaction.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(label="Advanced", style=discord.ButtonStyle.secondary, emoji="🎭", row=2)
     async def advanced_help(self, interaction: discord.Interaction, button: discord.ui.Button):
         embed = discord.Embed(
             title="🎭 **Advanced Features & Tools**",
-            description="*Powerful features like reaction roles and automated systems.*\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-            color=0xe67e22
+            description=f"*Extended capabilities—reaction roles, automation, and intelligent systems.*\n\n{VisualElements.CIRCUIT_LINE}",
+            color=BrandColors.PANEL
         )
         embed.add_field(
             name="🎭 **Multi-Reaction Role System**",
@@ -1100,7 +1100,7 @@ class HelpView(discord.ui.View):
             value="👋 **Welcome DMs** - Professional messages to new members\n💔 **Goodbye DMs** - Farewell messages when members leave\n🎉 **Level Up Cards** - Beautiful rank card generation\n📊 **Live Server Count** - Bot status shows current servers\n⚡ **Real-time Logs** - Instant logging with timestamps",
             inline=False
         )
-        embed.set_footer(text="🟢 = Everyone • 🟡 = Junior Moderator • 🔴 = Main Moderator • 👑 = Server Owner")
+        embed.set_footer(text="🟣 = Everyone • 🟡 = Junior Moderator • 🔴 = Main Moderator • 👑 = Server Owner")
         await interaction.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(label="About", style=discord.ButtonStyle.secondary, emoji="ℹ️", row=3)
@@ -1109,23 +1109,23 @@ class HelpView(discord.ui.View):
         owner_mention = f"<@{bot_owner_id}>" if bot_owner_id else "Contact via server"
 
         embed = discord.Embed(
-            title="🤖 **About RXT ENGINE**",
-            description="*Learn more about me, my creator, and my current status.*\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-            color=0x3498db
+            title="💠 **About RXT ENGINE**",
+            description=f"*Quantum AI Core Information—system specifications and developer credentials.*\n\n{VisualElements.CIRCUIT_LINE}",
+            color=BrandColors.PRIMARY
         )
         embed.add_field(
-            name="🌴 **Bot Information**",
-            value=f"**Name:** {BOT_NAME}\n**Version:** {BOT_VERSION}\n**Tagline:** {BOT_TAGLINE}\n**Currently Serving:** {len(bot.guilds)} servers\n**Built With:** Python (discord.py)\n**Database:** MongoDB for persistence",
+            name="◆ **Quantum Core Specifications**",
+            value=f"**AI Core:** {BOT_NAME}\n**Version:** {BOT_VERSION}\n**Status:** {VisualElements.STATUS_ONLINE}\n**Active Servers:** {len(bot.guilds)}\n**Architecture:** Python-based quantum engine\n**Neural Storage:** MongoDB distributed database",
             inline=False
         )
         embed.add_field(
-            name="👨‍💻 **Developer Information**",
-            value=f"**Developer:** {BOT_OWNER_NAME}\n**Owner Account:** {owner_mention}\n**About:** {BOT_OWNER_DESCRIPTION}\n**Contact:** Mention my owner in any server for support",
+            name="⚡ **System Architect**",
+            value=f"**Creator:** {BOT_OWNER_NAME}\n**Contact:** {owner_mention}\n**Role:** {BOT_OWNER_DESCRIPTION}\n**Support Protocol:** Mention owner in any server",
             inline=False
         )
         embed.add_field(
-            name="✨ **What Makes Me Special**",
-            value="⚡ **Futuristic cyberpunk design and interface**\n🏆 **Professional moderation & Karma system**\n🎫 **Advanced ticket system with interactive forms**\n🛡️ **Smart auto-moderation that learns**\n📊 **Persistent database - never lose data**\n🎭 **Reaction roles and advanced features**",
+            name="💠 **Quantum Capabilities**",
+            value="◆ **Holographic UI** — Advanced quantum purple interface\n◆ **AI Moderation** — Intelligent enforcement protocols\n◆ **Karma Matrix** — Community recognition system\n◆ **Support Grid** — Multi-channel ticket resolution\n◆ **Neural Storage** — Persistent data architecture\n◆ **Security Core** — Multi-layer protection systems",
             inline=False
         )
         embed.add_field(
@@ -1144,9 +1144,9 @@ class HelpView(discord.ui.View):
     @discord.ui.button(label="Updates", style=discord.ButtonStyle.success, emoji="🆕", row=3)
     async def recent_updates_help(self, interaction: discord.Interaction, button: discord.ui.Button):
         embed = discord.Embed(
-            title="🌴 **Latest Features & Updates** ✨",
-            description="*Hey everyone! Here are the major features now available in RXT ENGINE:*\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-            color=0x43b581
+            title="🆕 **Quantum Core Updates**",
+            description=f"*Latest system enhancements and feature deployments for RXT ENGINE.*\n\n{VisualElements.CIRCUIT_LINE}",
+            color=BrandColors.SUCCESS
         )
         embed.add_field(
             name="✨ **Karma System** (Community Recognition)",
@@ -1168,7 +1168,7 @@ class HelpView(discord.ui.View):
             value="**Step 1:** Use `/givekarma` to appreciate helpful members\n**Step 2:** Generate your `/profile` to see your beautiful stats card\n**Step 3:** Try `/ticketsetup` to create a support system\n**Step 4:** Use `/help` to explore all available commands!",
             inline=False
         )
-        embed.set_footer(text="🌴 Made with ❤️ by Daazo from Advanced Community Management • Ready to serve!", icon_url=bot.user.display_avatar.url)
+        embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
         embed.set_thumbnail(url=bot.user.display_avatar.url)
         await interaction.response.edit_message(embed=embed, view=self)
 
@@ -1186,24 +1186,24 @@ async def ping(interaction: discord.Interaction):
     latency = round(bot.latency * 1000)
 
     if latency < 100:
-        color = 0x43b581
-        status = "Excellent"
-        emoji = "🟢"
+        color = BrandColors.SUCCESS
+        status = "Optimal"
+        emoji = "⚡"
     elif latency < 200:
-        color = 0xf39c12
+        color = BrandColors.WARNING
         status = "Good"
-        emoji = "🟡"
+        emoji = "◆"
     else:
-        color = 0xe74c3c
-        status = "Poor"
-        emoji = "🔴"
+        color = BrandColors.DANGER
+        status = "Degraded"
+        emoji = "⚠"
 
     embed = discord.Embed(
-        title="🏓 **Pong!** ⚡",
-        description=f"**{emoji} Latency:** `{latency}ms`\n**Status:** {status}\n\n*Connection to Discord is stable!* ✨",
+        title=f"{emoji} **Quantum Network Diagnostic**",
+        description=f"{VisualElements.CIRCUIT_LINE}\n**⚡ Latency:** `{latency}ms`\n**◆ Status:** {status}\n**🟣 Connection:** ACTIVE\n{VisualElements.CIRCUIT_LINE}",
         color=color
     )
-    embed.set_footer(text="🌴 ᴠᴀᴀᴢʜᴀ Network Status", icon_url=bot.user.display_avatar.url)
+    embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
     await interaction.response.send_message(embed=embed)
 
     await log_action(interaction.guild.id, "general", f"🏓 [PING] {interaction.user} checked bot latency ({latency}ms)")
@@ -1218,11 +1218,11 @@ async def uptime(interaction: discord.Interaction):
     uptime_str = str(timedelta(seconds=int(uptime_seconds)))
 
     embed = discord.Embed(
-        title="⏰ **Bot Uptime** 🚀",
-        description=f"**🟢 I've been running for:** `{uptime_str}`\n\n*Serving {len(bot.guilds)} servers with ❤️* 🌴",
-        color=0x43b581
+        title="⏰ **Quantum Core Runtime Status**",
+        description=f"{VisualElements.CIRCUIT_LINE}\n**{VisualElements.STATUS_ACTIVE}** — System operational for `{uptime_str}`\n**🟣 Active Servers:** {len(bot.guilds)}\n**◆ Neural Status:** All systems nominal\n{VisualElements.CIRCUIT_LINE}",
+        color=BrandColors.SUCCESS
     )
-    embed.set_footer(text="🌴 ᴠᴀᴀᴢʜᴀ System Status", icon_url=bot.user.display_avatar.url)
+    embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
     await interaction.response.send_message(embed=embed)
 
     await log_action(interaction.guild.id, "general", f"⏰ [UPTIME] {interaction.user} checked bot uptime ({uptime_str})")
@@ -1236,9 +1236,9 @@ async def userinfo(interaction: discord.Interaction, user: discord.Member = None
     join_pos = sorted(interaction.guild.members, key=lambda m: m.joined_at).index(user) + 1
 
     embed = discord.Embed(
-        title=f"👤 **{user.display_name}**",
-        description=f"*User information for {user.mention}*",
-        color=user.color if user.color.value != 0 else 0x3498db
+        title=f"💠 **{user.display_name}**",
+        description=f"*User data profile for {user.mention}*\n{VisualElements.THIN_LINE}",
+        color=user.color if user.color.value != 0 else BrandColors.PRIMARY
     )
     embed.set_thumbnail(url=user.display_avatar.url)
 
@@ -1276,9 +1276,9 @@ async def serverinfo(interaction: discord.Interaction):
     human_count = guild.member_count - bot_count
 
     embed = discord.Embed(
-        title=f"🏰 **{guild.name}**",
-        description=f"*Server information and statistics*",
-        color=0x3498db
+        title=f"◆ **{guild.name}**",
+        description=f"*Quantum server analytics and statistics*\n{VisualElements.CIRCUIT_LINE}",
+        color=BrandColors.PRIMARY
     )
     if guild.icon:
         embed.set_thumbnail(url=guild.icon.url)
@@ -1326,9 +1326,9 @@ async def sync_commands(interaction: discord.Interaction):
         karma_commands = [cmd for cmd in ['givekarma', 'karma', 'karmaboard', 'setkarmachannel'] if cmd in all_commands]
 
         embed = discord.Embed(
-            title="🔄 **Commands Synced Successfully**",
-            description=f"**Global Sync:** {len(synced_global)} commands\n**Guild Sync:** {len(synced_guild)} commands\n**Total Registered:** {len(all_commands)}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-            color=0x43b581
+            title="✓ **Quantum Commands Synchronized**",
+            description=f"{VisualElements.CIRCUIT_LINE}\n**◆ Global Sync:** {len(synced_global)} commands\n**◆ Guild Sync:** {len(synced_guild)} commands\n**◆ Total Active:** {len(all_commands)}\n{VisualElements.CIRCUIT_LINE}",
+            color=BrandColors.SUCCESS
         )
 
         embed.add_field(
@@ -1423,9 +1423,9 @@ async def contact_info(interaction: discord.Interaction):
             file = discord.File(img_bytes, filename=f"bot_contact_{bot.user.id}.png")
 
             embed = discord.Embed(
-                title="🤖 **RXT ENGINE Contact & Information**",
-                description=f"*{BOT_TAGLINE}*\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-                color=0x43b581
+                title="💠 **RXT ENGINE Contact Protocols**",
+                description=f"*{BOT_TAGLINE}*\n\n{VisualElements.CIRCUIT_LINE}",
+                color=BrandColors.SUCCESS
             )
             embed.set_image(url=f"attachment://bot_contact_{bot.user.id}.png")
 
@@ -1459,9 +1459,9 @@ async def contact_info(interaction: discord.Interaction):
         print(f"Error creating bot profile card: {e}")
         # Fallback to regular embed
         embed = discord.Embed(
-            title="📞 **Contact Information & Support**",
-            description=f"*Need help or want to get in touch? Here's how to reach us!*\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-            color=0x3498db
+            title="💠 **Quantum Core Contact Protocols**",
+            description=f"*System contact interface — access support and developer credentials*\n\n{VisualElements.CIRCUIT_LINE}",
+            color=BrandColors.PRIMARY
         )
 
         embed.add_field(
