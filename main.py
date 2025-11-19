@@ -227,11 +227,10 @@ async def on_ready():
         print(f"Failed to sync commands: {e}")
 
     # Add persistent views for ticket system
-    from ticket_system import TicketOpenView, TicketControlView, ReopenTicketView, CloseReopenedTicketView
+    from ticket_system import TicketOpenView, TicketControlView, ReopenDeleteTicketView
     bot.add_view(TicketOpenView("persistent"))
     bot.add_view(TicketControlView())
-    bot.add_view(ReopenTicketView())
-    bot.add_view(CloseReopenedTicketView())
+    bot.add_view(ReopenDeleteTicketView())
     print("✅ Persistent views added for ticket system")
 
     # Add persistent views for security system

@@ -89,7 +89,7 @@ class TicketModal(discord.ui.Modal, title='🎫 Create Support Ticket'):
         ticket_channel = await category.create_text_channel(
             name=channel_name,
             overwrites=overwrites,
-            topic=f"Support ticket #{ticket_count} for {interaction.user}"
+            topic=f"Support ticket #{ticket_count} for {interaction.user} | Creator ID: {interaction.user.id}"
         )
 
         embed = discord.Embed(
@@ -138,7 +138,6 @@ class TicketModal(discord.ui.Modal, title='🎫 Create Support Ticket'):
         )
         await interaction.response.send_message(embed=response_embed, ephemeral=True)
 
-        field_summary = ', '.join([f"{getattr(self, f'field_{i}', discord.ui.TextInput(label='', placeholder='')).label}: {getattr(self, f'field_{i}', discord.ui.TextInput(label='', placeholder='')).value[:50]}" for i in range(len(ticket_fields[:10])) if hasattr(self, f'field_{i}')])
         await log_action(interaction.guild.id, "tickets", f"🎫 [TICKET OPENED] {interaction.user} - Ticket #{ticket_count}")
 
 class TicketControlView(discord.ui.View):
@@ -219,11 +218,23 @@ class ReopenDeleteTicketView(discord.ui.View):
             await interaction.response.send_message("❌ Ticket open category not found!", ephemeral=True)
             return
 
+        creator_id = None
+        if interaction.channel.topic and "Creator ID:" in interaction.channel.topic:
+            try:
+                creator_id = int(interaction.channel.topic.split("Creator ID:")[1].strip())
+            except (ValueError, IndexError):
+                pass
+        
         new_name = interaction.channel.name.replace("closed-", "")
         await interaction.channel.edit(
             category=open_category,
             name=new_name
         )
+        
+        if creator_id:
+            creator = interaction.guild.get_member(creator_id)
+            if creator:
+                await interaction.channel.set_permissions(creator, read_messages=True, send_messages=True)
 
         embed = discord.Embed(
             title="🔓 Ticket Reopened",
