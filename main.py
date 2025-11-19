@@ -96,7 +96,6 @@ async def log_action(guild_id, log_type, message):
             "setup": "setup",
             "communication": "communication",
             "karma": "karma",
-            "economy": "economy",
             "tickets": "ticket",
             "reaction_role": "reaction",
             "welcome": "welcome",
@@ -557,6 +556,7 @@ async def on_member_join(member):
     # Send welcome message to channel
     welcome_channel_id = server_data.get('welcome_channel')
     welcome_message = server_data.get('welcome_message', f"Welcome {member.mention} to {member.guild.name}!")
+    welcome_title = server_data.get('welcome_title', "⚡ **Quantum Network — New Node Detected**")
     welcome_image = server_data.get('welcome_image')
 
     if welcome_channel_id:
@@ -564,9 +564,10 @@ async def on_member_join(member):
         if welcome_channel:
             # Replace placeholders safely
             formatted_message = welcome_message.replace("{user}", member.mention).replace("{server}", member.guild.name)
+            formatted_title = welcome_title.replace("{user}", member.name).replace("{server}", member.guild.name)
 
             embed = discord.Embed(
-                title="⚡ **Quantum Network — New Node Detected**",
+                title=formatted_title,
                 description=f"{formatted_message}\n\n*Neural connection established* 💠",
                 color=BrandColors.SUCCESS
             )
@@ -582,21 +583,43 @@ async def on_member_join(member):
     # Log member joining
     await log_action(member.guild.id, "welcome", f"🎊 [MEMBER JOIN] {member} ({member.id}) joined the server - Member #{member.guild.member_count}")
 
-    # Send DM to new member
+    # Send DM to new member (combine server welcome + bot message)
     try:
-        embed = discord.Embed(
+        # Get server's custom welcome message for DM
+        dm_welcome_message = server_data.get('welcome_message')
+        dm_welcome_title = server_data.get('welcome_title')
+        
+        # Build DM embed with server's message if available
+        if dm_welcome_message:
+            formatted_dm_message = dm_welcome_message.replace("{user}", member.mention).replace("{server}", member.guild.name)
+            formatted_dm_title = dm_welcome_title.replace("{user}", member.name).replace("{server}", member.guild.name) if dm_welcome_title else f"Welcome to {member.guild.name}!"
+            
+            server_embed = discord.Embed(
+                title=formatted_dm_title,
+                description=formatted_dm_message,
+                color=BrandColors.SUCCESS
+            )
+            server_embed.set_thumbnail(url=member.guild.icon.url if member.guild.icon else None)
+            if welcome_image:
+                server_embed.set_image(url=welcome_image)
+            server_embed.set_footer(text=f"Message from {member.guild.name}")
+            
+            await member.send(embed=server_embed)
+        
+        # Always send bot's message after server message
+        bot_embed = discord.Embed(
             title=f"💠 **{BOT_NAME} — Quantum Core Online**",
             description=f"**Neural connection established with {member.guild.name}**\n\n{VisualElements.CIRCUIT_LINE}\n\n◆ **System initialized — explore quantum channels and protocols**\n◆ **Assistance protocol active — mention core or execute commands**\n◆ **Holographic network operational**\n\n{VisualElements.CIRCUIT_LINE}\n\n*{BOT_TAGLINE}*",
             color=BrandColors.PRIMARY
         )
-        embed.set_thumbnail(url=member.guild.icon.url if member.guild.icon else bot.user.display_avatar.url)
-        embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
+        bot_embed.set_thumbnail(url=bot.user.display_avatar.url)
+        bot_embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
 
         view = discord.ui.View()
         invite_button = discord.ui.Button(label="🤖 Invite Bot to Other Servers", style=discord.ButtonStyle.link, url=f"https://discord.com/api/oauth2/authorize?client_id={bot.user.id}&permissions=8&scope=bot%20applications.commands", emoji="🤖")
         view.add_item(invite_button)
 
-        await member.send(embed=embed, view=view)
+        await member.send(embed=bot_embed, view=view)
 
         # Log welcome DM globally
         try:
@@ -1123,18 +1146,77 @@ class HelpView(discord.ui.View):
             value="◆ **Holographic UI** — Advanced quantum purple interface\n◆ **AI Moderation** — Intelligent enforcement protocols\n◆ **Karma Matrix** — Community recognition system\n◆ **Support Grid** — Multi-channel ticket resolution\n◆ **Neural Storage** — Persistent data architecture\n◆ **Security Core** — Multi-layer protection systems",
             inline=False
         )
+        support_server = os.getenv('SUPPORT_SERVER')
+        
         embed.add_field(
-            name="🔗 **Important Links**",
-            value=f"**🤖 Invite Me:** [Add RXT ENGINE to Your Server](https://discord.com/api/oauth2/authorize?client_id={bot.user.id}&permissions=8&scope=bot%20applications.commands)\n**💬 Support:** Mention {owner_mention} in any server I'm in\n**⚡ Powered by R!O</>**",
+            name="🔗 **Connect with RXT ENGINE**",
+            value=f"**💠 Quantum Invite:** [Integrate RXT ENGINE Into Your Matrix](https://discord.com/api/oauth2/authorize?client_id={bot.user.id}&permissions=8&scope=bot%20applications.commands)\n\n**◆ Direct Support Channels:**\n➤ **DM Developer:** {owner_mention}\n➤ **Support Server:** {'[Join Support Hub](' + support_server + ')' if support_server else 'Contact owner for invite'}\n\n**⚡ Engineered by R!O</>**",
             inline=False
         )
         embed.set_footer(text=BOT_FOOTER)
         embed.set_thumbnail(url=bot.user.display_avatar.url)
-        await interaction.response.edit_message(embed=embed, view=self)
+        
+        view_with_buttons = discord.ui.View()
+        invite_btn = discord.ui.Button(label="Add to Server", style=discord.ButtonStyle.link, url=f"https://discord.com/api/oauth2/authorize?client_id={bot.user.id}&permissions=8&scope=bot%20applications.commands", emoji="⚡")
+        view_with_buttons.add_item(invite_btn)
+        if support_server:
+            support_btn = discord.ui.Button(label="Support Server", style=discord.ButtonStyle.link, url=support_server, emoji="🏠")
+            view_with_buttons.add_item(support_btn)
+        dm_btn = discord.ui.Button(label="DM Developer", style=discord.ButtonStyle.link, url=f"https://discord.com/users/{bot_owner_id}" if bot_owner_id else "https://discord.com", emoji="💬")
+        view_with_buttons.add_item(dm_btn)
+        
+        for item in self.children:
+            view_with_buttons.add_item(item)
+        
+        await interaction.response.edit_message(embed=embed, view=view_with_buttons)
 
     @discord.ui.button(label="Contact", style=discord.ButtonStyle.success, emoji="📞", row=3)
     async def contact_help(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await contact_info(interaction)
+        bot_owner_id = os.getenv('BOT_OWNER_ID')
+        contact_email = os.getenv('CONTACT_EMAIL')
+        support_server = os.getenv('SUPPORT_SERVER')
+        
+        owner_mention = f"<@{bot_owner_id}>" if bot_owner_id else "Not available"
+        email_text = contact_email if contact_email else "Not available"
+        
+        embed = discord.Embed(
+            title="📞 **RXT ENGINE Contact Protocols**",
+            description=f"*{BOT_DESCRIPTION}*\n\n{VisualElements.CIRCUIT_LINE}",
+            color=BrandColors.SUCCESS
+        )
+        
+        embed.add_field(
+            name="🤖 **About RXT ENGINE**",
+            value=f"**Name:** {BOT_NAME}\n**Version:** {BOT_VERSION}\n**Active Servers:** {len(bot.guilds)}\n**Status:** {VisualElements.STATUS_ONLINE}",
+            inline=False
+        )
+        
+        embed.add_field(
+            name="👨‍💻 **System Architect**",
+            value=f"**Developer:** {BOT_OWNER_NAME}\n**Discord:** {owner_mention}\n**Role:** {BOT_OWNER_DESCRIPTION}",
+            inline=False
+        )
+        
+        embed.add_field(
+            name="📧 **Contact Methods**",
+            value=f"**📩 Email:** `{email_text}`\n**💬 Direct Message:** Click button below\n**🏠 Support Server:** Click button below",
+            inline=False
+        )
+        
+        embed.set_thumbnail(url=bot.user.display_avatar.url)
+        embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
+        
+        view = discord.ui.View()
+        if bot_owner_id:
+            dm_button = discord.ui.Button(label=f"DM {BOT_OWNER_NAME}", style=discord.ButtonStyle.link, url=f"https://discord.com/users/{bot_owner_id}", emoji="💬")
+            view.add_item(dm_button)
+        if support_server:
+            support_button = discord.ui.Button(label="Support Server", style=discord.ButtonStyle.link, url=support_server, emoji="🏠")
+            view.add_item(support_button)
+        invite_button = discord.ui.Button(label="Invite Bot", style=discord.ButtonStyle.link, url=f"https://discord.com/api/oauth2/authorize?client_id={bot.user.id}&permissions=8&scope=bot%20applications.commands", emoji="⚡")
+        view.add_item(invite_button)
+        
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
 
     @discord.ui.button(label="Updates", style=discord.ButtonStyle.success, emoji="🆕", row=3)
     async def recent_updates_help(self, interaction: discord.Interaction, button: discord.ui.Button):
