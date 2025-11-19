@@ -13,13 +13,13 @@ def run_bot():
         try:
             # Log restart attempt (will be sent once bot is online)
             restart_reason = "Manual restart" if restart_count == 0 else f"Auto-restart after crash (Attempt {restart_count})"
-            print(f"🌴 Starting VAAZHA Bot... (Attempt {restart_count + 1})")
+            print(f"⚡ Starting RXT ENGINE... (Attempt {restart_count + 1})")
 
             # Run the main bot file
             process = subprocess.run([sys.executable, "main.py"], check=True)
 
             # If we reach here, the bot exited normally
-            print("🌴 Bot stopped normally.")
+            print("⚡ RXT ENGINE stopped normally.")
             break
 
         except subprocess.CalledProcessError as e:
@@ -49,7 +49,7 @@ def run_bot():
             time.sleep(5)
 
 if __name__ == "__main__":
-    print("🤖 VAAZHA Bot Auto-Restart Manager Starting...")
+    print("⚡ RXT ENGINE Auto-Restart Manager Starting...")
 
     # Start keep-alive server
     keep_alive()

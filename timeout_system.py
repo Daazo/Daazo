@@ -266,7 +266,7 @@ async def timeout_settings(
         description=f"**Feature:** {feature_names.get(feature, feature)}\n**Status:** {status}",
         color=BrandColors.SUCCESS if enabled else 0xe74c3c
     )
-    embed.set_footer(text="🤖 ᴠᴀᴀᴢʜᴀ Auto-Moderation", icon_url=bot.user.display_avatar.url)
+    embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
 
     await interaction.response.send_message(embed=embed)
     await log_action(interaction.guild.id, "setup", f"⚙️ [TIMEOUT SETTINGS] {feature_names.get(feature, feature)} {status.lower()} by {interaction.user}")
@@ -290,7 +290,7 @@ async def remove_timeout(interaction: discord.Interaction, user: discord.Member)
             description=f"**User:** {user.mention}\n**Removed by:** {interaction.user.mention}\n**Action:** Timeout has been lifted early",
             color=BrandColors.SUCCESS
         )
-        embed.set_footer(text="🤖 ᴠᴀᴀʀᴀ Moderation", icon_url=bot.user.display_avatar.url)
+        embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
 
         await interaction.response.send_message(embed=embed)
         await log_action(interaction.guild.id, "timeout", f"⏰ [TIMEOUT REMOVED] {user} timeout removed by {interaction.user}")

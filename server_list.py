@@ -27,9 +27,9 @@ async def update_server_list():
         server_count = len(bot.guilds)
         
         embed = discord.Embed(
-            title=f"🌴 **VAAZHA Bot - Active Servers** 🤖",
-            description=f"**Currently serving {server_count} servers with ❤️**\n\n*Updated every 10 minutes automatically*",
-            color=0x43b581,
+            title=f"⚡ **RXT ENGINE - Active Servers** 💠",
+            description=f"**Currently serving {server_count} servers with quantum power**\n\n*Updated every 10 minutes automatically*",
+            color=0xA66BFF,
             timestamp=datetime.utcnow()
         )
         
@@ -62,8 +62,9 @@ async def update_server_list():
                 inline=False
             )
         
+        from brand_config import BOT_FOOTER
         embed.set_footer(
-            text=f"🌴 VAAZHA Bot Status • Uptime: Running • Made with ❤️ by Daazo",
+            text=BOT_FOOTER,
             icon_url=bot.user.display_avatar.url
         )
         embed.set_thumbnail(url=bot.user.display_avatar.url)

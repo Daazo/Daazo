@@ -90,7 +90,7 @@ async def security_settings(
         description=f"**Feature:** {feature_names.get(feature, feature)}\n**Status:** {status}{extra_info}",
         color=BrandColors.SUCCESS if enabled else 0xe74c3c
     )
-    embed.set_footer(text="🌴 ᴠᴀᴀᴢʜᴀ Security System", icon_url=bot.user.display_avatar.url)
+    embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
 
     await interaction.response.send_message(embed=embed)
     await log_action(interaction.guild.id, "security", f"🛡️ [SECURITY] {feature_names.get(feature, feature)} {status.lower()} by {interaction.user}")
@@ -134,7 +134,7 @@ async def verification_setup(
         description=f"**{message}**\n\n🔒 You must verify to access all channels and features.\n\n📋 **What verification gives you:**\n• Access to all server channels\n• Ability to participate in discussions\n• Full server member privileges",
         color=BrandColors.SUCCESS
     )
-    embed.set_footer(text="🌴 ᴠᴀᴀᴢʜᴀ Security System", icon_url=bot.user.display_avatar.url)
+    embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
 
     view = VerificationView()  # Database-driven verification
     await channel.send(embed=embed, view=view)
@@ -197,10 +197,10 @@ class VerificationView(discord.ui.View):
             
             embed = discord.Embed(
                 title="✅ **Verification Successful!**",
-                description="**Welcome to the server!** 🎉\n\nYou now have access to all channels and can participate fully in our community.\n\n*Enjoy your stay!* 🌴",
+                description="**Welcome to the server!** 🎉\n\nYou now have access to all channels and can participate fully in our community.\n\n*Enjoy your stay!* ⚡",
                 color=BrandColors.SUCCESS
             )
-            embed.set_footer(text="🌴 ᴠᴀᴀᴢʜᴀ Security", icon_url=bot.user.display_avatar.url)
+            embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
             
             await interaction.response.send_message(embed=embed, ephemeral=True)
             await log_action(interaction.guild.id, "security", f"✅ [VERIFICATION] {interaction.user} verified successfully")
@@ -259,7 +259,7 @@ async def whitelist_command(
             value="\n".join(role_list) if role_list else "*None*",
             inline=False
         )
-        embed.set_footer(text="🌴 ᴠᴀᴀᴢʜᴀ Security System")
+        embed.set_footer(text=BOT_FOOTER)
         
         await interaction.response.send_message(embed=embed)
         return
@@ -376,7 +376,7 @@ async def handle_raid_detection(guild, join_count):
             description=f"**Potential raid detected!**\n\n**Members joined:** {join_count}\n**Time frame:** Last 60 seconds\n**Action recommended:** Review recent joins and take appropriate action",
             color=BrandColors.DANGER
         )
-        embed.set_footer(text="🌴 ᴠᴀᴀᴢʜᴀ Security Alert")
+        embed.set_footer(text=BOT_FOOTER)
         await alert_channel.send(embed=embed)
 
 async def is_suspicious_account(member):

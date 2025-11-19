@@ -512,7 +512,8 @@ async def send_karma_levelup(guild, user, karma):
                 inline=False
             )
             embed.set_image(url=selected_gif)
-            embed.set_footer(text="🌴 Spreading positivity in our Kerala-style community! 🌟", icon_url=bot.user.display_avatar.url)
+            from brand_config import BOT_FOOTER
+            embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
 
             # Send announcement
             await levelup_channel.send(f"🎉 **KARMA CELEBRATION TIME!** 🎊", embed=embed)

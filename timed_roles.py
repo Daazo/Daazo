@@ -42,7 +42,7 @@ async def check_expired_roles():
                             description=f"Your **{role.name}** role in **{guild.name}** has expired and been removed.",
                             color=BrandColors.WARNING
                         )
-                        embed.set_footer(text="ᴠᴀᴀᴢʜᴀ Timed Roles", icon_url=bot.user.display_avatar.url)
+                        embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
                         await member.send(embed=embed)
                     except:
                         pass  # User has DMs disabled
@@ -160,7 +160,7 @@ async def give_timed_role(
                 description=f"**User:** {user.mention}\n**Role:** {role.mention}\n**Type:** `Permanent`\n**Assigned by:** {interaction.user.mention}\n\n*This role will remain until manually removed.*",
                 color=BrandColors.SUCCESS
             )
-            embed.set_footer(text="ᴠᴀᴀᴢʜᴀ Role Management", icon_url=bot.user.display_avatar.url)
+            embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
             await interaction.response.send_message(embed=embed)
 
             # Send DM to user for permanent role
@@ -170,7 +170,7 @@ async def give_timed_role(
                     description=f"**Server:** {interaction.guild.name}\n**Role:** {role.name}\n**Type:** Permanent\n\n*This role will remain until a moderator removes it.*",
                     color=BrandColors.SUCCESS
                 )
-                dm_embed.set_footer(text="ᴠᴀᴀᴢʜᴀ Role Management", icon_url=bot.user.display_avatar.url)
+                dm_embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
                 await user.send(embed=dm_embed)
             except:
                 pass  # User has DMs disabled
@@ -363,7 +363,7 @@ async def view_timed_roles(interaction: discord.Interaction):
                 inline=False
             )
 
-        embed.set_footer(text="ᴠᴀᴀᴢʜᴀ Timed Roles • Roles are checked every minute", icon_url=bot.user.display_avatar.url)
+        embed.set_footer(text=f"{BOT_FOOTER} • Roles are checked every minute", icon_url=bot.user.display_avatar.url)
         await interaction.response.send_message(embed=embed)
 
     except Exception as e:

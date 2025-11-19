@@ -312,7 +312,7 @@ async def on_message(message):
             # Send contact info in DMs
             bot_owner_id = os.getenv('BOT_OWNER_ID')
             contact_email = os.getenv('CONTACT_EMAIL')
-            support_server = os.getenv('SUPPORT_SERVER_LINK')
+            support_server = os.getenv('SUPPORT_SERVER')
 
             owner_mention = f"<@{bot_owner_id}>" if bot_owner_id else "Contact via server"
             email_text = contact_email if contact_email else "Not available"
@@ -382,57 +382,6 @@ async def on_message(message):
         return  # Don't process other DM messages
 
 
-
-    # Check for owner mention - PRIORITY CHECK
-    owner_id = os.getenv('BOT_OWNER_ID')
-    if owner_id and (f"<@{owner_id}>" in message.content or
-                    f"<@!{owner_id}>" in message.content or
-                    "daazo" in message.content.lower()):
-        owner_mention = f"<@{owner_id}>" if owner_id else "Contact via server"
-        embed = discord.Embed(
-            title="📢 **Developer Mention**",
-            description=f"**Developer:** {owner_mention}\n\n**About:** {BOT_OWNER_DESCRIPTION}\n\n**Need Help?** Use `/help` or contact the support server.",
-            color=BrandColors.ACCENT
-        )
-        embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
-        embed.set_thumbnail(url=bot.user.display_avatar.url)
-        sent_message = await message.channel.send(embed=embed)
-        # Auto delete after 1 minute
-        await asyncio.sleep(60)
-        try:
-            await sent_message.delete()
-        except:
-            pass
-        return
-
-    # Check for bot mention - PRIORITY CHECK
-    if (bot.user in message.mentions or
-        f"<@{bot.user.id}>" in message.content or
-        f"<@!{bot.user.id}>" in message.content) and not message.content.startswith('/'):
-        owner_id = os.getenv('BOT_OWNER_ID')
-        owner_mention = f"<@{owner_id}>" if owner_id else "Contact via server"
-
-        embed = discord.Embed(
-            title=f"👋 **Hello, I'm {BOT_NAME}**",
-            description=f"**{BOT_TAGLINE}**\n\n**Need help?** Type `/help`\n**Developer:** {owner_mention}\n\n⚡ Fast. Powerful. Engineered for your server.",
-            color=BrandColors.PRIMARY
-        )
-        embed.set_thumbnail(url=bot.user.display_avatar.url)
-        embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
-
-        view = discord.ui.View()
-        help_button = discord.ui.Button(label="📋 Commands", style=discord.ButtonStyle.primary, emoji="📋")
-        help_button.callback = lambda i: help_command_callback(i)
-        view.add_item(help_button)
-
-        sent_message = await message.channel.send(embed=embed, view=view)
-        # Auto delete after 1 minute
-        await asyncio.sleep(60)
-        try:
-            await sent_message.delete()
-        except:
-            pass
-        return
 
     # Karma system is handled via reactions and commands
 
@@ -628,7 +577,7 @@ async def on_member_join(member):
             if welcome_image:
                 embed.set_image(url=welcome_image)
 
-            embed.set_footer(text=f"🌴 Member #{member.guild.member_count}", icon_url=member.guild.icon.url if member.guild.icon else None)
+            embed.set_footer(text=f"{BOT_FOOTER} • Member #{member.guild.member_count}", icon_url=member.guild.icon.url if member.guild.icon else None)
             await welcome_channel.send(embed=embed)
 
     # Log member joining
@@ -658,6 +607,53 @@ async def on_member_join(member):
             pass
     except:
         pass  # User has DMs disabled
+
+@bot.event
+async def on_message_delete(message):
+    """Log deleted messages"""
+    if message.author.bot:
+        return
+    
+    if not message.guild:
+        return
+    
+    # Create embed for deleted message
+    embed = discord.Embed(
+        title="🗑️ **Message Deleted**",
+        description=f"**Author:** {message.author.mention} ({message.author})\n**Channel:** {message.channel.mention}\n**Content:** {message.content[:1000] if message.content else '*No content (may be embed/attachment only)*'}",
+        color=BrandColors.WARNING,
+        timestamp=datetime.now()
+    )
+    
+    if message.attachments:
+        attachment_list = "\n".join([f"[{att.filename}]({att.url})" for att in message.attachments[:3]])
+        embed.add_field(name="📎 Attachments", value=attachment_list, inline=False)
+    
+    embed.set_footer(text=f"{BOT_FOOTER} • User ID: {message.author.id}", icon_url=bot.user.display_avatar.url)
+    embed.set_thumbnail(url=message.author.display_avatar.url)
+    
+    # Log to server logs
+    await log_action(message.guild.id, "moderation", f"🗑️ [MESSAGE DELETE] Message by {message.author} deleted in {message.channel.name}")
+    
+    # Send to moderation log channel if configured
+    server_data = await get_server_data(message.guild.id)
+    organized_logs = server_data.get('organized_log_channels', {})
+    
+    if organized_logs and 'moderation' in organized_logs:
+        channel = bot.get_channel(int(organized_logs['moderation']))
+        if channel:
+            await channel.send(embed=embed)
+    else:
+        # Fallback to old logging system
+        log_channels = server_data.get('log_channels', {})
+        if 'moderation' in log_channels:
+            channel = bot.get_channel(int(log_channels['moderation']))
+            if channel:
+                await channel.send(embed=embed)
+        elif 'all' in log_channels:
+            channel = bot.get_channel(int(log_channels['all']))
+            if channel:
+                await channel.send(embed=embed)
 
 @bot.event
 async def on_voice_state_update(member, before, after):
@@ -732,7 +728,7 @@ async def on_member_remove(member):
             color=BrandColors.DANGER
         )
         embed.set_thumbnail(url=member.guild.icon.url if member.guild.icon else bot.user.display_avatar.url)
-        embed.set_footer(text="🌴 Hope to see you again!", icon_url=bot.user.display_avatar.url)
+        embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
 
         view = discord.ui.View()
         invite_button = discord.ui.Button(label="🤖 Invite Bot to Other Servers", style=discord.ButtonStyle.link, url=f"https://discord.com/api/oauth2/authorize?client_id={bot.user.id}&permissions=8&scope=bot%20applications.commands", emoji="🤖")
@@ -1261,7 +1257,7 @@ async def userinfo(interaction: discord.Interaction, user: discord.Member = None
     embed.add_field(name="📱 **Status**", value=f"`{str(user.status).title()}`", inline=True)
     embed.add_field(name="🤖 **Bot Account**", value=f"`{'Yes' if user.bot else 'No'}`", inline=True)
 
-    embed.set_footer(text=f"🌴 Requested by {interaction.user.display_name}", icon_url=interaction.user.display_avatar.url)
+    embed.set_footer(text=f"{BOT_FOOTER} • Requested by {interaction.user.display_name}", icon_url=interaction.user.display_avatar.url)
     await interaction.response.send_message(embed=embed)
 
     await log_action(interaction.guild.id, "general", f"👤 [USERINFO] {interaction.user} viewed info for {user}")
@@ -1295,7 +1291,7 @@ async def serverinfo(interaction: discord.Interaction):
     embed.add_field(name="😀 **Emojis**", value=f"`{len(guild.emojis)}`", inline=True)
     embed.add_field(name="🆔 **Server ID**", value=f"`{guild.id}`", inline=True)
 
-    embed.set_footer(text=f"🌴 Requested by {interaction.user.display_name}", icon_url=interaction.user.display_avatar.url)
+    embed.set_footer(text=f"{BOT_FOOTER} • Requested by {interaction.user.display_name}", icon_url=interaction.user.display_avatar.url)
     await interaction.response.send_message(embed=embed)
 
     await log_action(interaction.guild.id, "general", f"🏰 [SERVERINFO] {interaction.user} viewed server information")
@@ -1366,7 +1362,7 @@ async def sync_commands(interaction: discord.Interaction):
             inline=False
         )
 
-        embed.set_footer(text="Guild sync makes commands appear immediately! 🌴")
+        embed.set_footer(text=f"{BOT_FOOTER} • Guild sync makes commands appear immediately!")
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
     except Exception as e:
@@ -1377,7 +1373,7 @@ async def contact_info(interaction: discord.Interaction):
     await log_action(interaction.guild.id, "general", f"📞 [CONTACT] {interaction.user} viewed contact information")
     bot_owner_id = os.getenv('BOT_OWNER_ID')
     contact_email = os.getenv('CONTACT_EMAIL')
-    support_server = os.getenv('SUPPORT_SERVER_LINK')
+    support_server = os.getenv('SUPPORT_SERVER')
 
     owner_mention = f"<@{bot_owner_id}>" if bot_owner_id else "Contact via server"
     email_text = contact_email if contact_email else "Not available"
@@ -1441,7 +1437,7 @@ async def contact_info(interaction: discord.Interaction):
                 inline=False
             )
 
-            embed.set_footer(text="🌴 Made with ❤️ from Advanced Community Management", icon_url=bot.user.display_avatar.url)
+            embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
 
             view = discord.ui.View()
             if support_server:

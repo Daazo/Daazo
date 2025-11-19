@@ -109,7 +109,7 @@ async def setup(
         if welcome_data.get('welcome_image'):
             test_embed.set_image(url=welcome_data['welcome_image'])
 
-        test_embed.set_footer(text="ᴠᴀᴀᴢʜᴀ - Welcome system is ready!")
+        test_embed.set_footer(text=f"{BOT_FOOTER} • Welcome system is ready!")
         await interaction.response.send_message(embed=test_embed)
 
     elif action == "welcome_image":
@@ -306,11 +306,11 @@ async def setup(
 
                     # Send initial message to log channels
                     embed = discord.Embed(
-                        title=f"🌴 **{channel_name.replace('-', ' ').title()} Channel**",
+                        title=f"⚡ **{channel_name.replace('-', ' ').title()} Channel**",
                         description=f"**{description}**\n\n*This channel will automatically receive relevant bot logs.*\n\n**🤖 Bot:** {interaction.guild.me.mention}\n**Setup by:** {interaction.user.mention}\n**Setup time:** {discord.utils.format_dt(discord.utils.utcnow())}",
                         color=BrandColors.SUCCESS
                     )
-                    embed.set_footer(text="🌴 ᴠᴀᴀᴢʜᴀ Logging System", icon_url=interaction.guild.me.display_avatar.url)
+                    embed.set_footer(text=BOT_FOOTER, icon_url=interaction.guild.me.display_avatar.url)
                     await channel.send(embed=embed)
 
                 # Store channel ID for log mapping
@@ -328,7 +328,7 @@ async def setup(
                 description=f"**Category:** {category.mention}\n**Channels Created:** {len(created_channels)}\n**Total Log Channels:** {len(log_channels_to_create)}\n\n🎯 **Organized Logging Features:**\n📋 General logs (includes ping, uptime, profile commands)\n🛡️ Moderation action tracking\n⚙️ Setup and configuration logs\n💬 Communication command logs\n✨ Karma system activity\n🪙 Economy transactions\n🎫 Ticket management\n🎭 Reaction role verifications\n👋 Welcome system logs\n🔊 Voice activity tracking\n🕰️ Timed role management\n🔒 Auto-timeout system logs\n🔒 Security feature alerts",
                 color=BrandColors.INFO
             )
-            embed.set_footer(text="🌴 Professional logging system active!")
+            embed.set_footer(text=f"{BOT_FOOTER} • Professional logging system active!")
             await interaction.followup.send(embed=embed)
 
             await log_action(interaction.guild.id, "setup", f"📋 [LOG SETUP] Organized logging system set up in {category.name} by {interaction.user}")

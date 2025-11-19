@@ -6,7 +6,7 @@ from main import bot
 from brand_config import BOT_FOOTER, BrandColors
 from main import has_permission, log_action
 
-@bot.tree.command(name="kick", description="👢 Kick a user from the server")
+@bot.tree.command(name="kick", description="⚔️ Kick a user from the server")
 @app_commands.describe(user="User to kick", reason="Reason for kick")
 async def kick(interaction: discord.Interaction, user: discord.Member, reason: str = "No reason provided"):
     if not await has_permission(interaction, "main_moderator"):
@@ -21,10 +21,11 @@ async def kick(interaction: discord.Interaction, user: discord.Member, reason: s
         # Send DM to user before kicking
         try:
             dm_embed = discord.Embed(
-                title=f"👢 You were kicked from {interaction.guild.name}",
+                title=f"⚔️ You were kicked from {interaction.guild.name}",
                 description=f"**Reason:** {reason}\n**Moderator:** {interaction.user}",
                 color=BrandColors.WARNING
             )
+            dm_embed.set_footer(text=BOT_FOOTER)
             await user.send(embed=dm_embed)
         except:
             pass  # User has DMs disabled
@@ -32,13 +33,14 @@ async def kick(interaction: discord.Interaction, user: discord.Member, reason: s
         await user.kick(reason=f"Kicked by {interaction.user}: {reason}")
 
         embed = discord.Embed(
-            title="👢 User Kicked",
+            title="⚔️ User Kicked",
             description=f"**User:** {user.mention}\n**Moderator:** {interaction.user.mention}\n**Reason:** {reason}",
             color=BrandColors.WARNING
         )
+        embed.set_footer(text=BOT_FOOTER, icon_url=interaction.client.user.display_avatar.url)
         await interaction.response.send_message(embed=embed)
 
-        await log_action(interaction.guild.id, "moderation", f"👢 [KICK] {user} kicked by {interaction.user} - Reason: {reason}")
+        await log_action(interaction.guild.id, "moderation", f"⚔️ [KICK] {user} kicked by {interaction.user} - Reason: {reason}")
 
     except discord.Forbidden:
         await interaction.response.send_message("❌ I don't have permission to kick this user!", ephemeral=True)
@@ -136,7 +138,7 @@ class NukeConfirmView(discord.ui.View):
                 description=f"**All messages have been deleted!**\n\n**Moderator:** {interaction.user.mention}\n**Time:** {discord.utils.format_dt(discord.utils.utcnow())}\n\n*This channel has been completely reset.*",
                 color=BrandColors.DANGER
             )
-            embed.set_footer(text="🌴 ᴠᴀᴀᴢʜᴀ Moderation", icon_url=interaction.client.user.display_avatar.url)
+            embed.set_footer(text=BOT_FOOTER, icon_url=interaction.client.user.display_avatar.url)
 
             await new_channel.send(embed=embed)
 

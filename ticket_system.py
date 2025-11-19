@@ -368,7 +368,7 @@ async def ticket_setup(
             description=f"{description}\n\n**Need help?** Click the button below to create a support ticket!\nOur team will assist you as soon as possible.",
             color=BrandColors.INFO
         )
-        embed.set_footer(text="🌴 ᴠᴀᴀᴢʜᴀ Support System")
+        embed.set_footer(text=BOT_FOOTER)
 
         view = TicketOpenView(str(category.id))
         await channel.send(embed=embed, view=view)

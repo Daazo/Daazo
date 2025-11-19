@@ -107,7 +107,7 @@ async def reaction_role_setup(
                         inline=False
                     )
 
-                embed.set_footer(text="React below to get your roles! • ᴠᴀᴀᴢʜᴀ")
+                embed.set_footer(text=f"React below to get your roles! • {BOT_FOOTER}")
 
                 # Send the message
                 sent_message = await self.channel.send(embed=embed)
@@ -399,5 +399,5 @@ async def list_reaction_roles(interaction: discord.Interaction):
             inline=False
         )
 
-    embed.set_footer(text="ᴠᴀᴀᴢʜᴀ Reaction Roles", icon_url=bot.user.display_avatar.url)
+    embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
     await interaction.response.send_message(embed=embed)
