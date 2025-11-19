@@ -17,6 +17,7 @@ from main import has_permission, get_server_data, update_server_data, log_action
     app_commands.Choice(name="main_moderator", value="main_moderator"),
     app_commands.Choice(name="junior_moderator", value="junior_moderator"),
     app_commands.Choice(name="welcome", value="welcome"),
+    app_commands.Choice(name="welcome_title", value="welcome_title"),
     app_commands.Choice(name="welcome_image", value="welcome_image"),
     app_commands.Choice(name="logs", value="logs"),
     app_commands.Choice(name="karma_channel", value="karma_channel"),
@@ -111,6 +112,22 @@ async def setup(
 
         test_embed.set_footer(text=f"{BOT_FOOTER} • Welcome system is ready!")
         await interaction.response.send_message(embed=test_embed)
+
+    elif action == "welcome_title":
+        if not value:
+            await interaction.response.send_message("❌ Please specify a welcome title!", ephemeral=True)
+            return
+
+        await update_server_data(interaction.guild.id, {'welcome_title': value})
+
+        embed = discord.Embed(
+            title="✅ Welcome Title Set",
+            description=f"**Title:** {value}\n**Set by:** {interaction.user.mention}\n\n*Use {{user}} and {{server}} placeholders*",
+            color=BrandColors.SUCCESS
+        )
+        embed.set_footer(text=BOT_FOOTER)
+        await interaction.response.send_message(embed=embed)
+        await log_action(interaction.guild.id, "setup", f"⚙️ [SETUP] Welcome title set by {interaction.user}")
 
     elif action == "welcome_image":
         if not value:
@@ -323,7 +340,7 @@ async def setup(
 
             embed = discord.Embed(
                 title="✅ Organized Logging System Setup Complete!",
-                description=f"**Category:** {category.mention}\n**Channels Created:** {len(created_channels)}\n**Total Log Channels:** {len(log_channels_to_create)}\n\n🎯 **Organized Logging Features:**\n📋 General logs (includes ping, uptime, profile commands)\n🛡️ Moderation action tracking\n⚙️ Setup and configuration logs\n💬 Communication command logs\n✨ Karma system activity\n🪙 Economy transactions\n🎫 Ticket management\n🎭 Reaction role verifications\n👋 Welcome system logs\n🔊 Voice activity tracking\n🕰️ Timed role management\n🔒 Auto-timeout system logs\n🔒 Security feature alerts",
+                description=f"**Category:** {category.mention}\n**Channels Created:** {len(created_channels)}\n**Total Log Channels:** {len(log_channels_to_create)}\n\n🎯 **Organized Logging Features:**\n📋 General logs (includes ping, uptime, profile commands)\n🛡️ Moderation action tracking\n⚙️ Setup and configuration logs\n💬 Communication command logs\n✨ Karma system activity\n🎫 Ticket management\n🎭 Reaction role verifications\n👋 Welcome system logs\n🔊 Voice activity tracking\n🕰️ Timed role management\n🔒 Auto-timeout system logs\n🔒 Security feature alerts",
                 color=BrandColors.INFO
             )
             embed.set_footer(text=f"{BOT_FOOTER} • Professional logging system active!")

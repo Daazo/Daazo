@@ -118,7 +118,6 @@ async def log_action(guild_id, log_type, message):
                     "setup": BrandColors.WARNING,
                     "communication": BrandColors.SUCCESS,
                     "karma": BrandColors.PRIMARY,
-                    "economy": BrandColors.WARNING,
                     "tickets": BrandColors.INFO,
                     "reaction_role": BrandColors.ACCENT,
                     "welcome": BrandColors.SUCCESS,
@@ -1105,7 +1104,7 @@ class HelpView(discord.ui.View):
 
         embed.add_field(
             name="📊 **Comprehensive Logging System**",
-            value="**All Logs:** Combined logging channel for everything\n**Moderation:** Kicks, bans, mutes, voice actions\n**Economy:** Coin transactions, karma purchases, admin actions\n**Tickets:** Creation, closing, reopening events\n**Setup:** All configuration changes\n**Communication:** Announcements, polls, messages\n**Security:** Anti-raid, anti-nuke, permission changes",
+            value="**All Logs:** Combined logging channel for everything\n**Moderation:** Kicks, bans, mutes, voice actions\n**Karma:** Karma system activity and level-ups\n**Tickets:** Creation, closing, reopening events\n**Setup:** All configuration changes\n**Communication:** Announcements, polls, messages\n**Security:** Anti-raid, anti-nuke, permission changes",
             inline=False
         )
         embed.add_field(
