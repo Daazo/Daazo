@@ -45,21 +45,6 @@ class TicketCategorySelect(discord.ui.Select):
 class TicketSelectionView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
-    
-    async def interaction_check(self, interaction: discord.Interaction):
-        server_data = await get_server_data(interaction.guild.id)
-        ticket_categories = server_data.get('ticket_categories', {})
-        
-        enabled_cats = {k: v for k, v in ticket_categories.items() if v.get('enabled', False)}
-        
-        if not enabled_cats:
-            await interaction.response.send_message("❌ No ticket categories are configured! Contact an administrator.", ephemeral=True)
-            return False
-        
-        self.clear_items()
-        self.add_item(TicketCategorySelect(enabled_cats))
-        await interaction.response.edit_message(view=self)
-        return False
 
 class TicketModal(discord.ui.Modal):
     def __init__(self, category_num, category_data, server_data):
