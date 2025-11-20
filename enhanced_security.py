@@ -17,6 +17,12 @@ enhanced_security_data = {
     'mention_tracking': {},  # Track @everyone/@here mentions
     'spam_tracking': {},  # Track message spam {guild_id: {user_id: {'messages': [], 'last_message': '', 'repeat_count': 0}}}
     'raid_tracking': {},  # Track member joins {guild_id: {'joins': [], 'raid_mode': False}}
+    'nuke_tracking': {  # Track nuke actions (Phase 3)
+        'bans': {},  # {guild_id: [(timestamp, (user_id, moderator_id))]}
+        'kicks': {},  # {guild_id: [(timestamp, (user_id, moderator_id))]}
+        'role_deletes': {},  # {guild_id: [(timestamp, (role_data, moderator_id))]}
+        'channel_deletes': {},  # {guild_id: [(timestamp, (channel_data, moderator_id))]}
+    }
 }
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -1150,7 +1156,11 @@ async def on_member_ban_check(guild, user, moderator=None):
         # AUTO-ROLLBACK: Unban all recently banned users
         if anti_nuke.get('auto_rollback', True):
             guild_id = str(guild.id)
-            banned_users = enhanced_security_data['nuke_tracking']['bans'].get(guild_id, [])
+            banned_users = enhanced_security_data.get('nuke_tracking', {}).get('bans', {}).get(guild_id, [])
+            
+            if not banned_users:
+                print(f"⚠️ [ANTI-NUKE ROLLBACK] No banned users tracked for rollback")
+                return True
             
             unbanned_count = 0
             for timestamp, (banned_user_id, ban_moderator_id) in banned_users:
@@ -1176,7 +1186,7 @@ async def on_member_ban_check(guild, user, moderator=None):
     return False
 
 async def on_member_kick_check(guild, user, moderator=None):
-    """Check for mass kicks (Anti-Nuke)"""
+    """Check for mass kicks (Anti-Nuke) with automatic re-invite via DM"""
     if not guild:
         return
     
@@ -1196,6 +1206,68 @@ async def on_member_kick_check(guild, user, moderator=None):
     
     if await check_nuke_threshold(guild.id, 'kicks', threshold):
         await handle_anti_nuke_alert(guild, 'kicks', threshold, moderator)
+        
+        # AUTO-ROLLBACK: Send re-invite links to kicked users
+        if anti_nuke.get('auto_rollback', True):
+            guild_id = str(guild.id)
+            kicked_users = enhanced_security_data.get('nuke_tracking', {}).get('kicks', {}).get(guild_id, [])
+            
+            if not kicked_users:
+                print(f"⚠️ [ANTI-NUKE ROLLBACK] No kicked users tracked for rollback")
+                return True
+            
+            # Create an invite link (valid for 1 day, 100 uses)
+            try:
+                # Find a suitable channel to create invite from (prefer system channel or first text channel)
+                invite_channel = guild.system_channel or next((c for c in guild.text_channels if c.permissions_for(guild.me).create_instant_invite), None)
+                
+                if not invite_channel:
+                    await log_action(guild.id, "security", f"⚠️ [ANTI-NUKE] Cannot create invite link - no suitable channel found")
+                    return True
+                
+                invite = await invite_channel.create_invite(
+                    max_age=86400,  # 1 day
+                    max_uses=100,
+                    reason="RXT ENGINE Anti-Nuke: Mass kick rollback - re-inviting kicked users"
+                )
+                
+                reinvited_count = 0
+                failed_count = 0
+                
+                for timestamp, (kicked_user_id, kick_moderator_id) in kicked_users:
+                    try:
+                        kicked_user = await bot.fetch_user(int(kicked_user_id))
+                        
+                        # DM the kicked user with re-invite link
+                        embed = discord.Embed(
+                            title="🚨 **RXT ENGINE Security Alert**",
+                            description=f"**You were kicked from {guild.name} during a mass kick attack.**\n\nOur anti-nuke system detected this as a server raid. You can rejoin immediately using the link below:\n\n**[Click here to rejoin {guild.name}]({invite.url})**\n\nThis was not a legitimate kick. Our security system has alerted the server owner.",
+                            color=BrandColors.WARNING
+                        )
+                        embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
+                        
+                        await kicked_user.send(embed=embed)
+                        reinvited_count += 1
+                        print(f"✅ [ANTI-NUKE ROLLBACK] Sent re-invite to {kicked_user} (ID: {kicked_user_id})")
+                    except discord.Forbidden:
+                        failed_count += 1
+                        print(f"⚠️ [ANTI-NUKE ROLLBACK] Cannot DM user {kicked_user_id} - DMs disabled")
+                    except Exception as e:
+                        failed_count += 1
+                        print(f"⚠️ [ANTI-NUKE ROLLBACK] Could not send re-invite to user {kicked_user_id}: {e}")
+                
+                # Log rollback action
+                await log_action(guild.id, "security", f"🔄 [ANTI-NUKE ROLLBACK] Sent re-invite links to {reinvited_count}/{len(kicked_users)} kicked users (Failed: {failed_count} - DMs disabled)")
+                
+                # Clear the tracked kicks
+                enhanced_security_data['nuke_tracking']['kicks'][guild_id] = []
+                
+                print(f"🔄 [ANTI-NUKE ROLLBACK] Sent re-invite to {reinvited_count}/{len(kicked_users)} users, {failed_count} failed")
+                
+            except Exception as e:
+                await log_action(guild.id, "security", f"⚠️ [ANTI-NUKE] Could not create invite link: {e}")
+                print(f"⚠️ [ANTI-NUKE ROLLBACK] Invite creation failed: {e}")
+        
         return True  # Nuke detected
     
     return False
@@ -1236,7 +1308,11 @@ async def on_role_delete_check(guild, role, moderator=None):
         # AUTO-ROLLBACK: Recreate deleted roles
         if anti_nuke.get('auto_rollback', True):
             guild_id = str(guild.id)
-            deleted_roles = enhanced_security_data['nuke_tracking']['role_deletes'].get(guild_id, [])
+            deleted_roles = enhanced_security_data.get('nuke_tracking', {}).get('role_deletes', {}).get(guild_id, [])
+            
+            if not deleted_roles:
+                print(f"⚠️ [ANTI-NUKE ROLLBACK] No deleted roles tracked for rollback")
+                return True
             
             recreated_count = 0
             for timestamp, (deleted_role_data, delete_moderator_id) in deleted_roles:
@@ -1308,7 +1384,11 @@ async def on_channel_delete_check(guild, channel, moderator=None):
         # AUTO-ROLLBACK: Recreate deleted channels
         if anti_nuke.get('auto_rollback', True):
             guild_id = str(guild.id)
-            deleted_channels = enhanced_security_data['nuke_tracking']['channel_deletes'].get(guild_id, [])
+            deleted_channels = enhanced_security_data.get('nuke_tracking', {}).get('channel_deletes', {}).get(guild_id, [])
+            
+            if not deleted_channels:
+                print(f"⚠️ [ANTI-NUKE ROLLBACK] No deleted channels tracked for rollback")
+                return True
             
             recreated_count = 0
             for timestamp, (deleted_channel_data, delete_moderator_id) in deleted_channels:
