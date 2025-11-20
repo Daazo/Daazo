@@ -229,7 +229,7 @@ async def apply_enhanced_timeout(guild, member, duration_minutes, reason, trigge
                 description=f"**◆ You have been timed out**\n\n**Server:** {guild.name}\n**Duration:** {duration_minutes} minutes\n**Reason:** {reason}\n\n💠 Your roles have been temporarily removed and will be restored when the timeout ends.",
                 color=BrandColors.DANGER
             )
-            dm_embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
+            dm_embed.set_footer(text=BOT_FOOTER, icon_url=guild.me.display_avatar.url if guild.me else None)
             await member.send(embed=dm_embed)
         except:
             pass  # User has DMs disabled
@@ -284,7 +284,7 @@ async def remove_enhanced_timeout(guild, member, removed_by=None):
                 description=f"**◆ Your timeout has ended**\n\n**Server:** {guild.name}\n\n✅ Your previous roles have been restored\n💠 You now have full server access",
                 color=BrandColors.SUCCESS
             )
-            dm_embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
+            dm_embed.set_footer(text=BOT_FOOTER, icon_url=guild.me.display_avatar.url if guild.me else None)
             await member.send(embed=dm_embed)
         except:
             pass
@@ -395,7 +395,7 @@ async def on_message_mention_check(message):
                 description=f"**{message.author.mention} has been timed out**\n\n**◆ Reason:** Unauthorized @everyone/@here mention\n**◆ Duration:** {duration} minutes\n\n💠 Message deleted by Quantum Security",
                 color=BrandColors.DANGER
             )
-            embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
+            embed.set_footer(text=BOT_FOOTER, icon_url=message.guild.me.display_avatar.url if message.guild.me else None)
             await message.channel.send(embed=embed, delete_after=10)
         except:
             pass
@@ -409,6 +409,10 @@ async def on_message_mention_check(message):
 async def remove_timeout_command(interaction: discord.Interaction, member: discord.Member):
     if not await has_permission(interaction, "junior_moderator"):
         await interaction.response.send_message("❌ You need Junior Moderator permissions to use this command!", ephemeral=True)
+        return
+    
+    if not interaction.guild:
+        await interaction.response.send_message("❌ This command can only be used in a server!", ephemeral=True)
         return
     
     await interaction.response.defer()
@@ -428,7 +432,7 @@ async def remove_timeout_command(interaction: discord.Interaction, member: disco
             color=BrandColors.DANGER
         )
     
-    embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
+    embed.set_footer(text=BOT_FOOTER, icon_url=interaction.client.user.display_avatar.url)
     await interaction.followup.send(embed=embed)
 
 @bot.tree.command(name="security-whitelist", description="🔐 Manage security feature whitelists")
@@ -458,6 +462,10 @@ async def security_whitelist_command(
 ):
     if not await has_permission(interaction, "main_moderator"):
         await interaction.response.send_message("❌ You need Main Moderator permissions to use this command!", ephemeral=True)
+        return
+    
+    if not interaction.guild:
+        await interaction.response.send_message("❌ This command can only be used in a server!", ephemeral=True)
         return
     
     server_data = await get_server_data(interaction.guild.id)
@@ -491,7 +499,7 @@ async def security_whitelist_command(
             description=f"**◆ Feature:** {feature_names.get(feature, feature)}\n\n**Whitelisted Users:**\n{user_list}",
             color=BrandColors.PRIMARY
         )
-        embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
+        embed.set_footer(text=BOT_FOOTER, icon_url=interaction.client.user.display_avatar.url)
         await interaction.response.send_message(embed=embed)
         return
     
@@ -535,7 +543,7 @@ async def security_whitelist_command(
             )
     
     if embed:
-        embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url if bot.user else None)
+        embed.set_footer(text=BOT_FOOTER, icon_url=interaction.client.user.display_avatar.url)
         await interaction.response.send_message(embed=embed)
 
 @bot.tree.command(name="security-config", description="⚙️ Configure auto-timeout security features")
@@ -555,6 +563,10 @@ async def security_config_command(
 ):
     if not await has_permission(interaction, "main_moderator"):
         await interaction.response.send_message("❌ You need Main Moderator permissions to use this command!", ephemeral=True)
+        return
+    
+    if not interaction.guild:
+        await interaction.response.send_message("❌ This command can only be used in a server!", ephemeral=True)
         return
     
     server_data = await get_server_data(interaction.guild.id)
@@ -578,7 +590,7 @@ async def security_config_command(
         description=f"**◆ Feature:** {feature_names.get(feature, feature)}\n**◆ Status:** {status}\n**◆ Duration:** {duration} minutes",
         color=BrandColors.PRIMARY if enabled else BrandColors.DANGER
     )
-    embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
+    embed.set_footer(text=BOT_FOOTER, icon_url=interaction.client.user.display_avatar.url)
     
     await interaction.response.send_message(embed=embed)
     await log_action(interaction.guild.id, "security", f"⚙️ [SECURITY CONFIG] {feature_names.get(feature, feature)} {status} | Duration: {duration}m | By: {interaction.user}")
