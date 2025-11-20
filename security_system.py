@@ -250,20 +250,24 @@ class VerificationView(discord.ui.View):
             user_id = str(interaction.user.id)
             security_data['captcha_data'][user_id] = captcha_text
             
-            # Send CAPTCHA image
+            # Create modal and view
+            modal = CaptchaModal(captcha_text, verified_role, remove_role)
+            
+            # Send CAPTCHA image with input button in ONE message
             embed = discord.Embed(
-                title="🔐 **CAPTCHA Verification Required**",
-                description="**Please solve the CAPTCHA below to verify:**\n\nLook at the image and type the 6-character code in the form that will appear.\n\n⚠️ **Note:** Code is case-insensitive",
+                title="🔐 **CAPTCHA Verification**",
+                description="**Solve the CAPTCHA to verify:**\n\n**1.** Look at the code in the image below\n**2.** Click the button to enter the code\n\n⚠️ Code is case-insensitive",
                 color=BrandColors.PRIMARY
             )
             embed.set_image(url="attachment://captcha.png")
             embed.set_footer(text="This CAPTCHA is unique to you", icon_url=bot.user.display_avatar.url)
             
-            await interaction.response.send_message(embed=embed, file=captcha_file, ephemeral=True)
-            
-            # Show modal for input (send after the image message)
-            modal = CaptchaModal(captcha_text, verified_role, remove_role)
-            await interaction.followup.send("Click here to enter your CAPTCHA:", view=CaptchaInputView(modal), ephemeral=True)
+            await interaction.response.send_message(
+                embed=embed, 
+                file=captcha_file, 
+                view=CaptchaInputView(modal), 
+                ephemeral=True
+            )
             
         except Exception as e:
             await interaction.response.send_message(f"❌ CAPTCHA generation failed: {str(e)}", ephemeral=True)
@@ -274,7 +278,7 @@ class CaptchaInputView(discord.ui.View):
         super().__init__(timeout=300)  # 5 minute timeout
         self.modal = modal
     
-    @discord.ui.button(label='Enter CAPTCHA Code', style=discord.ButtonStyle.primary, emoji='⌨️')
+    @discord.ui.button(label='Type Code Here', style=discord.ButtonStyle.success, emoji='✍️')
     async def open_modal(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.send_modal(self.modal)
 
