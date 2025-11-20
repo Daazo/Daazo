@@ -36,9 +36,8 @@ BAD_WORDS = [
 # User message tracking for spam detection
 user_messages = {}
 
-@bot.event
 async def on_message_timeout_check(message):
-    """Check messages for timeout triggers"""
+    """Check messages for timeout triggers (called from main.py on_message event)"""
     if message.author.bot or not message.guild:
         return
 

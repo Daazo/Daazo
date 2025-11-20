@@ -9,7 +9,42 @@ RXT ENGINE is a powerful multi-function Discord bot focused on automation, moder
 
 ## Recent Changes
 
-### November 20, 2025 - Enhanced Security Systems & Command Cleanup
+### November 20, 2025 - Phase 1: Enhanced Security System Implementation
+- ⚡ **Enhanced Timeout Role System with Automatic Role Save/Restore**
+  - Created `/remove-timeout` command to manually remove timeouts and restore roles
+  - Automatically creates "⏰ Timed Out" role with proper permissions
+  - Saves all user roles before applying timeout (stored in database)
+  - Removes all user roles and applies timeout role during timeout period
+  - Automatically restores previous roles when timeout ends or is manually removed
+  - Timeout role only grants access to timeout channel (if configured)
+  - All other channels become inaccessible during timeout
+  - Persistent role data survives bot restarts via MongoDB
+  
+- 🔐 **Comprehensive Whitelist Framework**
+  - New `/security-whitelist` command for managing feature-specific whitelists
+  - Whitelist users for: @everyone/@here mentions, post links, discord invites, all security
+  - Actions: add, remove, list whitelisted users per feature
+  - Whitelisted users bypass specific security restrictions
+  - Database-backed persistent whitelists per guild
+  - Full RXT ENGINE Quantum Purple theme for all whitelist embeds
+  
+- 📣 **Auto-Timeout for @everyone/@here Mentions**
+  - New `/security-config` command to enable/configure auto-timeout features
+  - Automatically detects unauthorized @everyone or @here mentions
+  - Deletes offending message immediately
+  - Applies enhanced timeout with role removal and timeout role
+  - Configurable timeout duration (default: 30 minutes)
+  - Respects moderator permissions (junior/main moderators exempt)
+  - Respects whitelist system (whitelisted users can mention freely)
+  - Sends notification in channel when timeout is applied
+  - All logs routed to security log channel
+  
+- 📁 **New Files Created**
+  - `enhanced_security.py` - Phase 1 enhanced security features
+  - Integrated with main.py via on_message event handler
+  - Seamlessly works with existing timeout_system.py
+  
+### November 20, 2025 - Enhanced Security Systems & Command Cleanup (Previous)
 - ✅ **Enhanced Auto-Timeout System with 100% Isolation**
   - Added `/timeout-channel` command to configure dedicated timeout channel
   - When enabled, timed-out members can ONLY see and chat in the timeout channel

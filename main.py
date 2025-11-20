@@ -634,6 +634,30 @@ async def on_member_join(member):
         pass  # User has DMs disabled
 
 @bot.event
+async def on_message(message):
+    """Handle all message events and route to security checks"""
+    # Process commands first
+    await bot.process_commands(message)
+    
+    # Skip bot messages
+    if message.author.bot:
+        return
+    
+    # Call timeout system check (bad words, spam, links)
+    try:
+        from timeout_system import on_message_timeout_check
+        await on_message_timeout_check(message)
+    except Exception as e:
+        print(f"⚠️ [TIMEOUT CHECK] Error: {e}")
+    
+    # Call enhanced security mention check (@everyone/@here)
+    try:
+        from enhanced_security import on_message_mention_check
+        await on_message_mention_check(message)
+    except Exception as e:
+        print(f"⚠️ [MENTION CHECK] Error: {e}")
+
+@bot.event
 async def on_message_delete(message):
     """Log deleted messages"""
     if message.author.bot:
@@ -1558,6 +1582,7 @@ from ticket_system import *
 from timeout_system import *
 from autorole import *
 from security_system import *  # Security features
+from enhanced_security import *  # Enhanced security features - Phase 1
 
 # Import timed roles system - ensure commands are loaded
 from timed_roles import *
