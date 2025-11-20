@@ -1244,9 +1244,9 @@ async def uptime(interaction: discord.Interaction):
     uptime_str = str(timedelta(seconds=int(uptime_seconds)))
 
     embed = discord.Embed(
-        title="⏰ **Quantum Core Runtime Status**",
-        description=f"{VisualElements.CIRCUIT_LINE}\n**{VisualElements.STATUS_ACTIVE}** — System operational for `{uptime_str}`\n**🟣 Active Servers:** {len(bot.guilds)}\n**◆ Neural Status:** All systems nominal\n{VisualElements.CIRCUIT_LINE}",
-        color=BrandColors.SUCCESS
+        title="⚡ **Quantum Core Runtime Status**",
+        description=f"{VisualElements.CIRCUIT_LINE}\n**{VisualElements.STATUS_ACTIVE}** — System operational for `{uptime_str}`\n**💠 Active Servers:** {len(bot.guilds)}\n**◆ Neural Status:** All systems nominal\n{VisualElements.CIRCUIT_LINE}",
+        color=BrandColors.PRIMARY
     )
     embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
     await interaction.response.send_message(embed=embed)
@@ -1352,9 +1352,9 @@ async def sync_commands(interaction: discord.Interaction):
         karma_commands = [cmd for cmd in ['givekarma', 'karma', 'karmaboard', 'setkarmachannel'] if cmd in all_commands]
 
         embed = discord.Embed(
-            title="✓ **Quantum Commands Synchronized**",
+            title="⚡ **Quantum Commands Synchronized**",
             description=f"{VisualElements.CIRCUIT_LINE}\n**◆ Global Sync:** {len(synced_global)} commands\n**◆ Guild Sync:** {len(synced_guild)} commands\n**◆ Total Active:** {len(all_commands)}\n{VisualElements.CIRCUIT_LINE}",
-            color=BrandColors.SUCCESS
+            color=BrandColors.PRIMARY
         )
 
         embed.add_field(
@@ -1451,7 +1451,7 @@ async def contact_info(interaction: discord.Interaction):
             embed = discord.Embed(
                 title="💠 **RXT ENGINE Contact Protocols**",
                 description=f"*{BOT_TAGLINE}*\n\n{VisualElements.CIRCUIT_LINE}",
-                color=BrandColors.SUCCESS
+                color=BrandColors.PRIMARY
             )
             embed.set_image(url=f"attachment://bot_contact_{bot.user.id}.png")
 
