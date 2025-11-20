@@ -9,7 +9,7 @@ RXT ENGINE is a powerful multi-function Discord bot focused on automation, moder
 
 ## Recent Changes
 
-### November 20, 2025 - Enhanced Security Systems
+### November 20, 2025 - Enhanced Security Systems & Command Cleanup
 - ✅ **Enhanced Auto-Timeout System with 100% Isolation**
   - Added `/timeout-channel` command to configure dedicated timeout channel
   - When enabled, timed-out members can ONLY see and chat in the timeout channel
@@ -29,6 +29,8 @@ RXT ENGINE is a powerful multi-function Discord bot focused on automation, moder
   - On success: assigns verified role, optionally removes unverified role
   - On failure: shows clear error message, allows retry
   - Fully integrated with `/verification-setup` command
+  - **Removed confusing duplicate verification option from `/security` command**
+  - Now only `/verification-setup` is used for CAPTCHA verification (cleaner UX)
 
 ### November 19, 2025 - Critical Bug Fixes
 - ✅ Fixed `/help` About button interaction failure (removed duplicate view creation)

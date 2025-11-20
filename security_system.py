@@ -30,15 +30,13 @@ captcha_gen = CaptchaGenerator()
 @app_commands.describe(
     feature="Security feature to configure",
     enabled="Enable or disable the feature",
-    threshold="Threshold value for the feature (where applicable)",
-    role="Role for verification or whitelist"
+    threshold="Threshold value for the feature (where applicable)"
 )
 @app_commands.choices(feature=[
     app_commands.Choice(name="anti_raid", value="anti_raid"),
     app_commands.Choice(name="anti_nuke", value="anti_nuke"),
     app_commands.Choice(name="permission_monitoring", value="permission_monitoring"),
     app_commands.Choice(name="auto_ban", value="auto_ban"),
-    app_commands.Choice(name="verification_system", value="verification_system"),
     app_commands.Choice(name="bot_whitelist", value="bot_whitelist"),
     app_commands.Choice(name="security_logs", value="security_logs")
 ])
@@ -46,8 +44,7 @@ async def security_settings(
     interaction: discord.Interaction,
     feature: str,
     enabled: bool,
-    threshold: int = None,
-    role: discord.Role = None
+    threshold: int = None
 ):
     if not await has_permission(interaction, "main_moderator"):
         await interaction.response.send_message("❌ You need Main Moderator permissions to use this command!", ephemeral=True)
@@ -57,12 +54,7 @@ async def security_settings(
     security_settings = server_data.get('security_settings', {})
 
     # Update the specific security feature
-    if feature == "verification_system" and role:
-        security_settings[feature] = {
-            'enabled': enabled,
-            'verified_role': str(role.id)
-        }
-    elif threshold is not None:
+    if threshold is not None:
         security_settings[feature] = {
             'enabled': enabled,
             'threshold': threshold
@@ -77,7 +69,6 @@ async def security_settings(
         'anti_nuke': '🚫 Anti-Nuke Protection', 
         'permission_monitoring': '👁️ Permission Monitoring',
         'auto_ban': '🔨 Auto Ban System',
-        'verification_system': '✅ Verification System',
         'bot_whitelist': '🤖 Bot Whitelist',
         'security_logs': '📋 Security Logs'
     }
@@ -87,8 +78,6 @@ async def security_settings(
     
     if threshold:
         extra_info = f"\n**Threshold:** {threshold}"
-    if role:
-        extra_info += f"\n**Role:** {role.mention}"
 
     embed = discord.Embed(
         title="🛡️ **Security Settings Updated**",
