@@ -557,18 +557,26 @@ async def on_member_join(member):
 
     server_data = await get_server_data(member.guild.id)
 
-    # Auto role assignment
+    # Auto role assignment (skip if user is quarantined)
     auto_role_id = server_data.get('auto_role')
     if auto_role_id:
         auto_role = member.guild.get_role(int(auto_role_id))
         if auto_role:
-            try:
-                await member.add_roles(auto_role, reason="Auto role assignment")
-                await log_action(member.guild.id, "moderation", f"🎭 [AUTO ROLE] {auto_role.name} assigned to {member}")
-            except discord.Forbidden:
-                print(f"Missing permissions to assign auto role to {member}")
-            except Exception as e:
-                print(f"Failed to assign auto role: {e}")
+            # Check if user has quarantine role
+            quarantine_role = discord.utils.get(member.guild.roles, name="🚫 Quarantine")
+            is_quarantined = quarantine_role and quarantine_role in member.roles
+            
+            if not is_quarantined:
+                try:
+                    await member.add_roles(auto_role, reason="Auto role assignment")
+                    await log_action(member.guild.id, "moderation", f"🎭 [AUTO ROLE] {auto_role.name} assigned to {member}")
+                except discord.Forbidden:
+                    print(f"Missing permissions to assign auto role to {member}")
+                except Exception as e:
+                    print(f"Failed to assign auto role: {e}")
+            else:
+                # User is quarantined, skip auto-role
+                await log_action(member.guild.id, "security", f"🚫 [AUTO ROLE] Skipped for quarantined user {member}")
 
     # Send welcome message to channel
     welcome_channel_id = server_data.get('welcome_channel')
