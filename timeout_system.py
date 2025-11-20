@@ -146,11 +146,47 @@ def contains_links(text):
 
     return False
 
+async def restore_timeout_permissions(guild, member):
+    """Restore previous channel permissions after timeout ends"""
+    guild_id = str(guild.id)
+    user_id = str(member.id)
+    
+    # Check if we have timeout data for this user
+    if guild_id in user_messages and user_id in user_messages[guild_id]:
+        timeout_data = user_messages[guild_id][user_id].get('timeout_data')
+        
+        if timeout_data and 'overrides' in timeout_data:
+            overrides = timeout_data['overrides']
+            
+            # Restore permissions for each channel
+            for channel_id_str, override_data in overrides.items():
+                channel = guild.get_channel(int(channel_id_str))
+                if channel:
+                    try:
+                        if override_data['had_override']:
+                            # Restore previous overwrite using allow/deny values
+                            allow = discord.Permissions(override_data['allow'])
+                            deny = discord.Permissions(override_data['deny'])
+                            overwrite = discord.PermissionOverwrite.from_pair(allow, deny)
+                            await channel.set_permissions(member, overwrite=overwrite, reason="Timeout ended - restoring previous permissions")
+                        else:
+                            # No previous overwrite, so remove the timeout overwrite
+                            await channel.set_permissions(member, overwrite=None, reason="Timeout ended - removing restrictions")
+                    except Exception as e:
+                        print(f"⚠️ [TIMEOUT RESTORE] Could not restore permissions for {channel.name}: {e}")
+            
+            # Clear timeout data
+            user_messages[guild_id][user_id]['timeout_data'] = None
+            print(f"✅ [TIMEOUT RESTORE] Restored permissions for {member} in {guild.name}")
+
 async def timeout_user(member, guild, timeout_duration, offense_type, message_content, offense_count):
     """Timeout a user and send notifications"""
     # Get log channel
     server_data = await get_server_data(guild.id)
     log_channels = server_data.get('log_channels', {})
+    timeout_settings = server_data.get('timeout_settings', {})
+    timeout_channel_id = timeout_settings.get('timeout_channel')
+    
     log_channel = None
 
     if 'moderation' in log_channels:
@@ -177,9 +213,79 @@ async def timeout_user(member, guild, timeout_duration, offense_type, message_co
             print(f"❌ [TIMEOUT ERROR] Cannot timeout {member} - role hierarchy")
             return False
 
-        # Apply timeout
+        # Apply Discord timeout
         duration = timedelta(minutes=timeout_duration)
         await member.timeout(duration, reason=f"Auto-timeout: {offense_type.title()} violation")
+        
+        # Apply timeout channel restrictions if configured
+        if timeout_channel_id:
+            timeout_channel = guild.get_channel(int(timeout_channel_id))
+            if timeout_channel:
+                # Track channels modified for this timeout and save previous overrides
+                timeout_overrides = {}
+                
+                # Set channel-specific permissions for the timed-out user
+                # They can ONLY see and send messages in the timeout channel
+                for channel in guild.channels:
+                    # Only apply to text channels, voice channels, and categories
+                    if isinstance(channel, (discord.TextChannel, discord.VoiceChannel, discord.CategoryChannel)):
+                        try:
+                            # Save previous overwrite using pair() method to get allow/deny values
+                            previous_overwrite = channel.overwrites_for(member)
+                            allow, deny = previous_overwrite.pair() if previous_overwrite else (discord.Permissions.none(), discord.Permissions.none())
+                            
+                            if channel.id == timeout_channel.id:
+                                # Allow viewing and sending in timeout channel only
+                                overwrite = discord.PermissionOverwrite(
+                                    view_channel=True,
+                                    send_messages=True,
+                                    read_message_history=True
+                                )
+                                await channel.set_permissions(
+                                    member,
+                                    overwrite=overwrite,
+                                    reason=f"Timeout channel access - {offense_type}"
+                                )
+                            else:
+                                # Deny access to all other channels
+                                overwrite = discord.PermissionOverwrite(
+                                    view_channel=False
+                                )
+                                await channel.set_permissions(
+                                    member,
+                                    overwrite=overwrite,
+                                    reason=f"Timeout restriction - {offense_type}"
+                                )
+                            
+                            # Store channel ID and previous overwrite for restoration
+                            # Save allow/deny permission values for reconstruction
+                            timeout_overrides[str(channel.id)] = {
+                                'had_override': previous_overwrite is not None and not previous_overwrite.is_empty(),
+                                'allow': allow.value,
+                                'deny': deny.value
+                            }
+                            
+                        except Exception as e:
+                            print(f"⚠️ [TIMEOUT] Could not set permissions for {channel.name}: {e}")
+                
+                # Store timeout data with expiry time for cleanup
+                user_id = str(member.id)
+                guild_id = str(guild.id)
+                if guild_id not in user_messages:
+                    user_messages[guild_id] = {}
+                if user_id not in user_messages[guild_id]:
+                    user_messages[guild_id][user_id] = {
+                        'messages': [],
+                        'bad_word_count': 0,
+                        'spam_count': 0,
+                        'link_count': 0
+                    }
+                
+                # Store timeout info with expiry and previous overrides
+                user_messages[guild_id][user_id]['timeout_data'] = {
+                    'overrides': timeout_overrides,
+                    'expires_at': (datetime.now() + timedelta(minutes=timeout_duration)).timestamp()
+                }
 
         # Send DM to user
         try:
@@ -284,6 +390,9 @@ async def remove_timeout(interaction: discord.Interaction, user: discord.Member)
 
     try:
         await user.timeout(None, reason=f"Timeout removed by {interaction.user}")
+        
+        # Restore previous channel permissions
+        await restore_timeout_permissions(interaction.guild, user)
 
         embed = discord.Embed(
             title="🔓 **Timeout Removed**",
@@ -302,7 +411,7 @@ async def remove_timeout(interaction: discord.Interaction, user: discord.Member)
                 description=f"**Server:** {interaction.guild.name}\n**Removed by:** {interaction.user}\n**Status:** You can now participate normally in the server",
                 color=BrandColors.SUCCESS
             )
-            dm_embed.set_footer(text="ᴠᴀᴀʀᴀ Moderation", icon_url=bot.user.display_avatar.url)
+            dm_embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
             await user.send(embed=dm_embed)
         except:
             pass  # User has DMs disabled
@@ -358,6 +467,77 @@ async def timeout_stats(interaction: discord.Interaction, user: discord.Member =
         embed.set_footer(text="🤖 ᴠᴀᴀʀᴀ Auto-Moderation Stats", icon_url=bot.user.display_avatar.url)
 
     await interaction.response.send_message(embed=embed)
+
+@bot.tree.command(name="timeout-channel", description="🔒 Configure timeout channel for isolated communication")
+@app_commands.describe(
+    channel="Channel where timed-out members can chat (set to None to disable)"
+)
+async def timeout_channel_config(interaction: discord.Interaction, channel: discord.TextChannel = None):
+    if not await has_permission(interaction, "main_moderator"):
+        await interaction.response.send_message("❌ You need Main Moderator permissions to use this command!", ephemeral=True)
+        return
+
+    server_data = await get_server_data(interaction.guild.id)
+    timeout_settings = server_data.get('timeout_settings', {})
+    
+    if channel:
+        timeout_settings['timeout_channel'] = str(channel.id)
+        status_msg = f"✅ Timeout channel set to {channel.mention}"
+        description = f"**Timeout Channel:** {channel.mention}\n**Status:** Active\n\n⚡ **How it works:**\nWhen a member is timed out, they will:\n• Lose access to all server channels\n• Only see and chat in {channel.mention}\n• Have restrictions removed when timeout ends\n\nThis provides 100% isolation for timed-out members while allowing communication."
+        color = BrandColors.SUCCESS
+    else:
+        timeout_settings.pop('timeout_channel', None)
+        status_msg = "❌ Timeout channel disabled"
+        description = "**Status:** Disabled\n\nTimed-out members will use Discord's default timeout system only."
+        color = BrandColors.WARNING
+    
+    await update_server_data(interaction.guild.id, {'timeout_settings': timeout_settings})
+    
+    embed = discord.Embed(
+        title="🔒 **Timeout Channel Configuration**",
+        description=description,
+        color=color
+    )
+    embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
+    
+    await interaction.response.send_message(embed=embed)
+    await log_action(interaction.guild.id, "setup", f"🔒 [TIMEOUT CHANNEL] {status_msg} by {interaction.user}")
+
+async def timeout_cleanup_task():
+    """Background task to check and clean up expired timeouts"""
+    await bot.wait_until_ready()
+    print("✅ [TIMEOUT] Auto-cleanup task started")
+    
+    while not bot.is_closed():
+        try:
+            current_time = time.time()
+            
+            # Check all guilds for expired timeouts
+            for guild_id_str, guild_data in list(user_messages.items()):
+                guild = bot.get_guild(int(guild_id_str))
+                if not guild:
+                    continue
+                
+                for user_id_str, user_data in list(guild_data.items()):
+                    timeout_data = user_data.get('timeout_data')
+                    
+                    if timeout_data and 'expires_at' in timeout_data:
+                        expires_at = timeout_data['expires_at']
+                        
+                        # Check if timeout has expired
+                        if current_time >= expires_at:
+                            member = guild.get_member(int(user_id_str))
+                            
+                            if member and not member.is_timed_out():
+                                # Timeout expired naturally, restore permissions
+                                await restore_timeout_permissions(guild, member)
+                                print(f"🔄 [AUTO-CLEANUP] Restored permissions for {member} after timeout expiry")
+            
+        except Exception as e:
+            print(f"❌ [TIMEOUT CLEANUP ERROR] {e}")
+        
+        # Run every 60 seconds
+        await asyncio.sleep(60)
 
 # Hook into message events
 @bot.event

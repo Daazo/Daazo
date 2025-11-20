@@ -9,6 +9,7 @@ from main import bot
 from brand_config import BOT_FOOTER, BrandColors
 from main import has_permission, get_server_data, update_server_data, log_action
 import json
+from captcha_generator import CaptchaGenerator
 
 # Security tracking data
 security_data = {
@@ -17,8 +18,12 @@ security_data = {
     'channel_deletions': {},  # Track channel deletions
     'role_deletions': {},  # Track role deletions
     'ban_tracking': {},  # Track recent bans
-    'whitelist_cache': {}  # Cache for bot/role whitelists
+    'whitelist_cache': {},  # Cache for bot/role whitelists
+    'captcha_data': {}  # Store active CAPTCHA challenges {user_id: captcha_text}
 }
+
+# Initialize CAPTCHA generator
+captcha_gen = CaptchaGenerator()
 
 # Security settings command
 @bot.tree.command(name="security", description="🛡️ Configure security system settings")
@@ -152,6 +157,65 @@ async def verification_setup(
     await interaction.response.send_message(embed=response_embed)
     await log_action(interaction.guild.id, "security", f"✅ [VERIFICATION] Verification system setup by {interaction.user}")
 
+class CaptchaModal(discord.ui.Modal, title='🔐 CAPTCHA Verification'):
+    """Modal for CAPTCHA input"""
+    captcha_input = discord.ui.TextInput(
+        label='Enter the CAPTCHA code shown in the image',
+        placeholder='Type the 6-character code here...',
+        required=True,
+        max_length=6,
+        min_length=6
+    )
+    
+    def __init__(self, correct_captcha, verified_role, remove_role=None):
+        super().__init__()
+        self.correct_captcha = correct_captcha
+        self.verified_role = verified_role
+        self.remove_role = remove_role
+    
+    async def on_submit(self, interaction: discord.Interaction):
+        user_input = self.captcha_input.value.upper().strip()
+        
+        # Remove user's CAPTCHA from cache
+        user_id = str(interaction.user.id)
+        if user_id in security_data['captcha_data']:
+            del security_data['captcha_data'][user_id]
+        
+        if user_input == self.correct_captcha:
+            # Correct CAPTCHA - verify the user
+            try:
+                # Remove the specified role if configured
+                if self.remove_role and self.remove_role in interaction.user.roles:
+                    await interaction.user.remove_roles(self.remove_role, reason="Role removed during verification")
+                
+                # Add verified role
+                await interaction.user.add_roles(self.verified_role, reason="CAPTCHA verification successful")
+                
+                embed = discord.Embed(
+                    title="✅ **Verification Successful!**",
+                    description="**Welcome to the server!** 🎉\n\nYou correctly solved the CAPTCHA and now have full access to the server.\n\n*Enjoy your stay!* ⚡",
+                    color=BrandColors.SUCCESS
+                )
+                embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
+                
+                await interaction.response.send_message(embed=embed, ephemeral=True)
+                await log_action(interaction.guild.id, "security", f"✅ [CAPTCHA VERIFICATION] {interaction.user} verified successfully")
+                
+            except discord.Forbidden:
+                await interaction.response.send_message("❌ I don't have permission to assign the verified role. Contact administrators.", ephemeral=True)
+            except Exception as e:
+                await interaction.response.send_message(f"❌ Verification failed: {str(e)}", ephemeral=True)
+        else:
+            # Incorrect CAPTCHA
+            embed = discord.Embed(
+                title="❌ **Verification Failed**",
+                description=f"**Incorrect CAPTCHA code!**\n\nYou entered: `{user_input}`\n\nPlease try again by clicking the Verify button.",
+                color=BrandColors.ERROR
+            )
+            embed.set_footer(text="Try again to verify", icon_url=bot.user.display_avatar.url)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            await log_action(interaction.guild.id, "security", f"❌ [CAPTCHA FAILED] {interaction.user} entered incorrect CAPTCHA: {user_input}")
+
 class VerificationView(discord.ui.View):
     def __init__(self, verified_role_id=None, remove_role_id=None):
         super().__init__(timeout=None)
@@ -184,31 +248,46 @@ class VerificationView(discord.ui.View):
         if verified_role in interaction.user.roles:
             await interaction.response.send_message("✅ You are already verified!", ephemeral=True)
             return
+        
+        remove_role = None
+        if remove_role_id:
+            remove_role = interaction.guild.get_role(int(remove_role_id))
 
         try:
-            # Remove the specified role if user has it and remove_role is set
-            if remove_role_id:
-                remove_role = interaction.guild.get_role(int(remove_role_id))
-                if remove_role and remove_role in interaction.user.roles:
-                    await interaction.user.remove_roles(remove_role, reason="Role removed during verification")
+            # Generate unique CAPTCHA for this user
+            captcha_text, captcha_file = captcha_gen.generate()
             
-            # Add verified role
-            await interaction.user.add_roles(verified_role, reason="Member verification")
+            # Store CAPTCHA for validation
+            user_id = str(interaction.user.id)
+            security_data['captcha_data'][user_id] = captcha_text
             
+            # Send CAPTCHA image
             embed = discord.Embed(
-                title="✅ **Verification Successful!**",
-                description="**Welcome to the server!** 🎉\n\nYou now have access to all channels and can participate fully in our community.\n\n*Enjoy your stay!* ⚡",
-                color=BrandColors.SUCCESS
+                title="🔐 **CAPTCHA Verification Required**",
+                description="**Please solve the CAPTCHA below to verify:**\n\nLook at the image and type the 6-character code in the form that will appear.\n\n⚠️ **Note:** Code is case-insensitive",
+                color=BrandColors.PRIMARY
             )
-            embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
+            embed.set_image(url="attachment://captcha.png")
+            embed.set_footer(text="This CAPTCHA is unique to you", icon_url=bot.user.display_avatar.url)
             
-            await interaction.response.send_message(embed=embed, ephemeral=True)
-            await log_action(interaction.guild.id, "security", f"✅ [VERIFICATION] {interaction.user} verified successfully")
+            await interaction.response.send_message(embed=embed, file=captcha_file, ephemeral=True)
             
-        except discord.Forbidden:
-            await interaction.response.send_message("❌ I don't have permission to assign the verified role. Contact administrators.", ephemeral=True)
+            # Show modal for input (send after the image message)
+            modal = CaptchaModal(captcha_text, verified_role, remove_role)
+            await interaction.followup.send("Click here to enter your CAPTCHA:", view=CaptchaInputView(modal), ephemeral=True)
+            
         except Exception as e:
-            await interaction.response.send_message(f"❌ Verification failed: {str(e)}", ephemeral=True)
+            await interaction.response.send_message(f"❌ CAPTCHA generation failed: {str(e)}", ephemeral=True)
+
+class CaptchaInputView(discord.ui.View):
+    """View with button to open CAPTCHA input modal"""
+    def __init__(self, modal):
+        super().__init__(timeout=300)  # 5 minute timeout
+        self.modal = modal
+    
+    @discord.ui.button(label='Enter CAPTCHA Code', style=discord.ButtonStyle.primary, emoji='⌨️')
+    async def open_modal(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_modal(self.modal)
 
 # Bot whitelist command
 @bot.tree.command(name="whitelist", description="🤖 Manage bot and role whitelist for security")

@@ -239,6 +239,10 @@ async def on_ready():
     # Start timed roles background task
     from timed_roles import start_timed_roles_task
     start_timed_roles_task()
+    
+    # Start timeout cleanup background task
+    from timeout_system import timeout_cleanup_task
+    bot.loop.create_task(timeout_cleanup_task())
 
     # Start MongoDB ping task
     if mongo_client:
