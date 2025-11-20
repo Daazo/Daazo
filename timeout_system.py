@@ -456,7 +456,7 @@ async def timeout_stats(interaction: discord.Interaction, user: discord.Member =
         else:
             embed.add_field(name="⏰ Current Status", value="🟢 Active", inline=False)
 
-        embed.set_footer(text="🤖 ᴠᴀᴀʀᴀ Auto-Moderation Stats", icon_url=bot.user.display_avatar.url)
+        embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
     else:
         embed = discord.Embed(
             title=f"📊 **Timeout Stats for {user.display_name}**",
@@ -464,7 +464,7 @@ async def timeout_stats(interaction: discord.Interaction, user: discord.Member =
             color=BrandColors.SUCCESS
         )
         embed.set_thumbnail(url=user.display_avatar.url)
-        embed.set_footer(text="🤖 ᴠᴀᴀʀᴀ Auto-Moderation Stats", icon_url=bot.user.display_avatar.url)
+        embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
 
     await interaction.response.send_message(embed=embed)
 

@@ -202,7 +202,7 @@ async def give_timed_role(
                 description=f"**User:** {user.mention}\n**Role:** {role.mention}\n**Duration:** `{format_duration(duration_seconds)}`\n**Expires:** {discord.utils.format_dt(expires_at, style='R')}\n**Assigned by:** {interaction.user.mention}",
                 color=BrandColors.SUCCESS
             )
-            embed.set_footer(text="ᴠᴀᴀᴢʜᴀ Timed Roles", icon_url=bot.user.display_avatar.url)
+            embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
             await interaction.response.send_message(embed=embed)
 
             # Send DM to user for timed role
@@ -212,7 +212,7 @@ async def give_timed_role(
                     description=f"**Server:** {interaction.guild.name}\n**Role:** {role.name}\n**Duration:** `{format_duration(duration_seconds)}`\n**Expires:** {discord.utils.format_dt(expires_at, style='F')}\n\n*This role will be automatically removed when it expires.*",
                     color=BrandColors.SUCCESS
                 )
-                dm_embed.set_footer(text="ᴠᴀᴀᴢʜᴀ Timed Roles", icon_url=bot.user.display_avatar.url)
+                dm_embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
                 await user.send(embed=dm_embed)
             except:
                 pass  # User has DMs disabled
@@ -269,7 +269,7 @@ async def remove_role(
             description=f"**User:** {user.mention}\n**Role:** {role.mention}\n**Removed by:** {interaction.user.mention}" + (f"\n**Note:** This was a timed role that has been cancelled." if was_timed else ""),
             color=BrandColors.WARNING
         )
-        embed.set_footer(text="ᴠᴀᴀᴢʜᴀ Role Management", icon_url=bot.user.display_avatar.url)
+        embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
         await interaction.response.send_message(embed=embed)
 
         # Send DM to user
@@ -279,7 +279,7 @@ async def remove_role(
                 description=f"Your **{role.name}** role has been removed from **{interaction.guild.name}**" + (f" (timed role cancelled)" if was_timed else "") + f".\n\n**Removed by:** {interaction.user}",
                 color=BrandColors.WARNING
             )
-            dm_embed.set_footer(text="ᴠᴀᴀᴢʜᴀ Role Management", icon_url=bot.user.display_avatar.url)
+            dm_embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
             await user.send(embed=dm_embed)
         except:
             pass  # User has DMs disabled
@@ -314,7 +314,7 @@ async def view_timed_roles(interaction: discord.Interaction):
                 description="*No active timed roles found in this server.*",
                 color=0x95a5a6
             )
-            embed.set_footer(text="ᴠᴀᴀᴢʜᴀ Timed Roles", icon_url=bot.user.display_avatar.url)
+            embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
             await interaction.response.send_message(embed=embed)
             return
 
