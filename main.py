@@ -533,6 +533,13 @@ async def on_member_join(member):
     """Send welcome message, DM, assign auto role, and run security checks"""
     # Run security checks first
     await on_member_join_security_check(member)
+    
+    # Run Phase 2 Anti-Raid check
+    try:
+        from enhanced_security import check_raid_on_join
+        await check_raid_on_join(member)
+    except Exception as e:
+        print(f"⚠️ [ANTI-RAID CHECK] Error: {e}")
 
     # Log to global system
     try:
@@ -650,12 +657,19 @@ async def on_message(message):
     except Exception as e:
         print(f"⚠️ [TIMEOUT CHECK] Error: {e}")
     
-    # Call enhanced security mention check (@everyone/@here)
+    # Call Phase 1 enhanced security mention check (@everyone/@here)
     try:
         from enhanced_security import on_message_mention_check
         await on_message_mention_check(message)
     except Exception as e:
         print(f"⚠️ [MENTION CHECK] Error: {e}")
+    
+    # Call Phase 2 enhanced security checks (spam, invites, links)
+    try:
+        from enhanced_security import on_message_security_checks
+        await on_message_security_checks(message)
+    except Exception as e:
+        print(f"⚠️ [SECURITY CHECKS] Error: {e}")
 
 @bot.event
 async def on_message_delete(message):

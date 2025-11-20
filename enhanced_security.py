@@ -15,6 +15,8 @@ enhanced_security_data = {
     'timeout_roles': {},  # Store timeout role IDs {guild_id: role_id}
     'whitelists': {},  # Store whitelists per feature {guild_id: {feature: [user_ids]}}
     'mention_tracking': {},  # Track @everyone/@here mentions
+    'spam_tracking': {},  # Track message spam {guild_id: {user_id: {'messages': [], 'last_message': '', 'repeat_count': 0}}}
+    'raid_tracking': {},  # Track member joins {guild_id: {'joins': [], 'raid_mode': False}}
 }
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -563,6 +565,10 @@ async def security_whitelist_command(
 )
 @app_commands.choices(feature=[
     app_commands.Choice(name="Auto-Timeout @everyone/@here", value="auto_timeout_mentions"),
+    app_commands.Choice(name="Link Filter", value="link_filter"),
+    app_commands.Choice(name="Anti-Invite", value="anti_invite"),
+    app_commands.Choice(name="Anti-Spam", value="anti_spam"),
+    app_commands.Choice(name="Anti-Raid", value="anti_raid"),
 ])
 async def security_config_command(
     interaction: discord.Interaction,
@@ -586,12 +592,36 @@ async def security_config_command(
             'enabled': enabled,
             'duration_minutes': duration
         }
+    elif feature == "link_filter":
+        security_settings['link_filter'] = {
+            'enabled': enabled
+        }
+    elif feature == "anti_invite":
+        security_settings['anti_invite'] = {
+            'enabled': enabled,
+            'allowed_channels': []
+        }
+    elif feature == "anti_spam":
+        security_settings['anti_spam'] = {
+            'enabled': enabled,
+            'timeout_duration': duration
+        }
+    elif feature == "anti_raid":
+        security_settings['anti_raid'] = {
+            'enabled': enabled,
+            'threshold_seconds': 10,
+            'join_threshold': 5
+        }
     
     await update_server_data(interaction.guild.id, {'security_settings': security_settings})
     
     status = "✅ Enabled" if enabled else "❌ Disabled"
     feature_names = {
-        'auto_timeout_mentions': '📣 Auto-Timeout @everyone/@here Mentions'
+        'auto_timeout_mentions': '📣 Auto-Timeout @everyone/@here Mentions',
+        'link_filter': '🔗 Link Filter',
+        'anti_invite': '💬 Anti-Invite (Discord Invites)',
+        'anti_spam': '💨 Anti-Spam',
+        'anti_raid': '🚨 Anti-Raid (Mass Joins)'
     }
     
     embed = discord.Embed(
@@ -604,4 +634,355 @@ async def security_config_command(
     await interaction.response.send_message(embed=embed)
     await log_action(interaction.guild.id, "security", f"⚙️ [SECURITY CONFIG] {feature_names.get(feature, feature)} {status} | Duration: {duration}m | By: {interaction.user}")
 
-print("✅ [ENHANCED SECURITY] Phase 1 systems loaded - Enhanced Timeout, Whitelist Framework, Auto-Timeout")
+# ═══════════════════════════════════════════════════════════════════════════
+# PHASE 2: LINK FILTER SYSTEM
+# ═══════════════════════════════════════════════════════════════════════════
+
+async def check_link_filter(message):
+    """Check for external links and delete if not whitelisted"""
+    if message.author.bot or not message.guild:
+        return
+    
+    # Skip if user has moderator permissions
+    if await has_permission_user(message.author, message.guild, "junior_moderator"):
+        return
+    
+    # Check if user is whitelisted for posting links
+    if await is_whitelisted(message.guild.id, message.author.id, 'post_links'):
+        return
+    
+    # Get security settings
+    server_data = await get_server_data(message.guild.id)
+    security_settings = server_data.get('security_settings', {})
+    link_filter = security_settings.get('link_filter', {})
+    
+    if not link_filter.get('enabled', False):
+        return
+    
+    # Check for links (http://, https://, www.)
+    link_pattern = r'(https?://|www\.)\S+'
+    if re.search(link_pattern, message.content, re.IGNORECASE):
+        # Delete the message
+        try:
+            await message.delete()
+        except:
+            pass
+        
+        # Send notification
+        try:
+            embed = discord.Embed(
+                title="⚡ **Link Blocked**",
+                description=f"**{message.author.mention}, external links are not allowed**\n\n💠 Message deleted by Quantum Security",
+                color=BrandColors.DANGER
+            )
+            if message.guild and message.guild.me:
+                embed.set_footer(text=BOT_FOOTER, icon_url=message.guild.me.display_avatar.url)
+            else:
+                embed.set_footer(text=BOT_FOOTER)
+            await message.channel.send(embed=embed, delete_after=5)
+        except:
+            pass
+        
+        # Log action
+        await log_action(message.guild.id, "security", f"🔗 [LINK FILTER] Blocked link from {message.author.mention} in {message.channel.mention}")
+
+# ═══════════════════════════════════════════════════════════════════════════
+# PHASE 2: ANTI-INVITE SYSTEM
+# ═══════════════════════════════════════════════════════════════════════════
+
+async def check_discord_invites(message):
+    """Check for Discord invite links and delete if not in allowed channels"""
+    if message.author.bot or not message.guild:
+        return
+    
+    # Skip if user has moderator permissions
+    if await has_permission_user(message.author, message.guild, "junior_moderator"):
+        return
+    
+    # Check if user is whitelisted for posting invites
+    if await is_whitelisted(message.guild.id, message.author.id, 'discord_invites'):
+        return
+    
+    # Get security settings
+    server_data = await get_server_data(message.guild.id)
+    security_settings = server_data.get('security_settings', {})
+    anti_invite = security_settings.get('anti_invite', {})
+    
+    if not anti_invite.get('enabled', False):
+        return
+    
+    # Check if channel is allowed
+    allowed_channels = anti_invite.get('allowed_channels', [])
+    if str(message.channel.id) in allowed_channels:
+        return
+    
+    # Check for Discord invite links
+    invite_pattern = r'(discord\.gg/|discord\.com/invite/|discordapp\.com/invite/)\S+'
+    if re.search(invite_pattern, message.content, re.IGNORECASE):
+        # Delete the message
+        try:
+            await message.delete()
+        except:
+            pass
+        
+        # Send notification
+        try:
+            embed = discord.Embed(
+                title="⚡ **Discord Invite Blocked**",
+                description=f"**{message.author.mention}, Discord invites are not allowed here**\n\n💠 Message deleted by Quantum Security",
+                color=BrandColors.DANGER
+            )
+            if message.guild and message.guild.me:
+                embed.set_footer(text=BOT_FOOTER, icon_url=message.guild.me.display_avatar.url)
+            else:
+                embed.set_footer(text=BOT_FOOTER)
+            await message.channel.send(embed=embed, delete_after=5)
+        except:
+            pass
+        
+        # Log action
+        await log_action(message.guild.id, "security", f"💬 [ANTI-INVITE] Blocked Discord invite from {message.author.mention} in {message.channel.mention}")
+
+# ═══════════════════════════════════════════════════════════════════════════
+# PHASE 2: ANTI-SPAM SYSTEM
+# ═══════════════════════════════════════════════════════════════════════════
+
+async def check_spam(message):
+    """Check for message spam and repeated content"""
+    if message.author.bot or not message.guild:
+        return
+    
+    # Skip if user has moderator permissions
+    if await has_permission_user(message.author, message.guild, "junior_moderator"):
+        return
+    
+    # Get security settings
+    server_data = await get_server_data(message.guild.id)
+    security_settings = server_data.get('security_settings', {})
+    anti_spam = security_settings.get('anti_spam', {})
+    
+    if not anti_spam.get('enabled', False):
+        return
+    
+    guild_id = str(message.guild.id)
+    user_id = str(message.author.id)
+    
+    # Initialize tracking
+    if guild_id not in enhanced_security_data['spam_tracking']:
+        enhanced_security_data['spam_tracking'][guild_id] = {}
+    
+    if user_id not in enhanced_security_data['spam_tracking'][guild_id]:
+        enhanced_security_data['spam_tracking'][guild_id][user_id] = {
+            'messages': [],
+            'last_message': '',
+            'repeat_count': 0
+        }
+    
+    user_spam_data = enhanced_security_data['spam_tracking'][guild_id][user_id]
+    current_time = time.time()
+    
+    # Check for repeated messages
+    if message.content == user_spam_data['last_message']:
+        user_spam_data['repeat_count'] += 1
+        
+        # If repeated 3+ times, timeout user
+        if user_spam_data['repeat_count'] >= 3:
+            try:
+                await message.delete()
+            except:
+                pass
+            
+            duration = anti_spam.get('timeout_duration', 10)
+            await apply_enhanced_timeout(
+                message.guild,
+                message.author,
+                duration,
+                "Spam: Repeated messages",
+                triggered_by="Anti-Spam System"
+            )
+            
+            # Send notification
+            try:
+                embed = discord.Embed(
+                    title="⚡ **Anti-Spam: User Timed Out**",
+                    description=f"**{message.author.mention} has been timed out**\n\n**◆ Reason:** Repeated messages (spam)\n**◆ Duration:** {duration} minutes\n\n💠 Message deleted by Quantum Security",
+                    color=BrandColors.DANGER
+                )
+                if message.guild and message.guild.me:
+                    embed.set_footer(text=BOT_FOOTER, icon_url=message.guild.me.display_avatar.url)
+                else:
+                    embed.set_footer(text=BOT_FOOTER)
+                await message.channel.send(embed=embed, delete_after=10)
+            except:
+                pass
+            
+            # Reset tracking
+            user_spam_data['repeat_count'] = 0
+            user_spam_data['messages'] = []
+            return
+    else:
+        user_spam_data['repeat_count'] = 0
+        user_spam_data['last_message'] = message.content
+    
+    # Check for message flood (5+ messages in 5 seconds)
+    user_spam_data['messages'].append(current_time)
+    user_spam_data['messages'] = [t for t in user_spam_data['messages'] if current_time - t < 5]
+    
+    if len(user_spam_data['messages']) >= 5:
+        # Delete recent messages and timeout
+        try:
+            await message.delete()
+        except:
+            pass
+        
+        duration = anti_spam.get('timeout_duration', 10)
+        await apply_enhanced_timeout(
+            message.guild,
+            message.author,
+            duration,
+            "Spam: Message flooding",
+            triggered_by="Anti-Spam System"
+        )
+        
+        # Send notification
+        try:
+            embed = discord.Embed(
+                title="⚡ **Anti-Spam: User Timed Out**",
+                description=f"**{message.author.mention} has been timed out**\n\n**◆ Reason:** Message flooding (5+ messages in 5s)\n**◆ Duration:** {duration} minutes\n\n💠 Quantum Security active",
+                color=BrandColors.DANGER
+            )
+            if message.guild and message.guild.me:
+                embed.set_footer(text=BOT_FOOTER, icon_url=message.guild.me.display_avatar.url)
+            else:
+                embed.set_footer(text=BOT_FOOTER)
+            await message.channel.send(embed=embed, delete_after=10)
+        except:
+            pass
+        
+        # Reset tracking
+        user_spam_data['messages'] = []
+
+# ═══════════════════════════════════════════════════════════════════════════
+# PHASE 2: ANTI-RAID SYSTEM
+# ═══════════════════════════════════════════════════════════════════════════
+
+async def check_raid_on_join(member):
+    """Check for raid (mass joins) and enable raid mode"""
+    guild = member.guild
+    guild_id = str(guild.id)
+    
+    # Get security settings
+    server_data = await get_server_data(guild.id)
+    security_settings = server_data.get('security_settings', {})
+    anti_raid = security_settings.get('anti_raid', {})
+    
+    if not anti_raid.get('enabled', False):
+        return
+    
+    # Initialize tracking
+    if guild_id not in enhanced_security_data['raid_tracking']:
+        enhanced_security_data['raid_tracking'][guild_id] = {
+            'joins': [],
+            'raid_mode': False
+        }
+    
+    raid_data = enhanced_security_data['raid_tracking'][guild_id]
+    current_time = time.time()
+    
+    # Add this join to tracking
+    raid_data['joins'].append(current_time)
+    
+    # Clean old joins (older than threshold seconds)
+    threshold_seconds = anti_raid.get('threshold_seconds', 10)
+    raid_data['joins'] = [t for t in raid_data['joins'] if current_time - t < threshold_seconds]
+    
+    # Check if raid threshold exceeded
+    join_threshold = anti_raid.get('join_threshold', 5)
+    
+    if len(raid_data['joins']) >= join_threshold and not raid_data['raid_mode']:
+        # Enable raid mode
+        raid_data['raid_mode'] = True
+        
+        # Log raid detected
+        await log_action(guild.id, "security", f"🚨 [ANTI-RAID] Raid detected! {len(raid_data['joins'])} joins in {threshold_seconds}s - RAID MODE ENABLED")
+        
+        # Send alert to security channel
+        server_data = await get_server_data(guild.id)
+        organized_logs = server_data.get('organized_log_channels', {})
+        
+        if organized_logs and 'security' in organized_logs:
+            channel = bot.get_channel(int(organized_logs['security']))
+            if channel:
+                embed = discord.Embed(
+                    title="🚨 **RAID ALERT - RAID MODE ACTIVATED**",
+                    description=f"**◆ Detection:** {len(raid_data['joins'])} members joined in {threshold_seconds} seconds\n**◆ Status:** RAID MODE ENABLED\n**◆ Action:** New members will be kicked automatically\n\n💠 Use `/security-config` to disable raid mode",
+                    color=BrandColors.DANGER
+                )
+                if guild.me:
+                    embed.set_footer(text=BOT_FOOTER, icon_url=guild.me.display_avatar.url)
+                else:
+                    embed.set_footer(text=BOT_FOOTER)
+                await channel.send(embed=embed)
+    
+    # If raid mode active, kick new members
+    if raid_data['raid_mode']:
+        try:
+            await member.kick(reason="Auto-kicked during raid mode - RXT ENGINE Security")
+            await log_action(guild.id, "security", f"🚨 [ANTI-RAID] Auto-kicked {member} ({member.id}) - Raid mode active")
+        except Exception as e:
+            print(f"⚠️ [ANTI-RAID] Could not kick {member}: {e}")
+
+# ═══════════════════════════════════════════════════════════════════════════
+# PHASE 2: UNIFIED MESSAGE CHECK HANDLER
+# ═══════════════════════════════════════════════════════════════════════════
+
+async def on_message_security_checks(message):
+    """Run all Phase 2 security checks on messages (called from main.py)"""
+    if message.author.bot or not message.guild:
+        return
+    
+    # Run all checks (order matters - most strict first)
+    await check_spam(message)  # Check spam first (can timeout user)
+    await check_discord_invites(message)  # Check Discord invites
+    await check_link_filter(message)  # Check external links
+
+# ═══════════════════════════════════════════════════════════════════════════
+# PHASE 2: RAID MODE MANAGEMENT COMMAND
+# ═══════════════════════════════════════════════════════════════════════════
+
+@bot.tree.command(name="raid-mode", description="🚨 Manually enable/disable raid mode")
+@app_commands.describe(enabled="Enable or disable raid mode")
+async def raid_mode_command(interaction: discord.Interaction, enabled: bool):
+    if not await has_permission(interaction, "main_moderator"):
+        await interaction.response.send_message("❌ You need Main Moderator permissions to use this command!", ephemeral=True)
+        return
+    
+    if not interaction.guild:
+        await interaction.response.send_message("❌ This command can only be used in a server!", ephemeral=True)
+        return
+    
+    guild_id = str(interaction.guild.id)
+    
+    # Initialize tracking
+    if guild_id not in enhanced_security_data['raid_tracking']:
+        enhanced_security_data['raid_tracking'][guild_id] = {
+            'joins': [],
+            'raid_mode': False
+        }
+    
+    enhanced_security_data['raid_tracking'][guild_id]['raid_mode'] = enabled
+    
+    status = "🚨 ENABLED" if enabled else "✅ DISABLED"
+    color = BrandColors.DANGER if enabled else BrandColors.SUCCESS
+    
+    embed = discord.Embed(
+        title="⚡ **Raid Mode Updated**",
+        description=f"**◆ Status:** {status}\n\n{'💠 New members will be automatically kicked' if enabled else '💠 Normal member joins resumed'}",
+        color=color
+    )
+    embed.set_footer(text=BOT_FOOTER, icon_url=interaction.client.user.display_avatar.url)
+    
+    await interaction.response.send_message(embed=embed)
+    await log_action(interaction.guild.id, "security", f"🚨 [RAID MODE] {'Enabled' if enabled else 'Disabled'} by {interaction.user}")
+
+print("✅ [ENHANCED SECURITY] Phase 1 & 2 systems loaded - Full Security Suite Active")
