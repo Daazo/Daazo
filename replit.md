@@ -11,6 +11,51 @@ RXT ENGINE is a multi-functional Discord bot designed for automation, moderation
 
 ## Recent Changes
 
+### November 20, 2025 - Security Command Consolidation & Unified System
+- 🔐 **Security Command Consolidation**
+  - **Unified `/security-config` Command**: Consolidated all scattered security settings into one comprehensive command
+    - Replaced old `/security` command with enhanced version supporting all security features
+    - Added timeout system controls: `timeout_bad_words`, `timeout_spam`, `timeout_links`
+    - Supports all Phase 1-4 security features in single interface
+    - Features disabled by default - must be explicitly enabled by server admins
+  
+  - **Enhanced `/security-whitelist` Command**: Manages security feature bypasses
+    - Replaced old `/whitelist` command with feature-specific whitelist management
+    - Supports per-feature whitelists (anti_alt, bot_block, malware_filter, etc.)
+    - Allows trusted users to bypass specific security restrictions
+  
+  - **New `/security-timeout-channel` Command**: Configure timeout isolation
+    - Moved from old `/timeout-channel` command
+    - Sets dedicated channel where timed-out members can communicate
+    - Provides 100% isolation - timed-out users can only access this channel
+  
+  - **New `/security-status` Command**: View complete security overview
+    - Shows all enabled/disabled security features at a glance
+    - Displays auto security, content filters, member protection, and timeout system status
+    - Shows configured timeout channel if set
+  
+  - **Deprecated Commands Removed**:
+    - ❌ `/security` → Use `/security-config` instead
+    - ❌ `/whitelist` → Use `/security-whitelist` instead
+    - ❌ `/timeout-settings` → Use `/security-config` with timeout options
+    - ❌ `/timeout-channel` → Use `/security-timeout-channel` instead
+  
+  - **Per-Server Timeout Role System**: Each server gets one unique timeout role
+    - Automatically created when needed via `get_or_create_timeout_role()`
+    - Cached in memory and stored in database for persistence
+    - Role permissions configured for timeout isolation
+  
+  - **Dual Logging System**: All security actions logged to two destinations
+    - **Local Server Logs**: Sent to server-specific security/moderation channels
+    - **Global Main Server Logs**: Sent to main server's global logging channel
+    - Ensures comprehensive audit trail across all servers
+  
+  - **Security Detection & Actions**: All systems detect threats and take action when enabled
+    - Anti-raid, anti-spam, anti-nuke detection active when enabled
+    - Auto-timeout, auto-kick, auto-ban enforcement based on configuration
+    - Malware filter, link filter, anti-invite checks on all messages
+    - Warning system escalation (3/5/7 strikes) with auto-enforcement
+
 ### November 20, 2025 - Phase 4: Anti-Alt, Auto Bot-Block, Malware Filter, Auto Warning System
 - 🚫 **Anti-Alt System (New Account Quarantine)**
   - Automatically quarantines new accounts younger than configured days (default: 7 days)
