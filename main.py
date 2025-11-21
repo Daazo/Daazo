@@ -298,95 +298,7 @@ async def on_guild_remove(guild):
     except Exception as e:
         print(f"Error updating server list on guild remove: {e}")
 
-@bot.event
-async def on_message(message):
-    if message.author.bot:
-        return
-
-    # Handle DM mentions
-    if not message.guild:  # This is a DM
-        # Check for bot mention in DMs - Send contact info
-        if (bot.user in message.mentions or
-            f"<@{bot.user.id}>" in message.content or
-            f"<@!{bot.user.id}>" in message.content):
-
-            # Send contact info in DMs
-            bot_owner_id = os.getenv('BOT_OWNER_ID')
-            contact_email = os.getenv('CONTACT_EMAIL')
-            support_server = os.getenv('SUPPORT_SERVER')
-
-            owner_mention = f"<@{bot_owner_id}>" if bot_owner_id else "Contact via server"
-            email_text = contact_email if contact_email else "Not available"
-            support_text = support_server if support_server else "Contact owner for invite"
-
-            embed = discord.Embed(
-                title="📞 **Contact Information & Support**",
-                description=f"*Hello! Here's how to get help or get in touch:*\n\n**👨‍💻 Developer:** {owner_mention}\n**📧 Email:** `{email_text}`\n**🏠 Support Server:** {support_text}\n\n*Need quick help? Use `/help` in any server!*",
-                color=BrandColors.PRIMARY
-            )
-            embed.set_thumbnail(url=bot.user.display_avatar.url)
-            embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
-
-            view = discord.ui.View()
-            if support_server:
-                support_button = discord.ui.Button(label="🏠 Support Server", style=discord.ButtonStyle.link, url=support_server, emoji="🏠")
-                view.add_item(support_button)
-
-            invite_button = discord.ui.Button(label="🔗 Invite Bot", style=discord.ButtonStyle.link, url=f"https://discord.com/api/oauth2/authorize?client_id={bot.user.id}&permissions=8&scope=bot%20applications.commands", emoji="🔗")
-            view.add_item(invite_button)
-
-            sent_message = await message.channel.send(embed=embed, view=view)
-
-            # Log DM interaction globally
-            try:
-                from global_logging import log_to_global
-                log_embed = discord.Embed(
-                    title="◆ Quantum Core Contact Request",
-                    description=f"**User:** {message.author} ({message.author.id})\n**Protocol:** Direct mention trigger\n**Action:** Contact protocols transmitted",
-                    color=BrandColors.PRIMARY,
-                    timestamp=datetime.now()
-                )
-                await log_to_global("dm-logs", log_embed)
-            except:
-                pass
-
-            # Auto delete after 1 minute
-            await asyncio.sleep(60)
-            try:
-                await sent_message.delete()
-            except:
-                pass
-            return
-
-        # Check for owner mention in DMs
-        owner_id = os.getenv('BOT_OWNER_ID')
-        if owner_id and (f"<@{owner_id}>" in message.content or
-                        f"<@!{owner_id}>" in message.content or
-                        "daazo" in message.content.lower()):
-            owner_mention = f"<@{owner_id}>" if owner_id else "Contact via server"
-            embed = discord.Embed(
-                title="📢 **Developer Mention**",
-                description=f"**Developer:** {owner_mention}\n\n**About:** {BOT_OWNER_DESCRIPTION}\n\n**Need Help?** Use `/help` or contact the support server.",
-                color=BrandColors.ACCENT
-            )
-            embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
-            embed.set_thumbnail(url=bot.user.display_avatar.url)
-            sent_message = await message.channel.send(embed=embed)
-            # Auto delete after 1 minute
-            await asyncio.sleep(60)
-            try:
-                await sent_message.delete()
-            except:
-                pass
-            return
-
-        return  # Don't process other DM messages
-
-
-
-    # Karma system is handled via reactions and commands
-
-    await bot.process_commands(message)
+# Removed first duplicate on_message handler - merged into the main one below at line 659
 
 async def has_permission_user(member, guild, permission_level):
     """Check if user has required permission level (for message events)"""
@@ -657,7 +569,7 @@ async def on_member_join(member):
 
 @bot.event
 async def on_message(message):
-    """Handle all message events and route to security checks"""
+    """Handle all message events including DMs and security checks"""
     # Process commands first
     await bot.process_commands(message)
     
@@ -665,6 +577,86 @@ async def on_message(message):
     if message.author.bot:
         return
     
+    # Handle DM mentions
+    if not message.guild:  # This is a DM
+        # Check for bot mention in DMs - Send contact info
+        if (bot.user in message.mentions or
+            f"<@{bot.user.id}>" in message.content or
+            f"<@!{bot.user.id}>" in message.content):
+
+            # Send contact info in DMs
+            bot_owner_id = os.getenv('BOT_OWNER_ID')
+            contact_email = os.getenv('CONTACT_EMAIL')
+            support_server = os.getenv('SUPPORT_SERVER')
+
+            owner_mention = f"<@{bot_owner_id}>" if bot_owner_id else "Contact via server"
+            email_text = contact_email if contact_email else "Not available"
+            support_text = support_server if support_server else "Contact owner for invite"
+
+            embed = discord.Embed(
+                title="📞 **Contact Information & Support**",
+                description=f"*Hello! Here's how to get help or get in touch:*\n\n**👨‍💻 Developer:** {owner_mention}\n**📧 Email:** `{email_text}`\n**🏠 Support Server:** {support_text}\n\n*Need quick help? Use `/help` in any server!*",
+                color=BrandColors.PRIMARY
+            )
+            embed.set_thumbnail(url=bot.user.display_avatar.url)
+            embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
+
+            view = discord.ui.View()
+            if support_server:
+                support_button = discord.ui.Button(label="🏠 Support Server", style=discord.ButtonStyle.link, url=support_server, emoji="🏠")
+                view.add_item(support_button)
+
+            invite_button = discord.ui.Button(label="🔗 Invite Bot", style=discord.ButtonStyle.link, url=f"https://discord.com/api/oauth2/authorize?client_id={bot.user.id}&permissions=8&scope=bot%20applications.commands", emoji="🔗")
+            view.add_item(invite_button)
+
+            sent_message = await message.channel.send(embed=embed, view=view)
+
+            # Log DM interaction globally
+            try:
+                from global_logging import log_to_global
+                log_embed = discord.Embed(
+                    title="◆ Quantum Core Contact Request",
+                    description=f"**User:** {message.author} ({message.author.id})\n**Protocol:** Direct mention trigger\n**Action:** Contact protocols transmitted",
+                    color=BrandColors.PRIMARY,
+                    timestamp=datetime.now()
+                )
+                await log_to_global("dm-logs", log_embed)
+            except:
+                pass
+
+            # Auto delete after 1 minute
+            await asyncio.sleep(60)
+            try:
+                await sent_message.delete()
+            except:
+                pass
+            return
+
+        # Check for owner mention in DMs
+        owner_id = os.getenv('BOT_OWNER_ID')
+        if owner_id and (f"<@{owner_id}>" in message.content or
+                        f"<@!{owner_id}>" in message.content or
+                        "daazo" in message.content.lower()):
+            owner_mention = f"<@{owner_id}>" if owner_id else "Contact via server"
+            embed = discord.Embed(
+                title="📢 **Developer Mention**",
+                description=f"**Developer:** {owner_mention}\n\n**About:** {BOT_OWNER_DESCRIPTION}\n\n**Need Help?** Use `/help` or contact the support server.",
+                color=BrandColors.ACCENT
+            )
+            embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
+            embed.set_thumbnail(url=bot.user.display_avatar.url)
+            sent_message = await message.channel.send(embed=embed)
+            # Auto delete after 1 minute
+            await asyncio.sleep(60)
+            try:
+                await sent_message.delete()
+            except:
+                pass
+            return
+
+        return  # Don't process other DM messages
+    
+    # Guild messages only - Run security checks
     # Call timeout system check (bad words, spam, links)
     try:
         from timeout_system import on_message_timeout_check
