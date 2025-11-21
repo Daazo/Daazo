@@ -161,17 +161,21 @@ async def get_or_create_quarantine_channel(guild: discord.Guild, config: Dict, r
     embed = discord.Embed(
         title="🔒 **RXT QUARANTINE ZONE**",
         description=f"{VisualElements.CIRCUIT_LINE}\n\n"
-                   f"⚠️ **You have been placed in quarantine by the RXT Security System.**\n\n"
-                   f"**What is quarantine?**\n"
-                   f"• Your roles have been temporarily removed\n"
-                   f"• You can only see and chat in this channel\n"
-                   f"• Your message history is preserved\n\n"
-                   f"**What happens next?**\n"
-                   f"• Quarantine duration increases with repeated violations\n"
-                   f"• Minimum duration: 15 minutes\n"
-                   f"• Contact moderators if you believe this is a mistake\n\n"
+                   f"⚠️ **Quarantine Status: ACTIVE**\n\n"
+                   f"You have been placed in quarantine by the RXT Security System due to a policy violation.\n\n"
+                   f"**Quarantine Details:**\n"
+                   f"└─ Role access temporarily restricted\n"
+                   f"└─ Channel isolation active\n"
+                   f"└─ Message history preserved\n\n"
+                   f"**Escalation System:**\n"
+                   f"└─ First violation: 15 minutes\n"
+                   f"└─ Repeated violations: Extended duration\n"
+                   f"└─ Duration multiplies with each breach\n\n"
+                   f"**Important:**\n"
+                   f"Please review server rules. Contact moderators if this was an error.\n\n"
                    f"{VisualElements.CIRCUIT_LINE}",
-        color=BrandColors.DANGER
+        color=BrandColors.DANGER,
+        timestamp=datetime.now(timezone.utc)
     )
     embed.set_footer(text=BOT_FOOTER)
     await channel.send(embed=embed)
@@ -241,25 +245,27 @@ async def apply_quarantine(member: discord.Member, reason: str, violation_type: 
         embed = discord.Embed(
             title="🔒 **QUARANTINE APPLIED**",
             description=f"{VisualElements.CIRCUIT_LINE}\n\n"
-                       f"**User:** {member.mention}\n"
+                       f"**Target:** {member.mention}\n"
                        f"**User ID:** `{member.id}`\n"
-                       f"**Violation:** {violation_type.replace('_', ' ').title()}\n"
+                       f"**Violation Type:** {violation_type.replace('_', ' ').upper()}\n"
                        f"**Reason:** {reason}\n\n"
-                       f"**Quarantine Details:**\n"
-                       f"└─ Duration: {quarantine_duration // 60} minutes\n"
-                       f"└─ Violation Count: {current_violations}\n"
-                       f"└─ Expires: <t:{int(quarantine_until)}:R>\n\n"
-                       f"**Actions Taken:**\n"
-                       f"└─ All roles removed\n"
-                       f"└─ Moved to {quarantine_channel.mention}\n"
-                       f"└─ Cannot participate in server\n\n"
-                       f"**Early Release:** Use `/quarantine remove @user` to restore early\n\n"
+                       f"**Quarantine Configuration:**\n"
+                       f"◆ Duration: {quarantine_duration // 60} minutes\n"
+                       f"◆ Severity Level: {current_violations}\n"
+                       f"◆ Expires: <t:{int(quarantine_until)}:R>\n\n"
+                       f"**Applied Restrictions:**\n"
+                       f"✗ All roles removed from user\n"
+                       f"✗ Confined to {quarantine_channel.mention}\n"
+                       f"✗ Server participation revoked\n\n"
+                       f"**Release Options:**\n"
+                       f"→ Automatic: Quarantine expires at scheduled time\n"
+                       f"→ Manual: `/quarantine remove @user` (Admin only)\n\n"
                        f"{VisualElements.CIRCUIT_LINE}",
             color=BrandColors.DANGER,
             timestamp=datetime.now(timezone.utc)
         )
         embed.set_footer(text=BOT_FOOTER)
-        embed.add_field(name="System Note", value="Roles will be automatically restored when quarantine expires.", inline=False)
+        embed.add_field(name="⚙️ System Note", value="Roles will be automatically restored when quarantine expires. Violation count increases with repeated breaches.", inline=False)
         
         try:
             await quarantine_channel.send(f"{member.mention}", embed=embed)
@@ -328,11 +334,15 @@ async def _execute_quarantine_restoration(member: discord.Member, is_from_reload
                     embed = discord.Embed(
                         title="✅ **QUARANTINE ENDED**",
                         description=f"{VisualElements.CIRCUIT_LINE}\n\n"
-                                   f"**User:** {member.mention}\n"
-                                   f"**Status:** Quarantine period expired\n"
-                                   f"**Roles Restored:** {len(roles_to_add)} role(s) restored\n"
-                                   f"**Reason:** {quarantine_info.get('reason', 'N/A')}\n\n"
-                                   f"The user has been released from quarantine and can participate normally.\n\n"
+                                   f"**Released User:** {member.mention}\n"
+                                   f"**Resolution Status:** Quarantine period completed\n"
+                                   f"**Roles Restored:** {len(roles_to_add)} role(s) returned\n"
+                                   f"**Original Violation:** {quarantine_info.get('reason', 'N/A')}\n\n"
+                                   f"**Restoration Details:**\n"
+                                   f"◆ All previous roles reinstated\n"
+                                   f"◆ Full server access granted\n"
+                                   f"◆ Channel restrictions lifted\n\n"
+                                   f"The user can now participate in the server normally. Warnings reset if behavior improves.\n\n"
                                    f"{VisualElements.CIRCUIT_LINE}",
                         color=BrandColors.SUCCESS,
                         timestamp=datetime.now(timezone.utc)
@@ -963,7 +973,7 @@ def setup(bot: commands.Bot, get_server_data_func, update_server_data_func, log_
             if not await _has_permission(interaction, "junior_moderator"):
                 embed = discord.Embed(
                     title="❌ **ACCESS DENIED**",
-                    description="**Permission Required:** 🔵 Junior Moderator+",
+                    description=f"{VisualElements.CIRCUIT_LINE}\n\n**Permission Required:** 🔵 Junior Moderator+\n\n{VisualElements.CIRCUIT_LINE}",
                     color=BrandColors.DANGER
                 )
                 embed.set_footer(text=BOT_FOOTER)
@@ -976,14 +986,15 @@ def setup(bot: commands.Bot, get_server_data_func, update_server_data_func, log_
             await update_security_config(interaction.guild.id, config)
             
             status = "✅ ENABLED" if new_state else "❌ DISABLED"
-            features_text = "\n".join([f"• {feature}" for feature in features])
+            features_text = "\n".join([f"→ {feature}" for feature in features])
             
             embed = discord.Embed(
                 title=f"{title} **{status}**",
                 description=f"{VisualElements.CIRCUIT_LINE}\n\n"
-                           f"**Protected Against:**\n{features_text}\n\n"
-                           f"**Status:** {status}\n"
-                           f"**Enforcement:** Quarantine system active\n\n"
+                           f"**Protection Features:**\n{features_text}\n\n"
+                           f"**Configuration:**\n"
+                           f"◆ Status: {status}\n"
+                           f"◆ Enforcement: Quarantine system active\n\n"
                            f"{VisualElements.CIRCUIT_LINE}",
                 color=BrandColors.SUCCESS if new_state else BrandColors.WARNING
             )
@@ -1018,7 +1029,7 @@ def setup(bot: commands.Bot, get_server_data_func, update_server_data_func, log_
         if not await _has_permission(interaction, "junior_moderator"):
             embed = discord.Embed(
                 title="❌ **ACCESS DENIED**",
-                description="**Permission Required:** 🔵 Junior Moderator+",
+                description=f"{VisualElements.CIRCUIT_LINE}\n\n**Permission Required:** 🔵 Junior Moderator+\n\n{VisualElements.CIRCUIT_LINE}",
                 color=BrandColors.DANGER
             )
             embed.set_footer(text=BOT_FOOTER)
@@ -1034,12 +1045,21 @@ def setup(bot: commands.Bot, get_server_data_func, update_server_data_func, log_
             embed = discord.Embed(
                 title="🔐 **SECURITY SYSTEM ENABLED**",
                 description=f"{VisualElements.CIRCUIT_LINE}\n\n"
-                           f"**Status:** ✅ All protections active\n"
-                           f"**Enforcement:** Quarantine system\n\n"
-                           f"All security features are now monitoring the server.\n"
-                           f"Configure individual protections with `/antiraid`, `/antinuke`, etc.\n\n"
+                           f"**System Status:** ✅ ALL PROTECTIONS ACTIVE\n\n"
+                           f"**Active Modules:**\n"
+                           f"◆ Anti-Raid Protection\n"
+                           f"◆ Anti-Nuke Defense\n"
+                           f"◆ Anti-Link Filter\n"
+                           f"◆ Anti-Spam Monitor\n"
+                           f"◆ Mass Mention Guard\n"
+                           f"◆ Webhook Guard\n"
+                           f"◆ Anti-Role Abuse\n"
+                           f"◆ Mass Delete Detection\n\n"
+                           f"**Enforcement:** Quarantine system with escalating penalties\n"
+                           f"**Management:** Use `/antiraid`, `/antinuke`, etc. to configure\n\n"
                            f"{VisualElements.CIRCUIT_LINE}",
-                color=BrandColors.SUCCESS
+                color=BrandColors.SUCCESS,
+                timestamp=datetime.now(timezone.utc)
             )
             embed.set_footer(text=BOT_FOOTER)
             await interaction.response.send_message(embed=embed)
@@ -1054,10 +1074,13 @@ def setup(bot: commands.Bot, get_server_data_func, update_server_data_func, log_
             embed = discord.Embed(
                 title="⛔ **SECURITY SYSTEM DISABLED**",
                 description=f"{VisualElements.CIRCUIT_LINE}\n\n"
-                           f"**Status:** ❌ All protections inactive\n\n"
-                           f"Use `/security enable` to re-enable protections.\n\n"
+                           f"**System Status:** ❌ ALL PROTECTIONS INACTIVE\n\n"
+                           f"⚠️ **Warning:** Server is now unprotected from raids, spam, and malicious activity.\n\n"
+                           f"**Re-enable Security:**\n"
+                           f"Use `/security enable` to restore all protections.\n\n"
                            f"{VisualElements.CIRCUIT_LINE}",
-                color=BrandColors.WARNING
+                color=BrandColors.WARNING,
+                timestamp=datetime.now(timezone.utc)
             )
             embed.set_footer(text=BOT_FOOTER)
             await interaction.response.send_message(embed=embed)
@@ -1067,21 +1090,22 @@ def setup(bot: commands.Bot, get_server_data_func, update_server_data_func, log_
         
         elif action == "status":
             status_lines = [
-                f"🔐 Security: {'✅ Enabled' if config.get('security_enabled') else '❌ Disabled'}",
-                f"🛡️ Anti-Raid: {'✅ Enabled' if config.get('antiraid_enabled') else '❌ Disabled'}",
-                f"💣 Anti-Nuke: {'✅ Enabled' if config.get('antinuke_enabled') else '❌ Disabled'}",
-                f"🔗 Anti-Link: {'✅ Enabled' if config.get('antilink_enabled') else '❌ Disabled'}",
-                f"💬 Anti-Spam: {'✅ Enabled' if config.get('antispam_enabled') else '❌ Disabled'}",
-                f"📢 Mass Mention: {'✅ Enabled' if config.get('massmention_enabled') else '❌ Disabled'}",
-                f"🪝 Webhook Guard: {'✅ Enabled' if config.get('webhookguard_enabled') else '❌ Disabled'}",
-                f"🎭 Anti-Role: {'✅ Enabled' if config.get('antirole_enabled') else '❌ Disabled'}",
-                f"🗑️ Mass Delete: {'✅ Enabled' if config.get('massdelete_enabled') else '❌ Disabled'}",
+                f"🔐 **Core System:** {'✅ ENABLED' if config.get('security_enabled') else '❌ DISABLED'}",
+                f"🛡️ **Anti-Raid:** {'✅ ACTIVE' if config.get('antiraid_enabled') else '❌ INACTIVE'}",
+                f"💣 **Anti-Nuke:** {'✅ ACTIVE' if config.get('antinuke_enabled') else '❌ INACTIVE'}",
+                f"🔗 **Anti-Link:** {'✅ ACTIVE' if config.get('antilink_enabled') else '❌ INACTIVE'}",
+                f"💬 **Anti-Spam:** {'✅ ACTIVE' if config.get('antispam_enabled') else '❌ INACTIVE'}",
+                f"📢 **Mass Mention:** {'✅ ACTIVE' if config.get('massmention_enabled') else '❌ INACTIVE'}",
+                f"🪝 **Webhook Guard:** {'✅ ACTIVE' if config.get('webhookguard_enabled') else '❌ INACTIVE'}",
+                f"🎭 **Anti-Role Abuse:** {'✅ ACTIVE' if config.get('antirole_enabled') else '❌ INACTIVE'}",
+                f"🗑️ **Mass Delete:** {'✅ ACTIVE' if config.get('massdelete_enabled') else '❌ INACTIVE'}",
             ]
             
             embed = discord.Embed(
-                title="🔐 **SECURITY STATUS**",
+                title="🔐 **SECURITY SYSTEM STATUS**",
                 description=f"{VisualElements.CIRCUIT_LINE}\n\n" + "\n".join(status_lines) + f"\n\n{VisualElements.CIRCUIT_LINE}",
-                color=BrandColors.INFO
+                color=BrandColors.INFO,
+                timestamp=datetime.now(timezone.utc)
             )
             embed.set_footer(text=BOT_FOOTER)
             await interaction.response.send_message(embed=embed)
@@ -1094,16 +1118,19 @@ def setup(bot: commands.Bot, get_server_data_func, update_server_data_func, log_
             embed = discord.Embed(
                 title="✅ **QUARANTINE SYSTEM SETUP**",
                 description=f"{VisualElements.CIRCUIT_LINE}\n\n"
-                           f"**Created:**\n"
-                           f"• 🔴 Quarantine Role\n"
-                           f"• 📁 Quarantine Category\n"
-                           f"• 💬 Quarantine Channel\n\n"
-                           f"**Features:**\n"
-                           f"• Automatic role storage and restoration\n"
-                           f"• Escalating quarantine durations\n"
-                           f"• Minimum 15 minute quarantine\n\n"
+                           f"**Infrastructure Created:**\n"
+                           f"◆ 🔴 Quarantine Role (restricted permissions)\n"
+                           f"◆ 📁 Quarantine Category (RXT-QUARANTINE)\n"
+                           f"◆ 💬 Quarantine Channel (isolation zone)\n\n"
+                           f"**System Features:**\n"
+                           f"◆ Automatic role storage and restoration\n"
+                           f"◆ Escalating quarantine durations per violation\n"
+                           f"◆ Minimum 15-minute quarantine period\n"
+                           f"◆ MongoDB persistence across bot restarts\n\n"
+                           f"**Status:** Ready for security operations\n\n"
                            f"{VisualElements.CIRCUIT_LINE}",
-                color=BrandColors.SUCCESS
+                color=BrandColors.SUCCESS,
+                timestamp=datetime.now(timezone.utc)
             )
             embed.set_footer(text=BOT_FOOTER)
             await interaction.followup.send(embed=embed)
@@ -1126,7 +1153,7 @@ def setup(bot: commands.Bot, get_server_data_func, update_server_data_func, log_
         if not await _has_permission(interaction, "junior_moderator"):
             embed = discord.Embed(
                 title="❌ **ACCESS DENIED**",
-                description="**Permission Required:** 🔵 Junior Moderator+",
+                description=f"{VisualElements.CIRCUIT_LINE}\n\n**Permission Required:** 🔵 Junior Moderator+\n\n{VisualElements.CIRCUIT_LINE}",
                 color=BrandColors.DANGER
             )
             embed.set_footer(text=BOT_FOOTER)
@@ -1141,12 +1168,12 @@ def setup(bot: commands.Bot, get_server_data_func, update_server_data_func, log_
                 embed = discord.Embed(
                     title="✅ **QUARANTINE REMOVED**",
                     description=f"{VisualElements.CIRCUIT_LINE}\n\n"
-                               f"**User:** {user.mention}\n"
+                               f"**Released User:** {user.mention}\n"
                                f"**User ID:** `{user.id}`\n\n"
-                               f"**Resolution:**\n"
-                               f"└─ Quarantine status: **LIFTED**\n"
-                               f"└─ Roles restored: **All previous roles**\n"
-                               f"└─ Released by: {interaction.user.mention}\n\n"
+                               f"**Release Details:**\n"
+                               f"◆ Quarantine Status: **LIFTED**\n"
+                               f"◆ Roles Restored: **All previous roles**\n"
+                               f"◆ Released by: {interaction.user.mention}\n\n"
                                f"**Status:** User can now participate in the server normally.\n\n"
                                f"{VisualElements.CIRCUIT_LINE}",
                     color=BrandColors.SUCCESS,
@@ -1155,7 +1182,7 @@ def setup(bot: commands.Bot, get_server_data_func, update_server_data_func, log_
             else:
                 embed = discord.Embed(
                     title="❌ **NOT IN QUARANTINE**",
-                    description=f"{user.mention} is not currently in quarantine.",
+                    description=f"{VisualElements.CIRCUIT_LINE}\n\n{user.mention} is not currently in quarantine.\n\n{VisualElements.CIRCUIT_LINE}",
                     color=BrandColors.DANGER
                 )
             
@@ -1169,20 +1196,21 @@ def setup(bot: commands.Bot, get_server_data_func, update_server_data_func, log_
             if quarantine_data:
                 time_remaining = max(0, quarantine_data['quarantine_until'] - time.time())
                 embed = discord.Embed(
-                    title="⚠️ **QUARANTINE INFO**",
+                    title="⚠️ **QUARANTINE INFORMATION**",
                     description=f"{VisualElements.CIRCUIT_LINE}\n\n"
-                               f"**User:** {user.mention}\n"
-                               f"**Reason:** {quarantine_data['reason']}\n"
-                               f"**Violations:** {quarantine_data['violations']}\n"
+                               f"**Subject:** {user.mention}\n"
+                               f"**Violation Reason:** {quarantine_data['reason']}\n"
+                               f"**Severity Level:** {quarantine_data['violations']}\n"
                                f"**Time Remaining:** {int(time_remaining // 60)} minutes\n"
-                               f"**Expires:** <t:{int(quarantine_data['quarantine_until'])}:R>\n\n"
+                               f"**Release Time:** <t:{int(quarantine_data['quarantine_until'])}:R>\n\n"
                                f"{VisualElements.CIRCUIT_LINE}",
-                    color=BrandColors.WARNING
+                    color=BrandColors.WARNING,
+                    timestamp=datetime.now(timezone.utc)
                 )
             else:
                 embed = discord.Embed(
                     title="ℹ️ **NOT QUARANTINED**",
-                    description=f"{user.mention} is not in quarantine.",
+                    description=f"{VisualElements.CIRCUIT_LINE}\n\n{user.mention} is not in quarantine.\n\n{VisualElements.CIRCUIT_LINE}",
                     color=BrandColors.INFO
                 )
             
@@ -1211,7 +1239,7 @@ def setup(bot: commands.Bot, get_server_data_func, update_server_data_func, log_
         if not await _has_permission(interaction, "junior_moderator"):
             embed = discord.Embed(
                 title="❌ **ACCESS DENIED**",
-                description="**Permission Required:** 🔵 Junior Moderator+",
+                description=f"{VisualElements.CIRCUIT_LINE}\n\n**Permission Required:** 🔵 Junior Moderator+\n\n{VisualElements.CIRCUIT_LINE}",
                 color=BrandColors.DANGER
             )
             embed.set_footer(text=BOT_FOOTER)
@@ -1231,14 +1259,15 @@ def setup(bot: commands.Bot, get_server_data_func, update_server_data_func, log_
             bot_mentions = [f"<@{bid}>" for bid in whitelist_bots]
             
             embed = discord.Embed(
-                title="🟩 **WHITELIST**",
+                title="🟩 **WHITELIST REGISTRY**",
                 description=f"{VisualElements.CIRCUIT_LINE}\n\n"
-                           f"**Users:** {', '.join(user_mentions) if user_mentions else 'None'}\n"
-                           f"**Roles:** {', '.join(role_mentions) if role_mentions else 'None'}\n"
-                           f"**Bots:** {', '.join(bot_mentions) if bot_mentions else 'None'}\n\n"
-                           f"*(Server owner is always whitelisted)*\n\n"
+                           f"**Whitelisted Users:**\n{', '.join(user_mentions) if user_mentions else '└─ None'}\n\n"
+                           f"**Whitelisted Roles:**\n{', '.join(role_mentions) if role_mentions else '└─ None'}\n\n"
+                           f"**Whitelisted Bots:**\n{', '.join(bot_mentions) if bot_mentions else '└─ None'}\n\n"
+                           f"**⚙️ System Note:** Server owner is always whitelisted.\n\n"
                            f"{VisualElements.CIRCUIT_LINE}",
-                color=BrandColors.SUCCESS
+                color=BrandColors.SUCCESS,
+                timestamp=datetime.now(timezone.utc)
             )
         
         elif action == "add" and target:
@@ -1251,7 +1280,7 @@ def setup(bot: commands.Bot, get_server_data_func, update_server_data_func, log_
                     
                     embed = discord.Embed(
                         title="✅ **WHITELIST UPDATED**",
-                        description=f"Added {target.mention} to user whitelist.\n\nUser is now exempt from security protections.",
+                        description=f"{VisualElements.CIRCUIT_LINE}\n\nAdded {target.mention} to user whitelist.\n\nUser is now **EXEMPT** from all security protections.\n\n{VisualElements.CIRCUIT_LINE}",
                         color=BrandColors.SUCCESS
                     )
                     await _log_action(interaction.guild.id, "security",
@@ -1387,7 +1416,7 @@ def setup(bot: commands.Bot, get_server_data_func, update_server_data_func, log_
         if not await _has_permission(interaction, "server_admin"):
             embed = discord.Embed(
                 title="❌ **ACCESS DENIED**",
-                description="**Permission Required:** 🔴 Server Admin+",
+                description=f"{VisualElements.CIRCUIT_LINE}\n\n**Permission Required:** 🔴 Server Admin+\n\n{VisualElements.CIRCUIT_LINE}",
                 color=BrandColors.DANGER
             )
             embed.set_footer(text=BOT_FOOTER)
@@ -1410,8 +1439,9 @@ def setup(bot: commands.Bot, get_server_data_func, update_server_data_func, log_
             
             embed = discord.Embed(
                 title="⚙️ **SECURITY CONFIGURATION**",
-                description=f"{VisualElements.CIRCUIT_LINE}\n\n" + "\n".join(config_lines) + f"\n\n{VisualElements.CIRCUIT_LINE}",
-                color=BrandColors.INFO
+                description=f"{VisualElements.CIRCUIT_LINE}\n\n**Current Settings:**\n" + "\n".join(config_lines) + f"\n\n{VisualElements.CIRCUIT_LINE}",
+                color=BrandColors.INFO,
+                timestamp=datetime.now(timezone.utc)
             )
             embed.set_footer(text=BOT_FOOTER)
             await interaction.response.send_message(embed=embed)
@@ -1420,7 +1450,7 @@ def setup(bot: commands.Bot, get_server_data_func, update_server_data_func, log_
         if value is None or value < 0:
             embed = discord.Embed(
                 title="❌ **INVALID VALUE**",
-                description="Value must be a positive number.",
+                description=f"{VisualElements.CIRCUIT_LINE}\n\nValue must be a positive number (>0).\n\n{VisualElements.CIRCUIT_LINE}",
                 color=BrandColors.DANGER
             )
             embed.set_footer(text=BOT_FOOTER)
@@ -1442,7 +1472,7 @@ def setup(bot: commands.Bot, get_server_data_func, update_server_data_func, log_
         if not db_key:
             embed = discord.Embed(
                 title="❌ **INVALID SETTING**",
-                description="Setting not found.",
+                description=f"{VisualElements.CIRCUIT_LINE}\n\nSetting not found in configuration.\n\n{VisualElements.CIRCUIT_LINE}",
                 color=BrandColors.DANGER
             )
             embed.set_footer(text=BOT_FOOTER)
@@ -1467,11 +1497,13 @@ def setup(bot: commands.Bot, get_server_data_func, update_server_data_func, log_
         embed = discord.Embed(
             title="✅ **CONFIGURATION UPDATED**",
             description=f"{VisualElements.CIRCUIT_LINE}\n\n"
-                       f"**Setting:** {setting_name}\n"
-                       f"**Old Value:** {old_value}\n"
-                       f"**New Value:** {value}\n\n"
+                       f"**Setting Name:** {setting_name}\n"
+                       f"**Previous Value:** {old_value}\n"
+                       f"**Updated Value:** {value}\n\n"
+                       f"Configuration change applied successfully.\n\n"
                        f"{VisualElements.CIRCUIT_LINE}",
-            color=BrandColors.SUCCESS
+            color=BrandColors.SUCCESS,
+            timestamp=datetime.now(timezone.utc)
         )
         embed.set_footer(text=BOT_FOOTER)
         await interaction.response.send_message(embed=embed)
