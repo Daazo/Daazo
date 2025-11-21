@@ -14,6 +14,7 @@ user_join_timestamps = defaultdict(list)
 user_message_deletion_attempts = defaultdict(lambda: defaultdict(list))
 user_stored_roles = {}
 user_quarantine_info = {}
+system_role_actions = set()  # Track system-initiated role changes to skip checks
 
 _bot_instance = None
 _get_server_data = None
@@ -262,6 +263,10 @@ async def restore_roles_after_quarantine(member: discord.Member, duration_second
             if role:
                 roles_to_add.append(role)
         
+        # Mark this action as system-initiated to skip security checks
+        action_id = f"{member.guild.id}_{member.id}_{time.time()}"
+        system_role_actions.add(action_id)
+        
         if quarantine_role_id:
             quarantine_role = member.guild.get_role(int(quarantine_role_id))
             if quarantine_role:
@@ -275,6 +280,10 @@ async def restore_roles_after_quarantine(member: discord.Member, duration_second
                 await member.add_roles(*roles_to_add, reason="RXT Security - Quarantine expired, roles restored")
             except:
                 pass
+        
+        # Clean up system action marker after a short delay
+        await asyncio.sleep(2)
+        system_role_actions.discard(action_id)
         
         del user_stored_roles[storage_key]
         if storage_key in user_quarantine_info:
@@ -304,6 +313,10 @@ async def remove_quarantine_manual(member: discord.Member):
             if role:
                 roles_to_add.append(role)
         
+        # Mark this action as system-initiated to skip security checks
+        action_id = f"{member.guild.id}_{member.id}_{time.time()}"
+        system_role_actions.add(action_id)
+        
         if quarantine_role_id:
             quarantine_role = member.guild.get_role(int(quarantine_role_id))
             if quarantine_role:
@@ -317,6 +330,10 @@ async def remove_quarantine_manual(member: discord.Member):
                 await member.add_roles(*roles_to_add, reason="RXT Security - Quarantine removed manually, roles restored")
             except:
                 pass
+        
+        # Clean up system action marker after a short delay
+        await asyncio.sleep(2)
+        system_role_actions.discard(action_id)
         
         del user_stored_roles[storage_key]
         if storage_key in user_quarantine_info:
@@ -530,6 +547,13 @@ def setup(bot: commands.Bot, get_server_data_func, update_server_data_func, log_
         if not config.get('security_enabled') or not config.get('antinuke_enabled'):
             return
         
+        # Check if this is a system action (role restoration) - skip checks
+        action_id = f"{before.guild.id}_{before.id}_{time.time()}"
+        is_system_action = any(str(before.guild.id) in str(action) and str(before.id) in str(action) for action in system_role_actions)
+        
+        if is_system_action:
+            return
+        
         if await is_whitelisted(before.guild.id, before):
             return
         
@@ -538,6 +562,25 @@ def setup(bot: commands.Bot, get_server_data_func, update_server_data_func, log_
         
         removed_roles = before_roles - after_roles
         added_roles = after_roles - before_roles
+        
+        # Check who made the role change from audit logs
+        actor_is_whitelisted = False
+        try:
+            async for entry in before.guild.audit_logs(limit=1, action=discord.AuditLogAction.member_role_update):
+                if entry.target.id == before.id:
+                    actor = entry.user
+                    if actor and await is_whitelisted(before.guild.id, actor):
+                        actor_is_whitelisted = True
+                    # Check if actor is server owner
+                    if actor and actor.id == before.guild.owner_id:
+                        actor_is_whitelisted = True
+                    break
+        except:
+            pass
+        
+        # If actor is whitelisted, skip quarantine
+        if actor_is_whitelisted:
+            return
         
         if removed_roles:
             for role in removed_roles:
