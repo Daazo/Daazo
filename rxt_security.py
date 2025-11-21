@@ -39,7 +39,6 @@ async def get_security_config(guild_id: int) -> Dict:
         'quarantine_role_id': None,
         'quarantine_channel_id': None,
         'quarantine_category_id': None,
-        'main_moderator_role_id': None,
         
         'whitelist_users': [],
         'whitelist_roles': [],
@@ -578,9 +577,10 @@ def setup(bot: commands.Bot, get_server_data_func, update_server_data_func, log_
                         # Check if actor is whitelisted user
                         elif await is_whitelisted(before.guild.id, actor):
                             actor_is_trusted = True
-                        # Check if actor has main moderator role
+                        # Check if actor has main moderator role (from server setup)
                         else:
-                            main_mod_role_id = config.get('main_moderator_role_id')
+                            server_data = await _get_server_data(before.guild.id)
+                            main_mod_role_id = server_data.get('main_moderator_role')
                             if main_mod_role_id and any(role.id == int(main_mod_role_id) for role in actor.roles):
                                 actor_is_trusted = True
                     break
@@ -1236,38 +1236,5 @@ def setup(bot: commands.Bot, get_server_data_func, update_server_data_func, log_
         
         await _log_action(interaction.guild.id, "security",
                         f"⚙️ [CONFIG] {setting_name} changed from {old_value} to {value} by {interaction.user}")
-    
-    @bot.tree.command(name="set-main-moderator", description="⚙️ Set the main moderator role for security system")
-    @app_commands.describe(role="The main moderator role to trust")
-    async def set_main_moderator_command(interaction: discord.Interaction, role: discord.Role):
-        if not await _has_permission(interaction, "server_admin"):
-            embed = discord.Embed(
-                title="❌ **ACCESS DENIED**",
-                description="**Permission Required:** 🔴 Server Admin+",
-                color=BrandColors.DANGER
-            )
-            embed.set_footer(text=BOT_FOOTER)
-            await interaction.response.send_message(embed=embed, ephemeral=True)
-            return
-        
-        config = await get_security_config(interaction.guild.id)
-        old_role_id = config.get('main_moderator_role_id')
-        config['main_moderator_role_id'] = role.id
-        await update_security_config(interaction.guild.id, config)
-        
-        embed = discord.Embed(
-            title="✅ **MAIN MODERATOR ROLE SET**",
-            description=f"{VisualElements.CIRCUIT_LINE}\n\n"
-                       f"**Role:** {role.mention}\n"
-                       f"**Status:** This role is now trusted for giving/removing high-permission roles\n"
-                       f"**Bypass:** Owner + Whitelisted users/roles + This role\n\n"
-                       f"{VisualElements.CIRCUIT_LINE}",
-            color=BrandColors.SUCCESS
-        )
-        embed.set_footer(text=BOT_FOOTER)
-        await interaction.response.send_message(embed=embed)
-        
-        await _log_action(interaction.guild.id, "security",
-                        f"⚙️ [CONFIG] Main moderator role set to {role.name} by {interaction.user}")
     
     print("✅ RXT Security System setup complete - event listeners and commands registered")
