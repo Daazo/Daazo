@@ -384,8 +384,14 @@ async def on_message_mention_check(message):
     if not auto_timeout_mentions.get('enabled', False):
         return
     
-    # Check for @everyone or @here mentions
-    if message.mention_everyone:
+    # Check for @everyone or @here mentions (both actual mentions AND text attempts)
+    has_mention = message.mention_everyone  # Actual Discord mention that pings
+    
+    # Check for text attempts using regex to avoid false positives (e.g., email@here.com)
+    # Negative lookbehind (?<!\S) ensures @ is not preceded by non-whitespace
+    has_text_mention = bool(re.search(r'(?<!\S)@(?:everyone|here)\b', message.content, re.IGNORECASE))
+    
+    if has_mention or has_text_mention:
         # Delete the message
         try:
             await message.delete()
