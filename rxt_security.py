@@ -212,12 +212,29 @@ async def apply_quarantine(member: discord.Member, reason: str, violation_type: 
         # Clean up system action marker after a delay
         asyncio.create_task(_cleanup_system_action(member.guild.id, member.id, 5))
         
+        quarantine_until = time.time() + quarantine_duration
         user_quarantine_info[storage_key] = {
-            'quarantine_until': time.time() + quarantine_duration,
+            'quarantine_until': quarantine_until,
             'violations': current_violations,
             'reason': reason,
             'quarantine_role_id': quarantine_role.id
         }
+        
+        # Save quarantine data to MongoDB for persistence
+        try:
+            server_data = await _get_server_data(member.guild.id)
+            if 'quarantine_data' not in server_data:
+                server_data['quarantine_data'] = {}
+            server_data['quarantine_data'][str(member.id)] = {
+                'roles': [role.id for role in current_roles],
+                'quarantine_until': quarantine_until,
+                'violations': current_violations,
+                'reason': reason,
+                'quarantine_role_id': quarantine_role.id
+            }
+            await _update_server_data(member.guild.id, server_data)
+        except:
+            pass
         
         embed = discord.Embed(
             title="🔒 **QUARANTINE APPLIED**",
@@ -306,8 +323,26 @@ async def restore_roles_after_quarantine(member: discord.Member, duration_second
 
 async def remove_quarantine_manual(member: discord.Member):
     storage_key = f"{member.guild.id}_{member.id}"
+    
+    # Check memory first
     if storage_key not in user_stored_roles:
-        return False
+        # Check MongoDB for persisted quarantine data
+        try:
+            server_data = await _get_server_data(member.guild.id)
+            quarantine_data = server_data.get('quarantine_data', {})
+            if str(member.id) in quarantine_data:
+                # Load from MongoDB
+                user_stored_roles[storage_key] = {
+                    'roles': quarantine_data[str(member.id)].get('roles', []),
+                    'timestamp': time.time(),
+                    'duration': 0,
+                    'violations': quarantine_data[str(member.id)].get('violations', 0)
+                }
+                user_quarantine_info[storage_key] = quarantine_data[str(member.id)]
+            else:
+                return False
+        except:
+            return False
     
     try:
         stored_data = user_stored_roles[storage_key]
@@ -347,6 +382,15 @@ async def remove_quarantine_manual(member: discord.Member):
         if storage_key in user_quarantine_info:
             del user_quarantine_info[storage_key]
         
+        # Remove from MongoDB
+        try:
+            server_data = await _get_server_data(member.guild.id)
+            if 'quarantine_data' in server_data and str(member.id) in server_data['quarantine_data']:
+                del server_data['quarantine_data'][str(member.id)]
+                await _update_server_data(member.guild.id, server_data)
+        except:
+            pass
+        
         await _log_action(member.guild.id, "security", 
                         f"✅ [QUARANTINE REMOVED] {member} ({member.id}) - Manually removed by moderator")
         
@@ -370,6 +414,30 @@ def setup(bot: commands.Bot, get_server_data_func, update_server_data_func, log_
     _log_action = log_action_func
     _has_permission = has_permission_func
     _setup_complete = True
+    
+    # Load persisted quarantine data from MongoDB on startup
+    async def load_quarantine_data():
+        try:
+            from main import bot as main_bot
+            for guild in main_bot.guilds:
+                try:
+                    server_data = await _get_server_data(guild.id)
+                    quarantine_data = server_data.get('quarantine_data', {})
+                    for user_id_str, q_data in quarantine_data.items():
+                        storage_key = f"{guild.id}_{user_id_str}"
+                        user_stored_roles[storage_key] = {
+                            'roles': q_data.get('roles', []),
+                            'timestamp': time.time(),
+                            'duration': 0,
+                            'violations': q_data.get('violations', 0)
+                        }
+                        user_quarantine_info[storage_key] = q_data
+                except:
+                    pass
+        except:
+            pass
+    
+    asyncio.create_task(load_quarantine_data())
     
     @bot.listen('on_message')
     async def security_on_message(message):
