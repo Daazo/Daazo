@@ -657,40 +657,57 @@ def setup(bot: commands.Bot, get_server_data_func, update_server_data_func, log_
         if not messages:
             return
         
-        config = await get_security_config(messages[0].guild.id)
-        
-        if not config.get('security_enabled') or not config.get('massdelete_enabled'):
-            return
-        
-        # Get the user who deleted the messages from audit logs
-        actor = None
         try:
-            async for entry in messages[0].guild.audit_logs(limit=5, action=discord.AuditLogAction.message_delete):
-                if entry.user:
-                    actor = entry.user
-                    break
-        except:
-            pass
-        
-        if not actor or actor.bot:
-            return
-        
-        # Get the member object
-        try:
-            member = await messages[0].guild.fetch_member(actor.id)
-        except:
-            return
-        
-        if await is_whitelisted(messages[0].guild.id, member):
-            return
-        
-        # Quarantine user for mass message deletion
-        deletion_count = len(messages)
-        if deletion_count > config.get('mass_delete_threshold', 5):
-            await apply_quarantine(member, f"Mass message deletion detected ({deletion_count} messages)", "mass_delete_violation")
+            config = await get_security_config(messages[0].guild.id)
+            
+            if not config.get('security_enabled') or not config.get('massdelete_enabled'):
+                return
+            
+            deletion_count = len(messages)
+            threshold = config.get('mass_delete_threshold', 5)
+            
+            # Only check audit logs if deletion count exceeds threshold
+            if deletion_count <= threshold:
+                return
+            
+            # Get the user who deleted the messages from audit logs
+            actor = None
+            actor_member = None
+            
+            # Try to get from audit logs - check multiple actions
+            try:
+                async for entry in messages[0].guild.audit_logs(limit=10):
+                    if entry.user and not entry.user.bot:
+                        # Check if this is a recent message delete action
+                        if entry.action == discord.AuditLogAction.message_delete or entry.action == discord.AuditLogAction.message_bulk_delete:
+                            actor = entry.user
+                            break
+            except Exception as e:
+                await _log_action(messages[0].guild.id, "security", 
+                               f"⚠️ [MASS DELETE] Could not read audit logs: {e}")
+                return
+            
+            if not actor:
+                return
+            
+            # Get the member object
+            try:
+                actor_member = await messages[0].guild.fetch_member(actor.id)
+            except:
+                return
+            
+            # Check whitelist
+            if await is_whitelisted(messages[0].guild.id, actor_member):
+                return
+            
+            # Quarantine user for mass message deletion
+            await apply_quarantine(actor_member, f"Mass message deletion detected ({deletion_count} messages deleted)", "mass_delete_violation")
             
             await _log_action(messages[0].guild.id, "security",
-                            f"🚫 [MASS DELETE] {actor} placed in quarantine - Deleted {deletion_count} messages in {messages[0].channel.mention}")
+                            f"🚫 [MASS DELETE] {actor} placed in quarantine - {deletion_count} messages deleted in {messages[0].channel.mention}")
+        except Exception as e:
+            await _log_action(messages[0].guild.id, "security", 
+                           f"⚠️ [MASS DELETE ERROR] {e}")
     
     @bot.listen('on_member_update')
     async def security_on_role_change(before, after):
