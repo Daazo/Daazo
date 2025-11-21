@@ -269,9 +269,7 @@ async def setup(
                 ("🎭-reaction-role-logs", "Reaction role verification and assignment logs 🎪", False),
                 ("👋-welcome-logs", "Member join and welcome message logs 🎊", False),
                 ("🔊-voice-logs", "Voice channel join, leave, and activity logs 🎵", False),
-                ("🕰️-timed-role-logs", "Timed role assignments and removals logs ⏰", False),
-                ("🔒-timeout-logs", "Auto-timeout system and penalty logs ⚠️", False),
-                ("🔒-security-logs", "Security feature alerts and logs 🛡️", False)
+                ("🕰️-timed-role-logs", "Timed role assignments and removals logs ⏰", False)
             ]
 
             created_channels = []
@@ -288,8 +286,6 @@ async def setup(
                 "welcome": "welcome",
                 "voice": "voice",
                 "timed_roles": "timed",
-                "timeout": "timeout",
-                "security": "security",
                 "profile": "general",  # Route profile logs to general
                 "utility": "general"   # Route utility logs to general
             }
@@ -340,7 +336,7 @@ async def setup(
 
             embed = discord.Embed(
                 title="✅ Organized Logging System Setup Complete!",
-                description=f"**Category:** {category.mention}\n**Channels Created:** {len(created_channels)}\n**Total Log Channels:** {len(log_channels_to_create)}\n\n🎯 **Organized Logging Features:**\n📋 General logs (includes ping, uptime, profile commands)\n🛡️ Moderation action tracking\n⚙️ Setup and configuration logs\n💬 Communication command logs\n✨ Karma system activity\n🎫 Ticket management\n🎭 Reaction role verifications\n👋 Welcome system logs\n🔊 Voice activity tracking\n🕰️ Timed role management\n🔒 Auto-timeout system logs\n🔒 Security feature alerts",
+                description=f"**Category:** {category.mention}\n**Channels Created:** {len(created_channels)}\n**Total Log Channels:** {len(log_channels_to_create)}\n\n🎯 **Organized Logging Features:**\n📋 General logs (includes ping, uptime, profile commands)\n🛡️ Moderation action tracking\n⚙️ Setup and configuration logs\n💬 Communication command logs\n✨ Karma system activity\n🎫 Ticket management\n🎭 Reaction role verifications\n👋 Welcome system logs\n🔊 Voice activity tracking\n🕰️ Timed role management",
                 color=BrandColors.INFO
             )
             embed.set_footer(text=f"{BOT_FOOTER} • Professional logging system active!")
