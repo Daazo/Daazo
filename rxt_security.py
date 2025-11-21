@@ -771,7 +771,7 @@ def setup(bot: commands.Bot, get_server_data_func, update_server_data_func, log_
     async def security_on_role_change(before, after):
         config = await get_security_config(before.guild.id)
         
-        if not config.get('security_enabled') or not config.get('antinuke_enabled'):
+        if not config.get('security_enabled'):
             return
         
         # Check if this is a system action (role restoration) - skip checks
@@ -821,7 +821,8 @@ def setup(bot: commands.Bot, get_server_data_func, update_server_data_func, log_
         if actor_is_trusted:
             return
         
-        if removed_roles:
+        # ANTI-NUKE: Check for role removal (anti-nuke protection)
+        if removed_roles and config.get('antinuke_enabled'):
             for role in removed_roles:
                 if role.permissions.administrator or role.permissions.manage_guild:
                     # Mark this role addition as system action before adding to prevent re-triggering protection
@@ -842,7 +843,8 @@ def setup(bot: commands.Bot, get_server_data_func, update_server_data_func, log_
                                        f"🚫 [ANTI-NUKE] {actor_member} placed in quarantine - Attempted to remove role: {role.name} from {before}")
                     return
         
-        if added_roles:
+        # ANTI-ROLE: Check for unauthorized role granting (anti-role abuse)
+        if added_roles and config.get('antirole_enabled'):
             for role in added_roles:
                 if role.permissions.administrator or role.permissions.manage_guild or role.permissions.ban_members:
                     # Mark this role removal as system action before removing to prevent re-triggering protection
