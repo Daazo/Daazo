@@ -605,10 +605,16 @@ def setup(bot: commands.Bot, get_server_data_func, update_server_data_func, log_
         if removed_roles:
             for role in removed_roles:
                 if role.permissions.administrator or role.permissions.manage_guild:
+                    # Mark this role addition as system action before adding to prevent re-triggering protection
+                    system_role_actions.add((before.guild.id, before.id))
+                    
                     try:
                         await before.add_roles(role, reason="RXT Security - Anti-nuke protection")
                     except:
                         pass
+                    
+                    # Clean up system action marker after a delay
+                    asyncio.create_task(_cleanup_system_action(before.guild.id, before.id, 3))
                     
                     # Quarantine the actor who tried to remove admin role
                     if actor_member:
