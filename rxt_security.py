@@ -203,8 +203,14 @@ async def apply_quarantine(member: discord.Member, reason: str, violation_type: 
         quarantine_role = await get_or_create_quarantine_role(member.guild, config)
         quarantine_channel = await get_or_create_quarantine_channel(member.guild, config, quarantine_role)
         
+        # Mark this action as system-initiated BEFORE removing roles to prevent triggering anti-nuke
+        system_role_actions.add((member.guild.id, member.id))
+        
         await member.remove_roles(*current_roles, reason=f"RXT Security Quarantine: {reason}")
         await member.add_roles(quarantine_role, reason=f"RXT Security Quarantine: {reason}")
+        
+        # Clean up system action marker after a delay
+        asyncio.create_task(_cleanup_system_action(member.guild.id, member.id, 5))
         
         user_quarantine_info[storage_key] = {
             'quarantine_until': time.time() + quarantine_duration,
@@ -242,6 +248,10 @@ async def apply_quarantine(member: discord.Member, reason: str, violation_type: 
     except Exception as e:
         await _log_action(member.guild.id, "security", 
                         f"⚠️ [QUARANTINE FAILED] {member} - Error: {e}")
+
+async def _cleanup_system_action(guild_id: int, user_id: int, delay_seconds: int):
+    await asyncio.sleep(delay_seconds)
+    system_role_actions.discard((guild_id, user_id))
 
 async def restore_roles_after_quarantine(member: discord.Member, duration_seconds: int):
     await asyncio.sleep(duration_seconds)
