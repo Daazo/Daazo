@@ -236,21 +236,29 @@ async def apply_quarantine(member: discord.Member, reason: str, violation_type: 
         except:
             pass
         
+        expires_at = datetime.fromtimestamp(quarantine_until, tz=timezone.utc)
         embed = discord.Embed(
             title="🔒 **QUARANTINE APPLIED**",
             description=f"{VisualElements.CIRCUIT_LINE}\n\n"
-                       f"**User:** {member.mention} (`{member.id}`)\n"
-                       f"**Reason:** {reason}\n"
-                       f"**Type:** {violation_type}\n"
-                       f"**Duration:** {quarantine_duration // 60} minutes\n"
-                       f"**Violations:** {current_violations}\n"
-                       f"**Channel:** {quarantine_channel.mention}\n\n"
-                       f"Roles have been removed. Use `/quarantine remove` to restore early.\n\n"
+                       f"**User:** {member.mention}\n"
+                       f"**User ID:** `{member.id}`\n"
+                       f"**Violation:** {violation_type.replace('_', ' ').title()}\n"
+                       f"**Reason:** {reason}\n\n"
+                       f"**Quarantine Details:**\n"
+                       f"└─ Duration: {quarantine_duration // 60} minutes\n"
+                       f"└─ Violation Count: {current_violations}\n"
+                       f"└─ Expires: <t:{int(quarantine_until)}:R>\n\n"
+                       f"**Actions Taken:**\n"
+                       f"└─ All roles removed\n"
+                       f"└─ Moved to {quarantine_channel.mention}\n"
+                       f"└─ Cannot participate in server\n\n"
+                       f"**Early Release:** Use `/quarantine remove @user` to restore early\n\n"
                        f"{VisualElements.CIRCUIT_LINE}",
             color=BrandColors.DANGER,
             timestamp=datetime.now(timezone.utc)
         )
         embed.set_footer(text=BOT_FOOTER)
+        embed.add_field(name="System Note", value="Roles will be automatically restored when quarantine expires.", inline=False)
         
         try:
             await quarantine_channel.send(f"{member.mention}", embed=embed)
@@ -272,7 +280,9 @@ async def _cleanup_system_action(guild_id: int, user_id: int, delay_seconds: int
 
 async def restore_roles_after_quarantine(member: discord.Member, duration_seconds: int):
     await asyncio.sleep(duration_seconds)
-    
+    await _execute_quarantine_restoration(member)
+
+async def _execute_quarantine_restoration(member: discord.Member, is_from_reload: bool = False):
     storage_key = f"{member.guild.id}_{member.id}"
     if storage_key not in user_stored_roles:
         return
@@ -280,6 +290,7 @@ async def restore_roles_after_quarantine(member: discord.Member, duration_second
     try:
         stored_data = user_stored_roles[storage_key]
         role_ids = stored_data['roles']
+        quarantine_info = user_quarantine_info.get(storage_key, {})
         
         config = await get_security_config(member.guild.id)
         quarantine_role_id = config.get('quarantine_role_id')
@@ -307,6 +318,29 @@ async def restore_roles_after_quarantine(member: discord.Member, duration_second
             except:
                 pass
         
+        # Send quarantine ending notice
+        try:
+            quarantine_channel_id = config.get('quarantine_channel_id')
+            if quarantine_channel_id:
+                channel = member.guild.get_channel(int(quarantine_channel_id))
+                if channel:
+                    embed = discord.Embed(
+                        title="✅ **QUARANTINE ENDED**",
+                        description=f"{VisualElements.CIRCUIT_LINE}\n\n"
+                                   f"**User:** {member.mention}\n"
+                                   f"**Status:** Quarantine period expired\n"
+                                   f"**Roles Restored:** {len(roles_to_add)} role(s) restored\n"
+                                   f"**Reason:** {quarantine_info.get('reason', 'N/A')}\n\n"
+                                   f"The user has been released from quarantine and can participate normally.\n\n"
+                                   f"{VisualElements.CIRCUIT_LINE}",
+                        color=BrandColors.SUCCESS,
+                        timestamp=datetime.now(timezone.utc)
+                    )
+                    embed.set_footer(text=BOT_FOOTER)
+                    await channel.send(embed=embed)
+        except:
+            pass
+        
         # Clean up system action marker after a short delay
         await asyncio.sleep(3)
         system_role_actions.discard((member.guild.id, member.id))
@@ -314,6 +348,15 @@ async def restore_roles_after_quarantine(member: discord.Member, duration_second
         del user_stored_roles[storage_key]
         if storage_key in user_quarantine_info:
             del user_quarantine_info[storage_key]
+        
+        # Remove from MongoDB
+        try:
+            server_data = await _get_server_data(member.guild.id)
+            if 'quarantine_data' in server_data and str(member.id) in server_data['quarantine_data']:
+                del server_data['quarantine_data'][str(member.id)]
+                await _update_server_data(member.guild.id, server_data)
+        except:
+            pass
         
         await _log_action(member.guild.id, "security", 
                         f"✅ [QUARANTINE EXPIRED] {member} ({member.id}) - Roles restored automatically")
@@ -414,6 +457,64 @@ def setup(bot: commands.Bot, get_server_data_func, update_server_data_func, log_
     _log_action = log_action_func
     _has_permission = has_permission_func
     _setup_complete = True
+    
+    # Background task to check for expired quarantines every minute
+    async def check_expired_quarantines():
+        await bot.wait_until_ready()
+        await asyncio.sleep(5)  # Wait for bot to fully startup
+        
+        while not bot.is_closed():
+            try:
+                current_time = time.time()
+                expired_keys = []
+                
+                for storage_key, q_info in list(user_quarantine_info.items()):
+                    if current_time >= q_info.get('quarantine_until', 0):
+                        expired_keys.append(storage_key)
+                
+                for storage_key in expired_keys:
+                    try:
+                        guild_id, user_id = storage_key.split('_')
+                        guild_id, user_id = int(guild_id), int(user_id)
+                        guild = bot.get_guild(guild_id)
+                        if guild:
+                            member = guild.get_member(user_id)
+                            if member:
+                                await _execute_quarantine_restoration(member)
+                    except:
+                        pass
+                
+                # Also check MongoDB for persisted quarantines that need restoration
+                for guild in bot.guilds:
+                    try:
+                        server_data = await _get_server_data(guild.id)
+                        quarantine_data = server_data.get('quarantine_data', {})
+                        expired_user_ids = []
+                        
+                        for user_id_str, q_data in quarantine_data.items():
+                            if current_time >= q_data.get('quarantine_until', 0):
+                                expired_user_ids.append(int(user_id_str))
+                        
+                        for user_id in expired_user_ids:
+                            member = guild.get_member(user_id)
+                            if member:
+                                storage_key = f"{guild.id}_{user_id}"
+                                user_stored_roles[storage_key] = {
+                                    'roles': quarantine_data[str(user_id)].get('roles', []),
+                                    'timestamp': time.time(),
+                                    'duration': 0,
+                                    'violations': quarantine_data[str(user_id)].get('violations', 0)
+                                }
+                                user_quarantine_info[storage_key] = quarantine_data[str(user_id)]
+                                await _execute_quarantine_restoration(member)
+                    except:
+                        pass
+                
+                await asyncio.sleep(60)  # Check every minute
+            except:
+                await asyncio.sleep(60)
+    
+    asyncio.create_task(check_expired_quarantines())
     
     @bot.listen('on_message')
     async def security_on_message(message):
@@ -977,10 +1078,15 @@ def setup(bot: commands.Bot, get_server_data_func, update_server_data_func, log_
                     title="✅ **QUARANTINE REMOVED**",
                     description=f"{VisualElements.CIRCUIT_LINE}\n\n"
                                f"**User:** {user.mention}\n"
-                               f"**Status:** Quarantine removed, roles restored\n"
-                               f"**Removed by:** {interaction.user.mention}\n\n"
+                               f"**User ID:** `{user.id}`\n\n"
+                               f"**Resolution:**\n"
+                               f"└─ Quarantine status: **LIFTED**\n"
+                               f"└─ Roles restored: **All previous roles**\n"
+                               f"└─ Released by: {interaction.user.mention}\n\n"
+                               f"**Status:** User can now participate in the server normally.\n\n"
                                f"{VisualElements.CIRCUIT_LINE}",
-                    color=BrandColors.SUCCESS
+                    color=BrandColors.SUCCESS,
+                    timestamp=datetime.now(timezone.utc)
                 )
             else:
                 embed = discord.Embed(
