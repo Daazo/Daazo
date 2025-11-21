@@ -514,7 +514,14 @@ def setup(bot: commands.Bot, get_server_data_func, update_server_data_func, log_
             except:
                 await asyncio.sleep(60)
     
-    asyncio.create_task(check_expired_quarantines())
+    @bot.event
+    async def on_ready():
+        if not bot.user:
+            return
+        try:
+            asyncio.create_task(check_expired_quarantines())
+        except:
+            pass
     
     @bot.listen('on_message')
     async def security_on_message(message):
