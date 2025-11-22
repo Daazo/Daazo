@@ -553,11 +553,15 @@ async def on_member_join(member):
             server_embed.set_footer(text=f"Message from {member.guild.name}")
             
             await member.send(embed=server_embed)
+            # Log DM sent
+            from advanced_logging import log_dm_sent
+            await log_dm_sent(member, formatted_dm_message, member.guild)
         
         # Always send bot's message after server message
+        bot_content = f"**Neural connection established with {member.guild.name}**\n\n{VisualElements.CIRCUIT_LINE}\n\n◆ **System initialized — explore quantum channels and protocols**\n◆ **Assistance protocol active — mention core or execute commands**\n◆ **Holographic network operational**\n\n{VisualElements.CIRCUIT_LINE}\n\n*{BOT_TAGLINE}*"
         bot_embed = discord.Embed(
             title=f"💠 **{BOT_NAME} — Quantum Core Online**",
-            description=f"**Neural connection established with {member.guild.name}**\n\n{VisualElements.CIRCUIT_LINE}\n\n◆ **System initialized — explore quantum channels and protocols**\n◆ **Assistance protocol active — mention core or execute commands**\n◆ **Holographic network operational**\n\n{VisualElements.CIRCUIT_LINE}\n\n*{BOT_TAGLINE}*",
+            description=bot_content,
             color=BrandColors.PRIMARY
         )
         bot_embed.set_thumbnail(url=bot.user.display_avatar.url)
@@ -568,13 +572,9 @@ async def on_member_join(member):
         view.add_item(invite_button)
 
         await member.send(embed=bot_embed, view=view)
-
-        # Log welcome DM globally
-        try:
-            from global_logging import on_bot_dm_send
-            await on_bot_dm_send(member, f"Welcome message sent to new member in {member.guild.name}")
-        except:
-            pass
+        # Log DM sent
+        from advanced_logging import log_dm_sent
+        await log_dm_sent(member, bot_content, member.guild)
     except:
         pass  # User has DMs disabled
 

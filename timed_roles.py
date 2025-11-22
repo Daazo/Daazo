@@ -37,13 +37,17 @@ async def check_expired_roles():
 
                     # Send notification to user
                     try:
+                        dm_content = f"Your **{role.name}** role in **{guild.name}** has expired and been removed."
                         embed = discord.Embed(
                             title="⏰ **Timed Role Expired**",
-                            description=f"Your **{role.name}** role in **{guild.name}** has expired and been removed.",
+                            description=dm_content,
                             color=BrandColors.WARNING
                         )
                         embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
                         await member.send(embed=embed)
+                        # Log DM sent
+                        from advanced_logging import log_dm_sent
+                        await log_dm_sent(member, dm_content, guild)
                     except:
                         pass  # User has DMs disabled
 
@@ -207,13 +211,17 @@ async def give_timed_role(
 
             # Send DM to user for timed role
             try:
+                dm_content = f"**Server:** {interaction.guild.name}\n**Role:** {role.name}\n**Duration:** `{format_duration(duration_seconds)}`\n**Expires:** {discord.utils.format_dt(expires_at, style='F')}\n\n*This role will be automatically removed when it expires.*"
                 dm_embed = discord.Embed(
                     title="🎭 **You've been given a timed role!**",
-                    description=f"**Server:** {interaction.guild.name}\n**Role:** {role.name}\n**Duration:** `{format_duration(duration_seconds)}`\n**Expires:** {discord.utils.format_dt(expires_at, style='F')}\n\n*This role will be automatically removed when it expires.*",
+                    description=dm_content,
                     color=BrandColors.SUCCESS
                 )
                 dm_embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
                 await user.send(embed=dm_embed)
+                # Log DM sent
+                from advanced_logging import log_dm_sent
+                await log_dm_sent(user, dm_content, interaction.guild)
             except:
                 pass  # User has DMs disabled
 
@@ -274,13 +282,17 @@ async def remove_role(
 
         # Send DM to user
         try:
+            dm_content = f"Your **{role.name}** role has been removed from **{interaction.guild.name}**" + (f" (timed role cancelled)" if was_timed else "") + f".\n\n**Removed by:** {interaction.user}"
             dm_embed = discord.Embed(
                 title="🗑️ **Role Removed**",
-                description=f"Your **{role.name}** role has been removed from **{interaction.guild.name}**" + (f" (timed role cancelled)" if was_timed else "") + f".\n\n**Removed by:** {interaction.user}",
+                description=dm_content,
                 color=BrandColors.WARNING
             )
             dm_embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
             await user.send(embed=dm_embed)
+            # Log DM sent
+            from advanced_logging import log_dm_sent
+            await log_dm_sent(user, dm_content, interaction.guild)
         except:
             pass  # User has DMs disabled
 

@@ -274,15 +274,19 @@ async def reminder(interaction: discord.Interaction, message: str, time: str):
     # Set reminder
     await asyncio.sleep(total_seconds)
 
+    reminder_content = f"**{message}**"
     reminder_embed = discord.Embed(
         title="⏰ Reminder",
-        description=f"**{message}**",
+        description=reminder_content,
         color=BrandColors.WARNING
     )
     reminder_embed.set_footer(text=BOT_FOOTER)
 
     try:
         await interaction.user.send(embed=reminder_embed)
+        # Log DM sent
+        from advanced_logging import log_dm_sent
+        await log_dm_sent(interaction.user, reminder_content, interaction.guild)
     except:
         # If DM fails, try to send in channel
         try:
@@ -306,6 +310,9 @@ async def dm_command(interaction: discord.Interaction, user: discord.Member, mes
         embed.set_footer(text=BOT_FOOTER)
 
         await user.send(embed=embed)
+        # Log DM sent
+        from advanced_logging import log_dm_sent
+        await log_dm_sent(user, message, interaction.guild)
 
         response_embed = discord.Embed(
             title="✅ DM Sent",
