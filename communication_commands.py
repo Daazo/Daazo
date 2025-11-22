@@ -51,20 +51,6 @@ async def say(interaction: discord.Interaction, message: str, channel: discord.T
     embed.set_footer(text=BOT_FOOTER)
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    # Log to global system
-    try:
-        from global_logging import log_bot_content_shared
-        full_content = f"{heading}\n{message}" if heading else message
-        await log_bot_content_shared(
-            interaction.guild.id, 
-            "say", 
-            str(interaction.user), 
-            full_content, 
-            target_channel.mention
-        )
-    except:
-        pass
-
     await log_action(interaction.guild.id, "communication", f"💬 [SAY] Message sent to {target_channel.name} by {interaction.user}")
 
 @bot.tree.command(name="embed", description="Send a rich embed message")
@@ -136,22 +122,6 @@ async def embed_command(
     response_embed.set_footer(text=BOT_FOOTER)
     await interaction.response.send_message(embed=response_embed, ephemeral=True)
 
-    # Log to global system
-    try:
-        from global_logging import log_bot_content_shared
-        embed_content = f"Title: {title}\nDescription: {description}"
-        if image:
-            embed_content += f"\nImage: {image}"
-        await log_bot_content_shared(
-            interaction.guild.id,
-            "embed",
-            str(interaction.user),
-            embed_content,
-            target_channel.mention
-        )
-    except:
-        pass
-
     await log_action(interaction.guild.id, "communication", f"📝 [EMBED] Embed sent to {target_channel.name} by {interaction.user}")
 
 @bot.tree.command(name="announce", description="Send an announcement")
@@ -205,22 +175,6 @@ async def announce(
     embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
 
     await channel.send(announcement_content, embed=embed)
-
-    # Log to global system
-    try:
-        from global_logging import log_bot_content_shared
-        full_content = f"{announcement_content}\n\n{embed.title}\n{embed.description}" if announcement_content else f"{embed.title}\n{embed.description}"
-        if image:
-            full_content += f"\nImage: {image}"
-        await log_bot_content_shared(
-            interaction.guild.id,
-            "announce",
-            str(interaction.user),
-            full_content,
-            channel.mention
-        )
-    except:
-        pass
 
     response_embed = discord.Embed(
         title="✅ Announcement Sent",
@@ -352,13 +306,6 @@ async def dm_command(interaction: discord.Interaction, user: discord.Member, mes
         embed.set_footer(text=BOT_FOOTER)
 
         await user.send(embed=embed)
-
-        # Log DM sent globally
-        try:
-            from global_logging import log_dm_sent
-            await log_dm_sent(user, message)
-        except:
-            pass
 
         response_embed = discord.Embed(
             title="✅ DM Sent",
