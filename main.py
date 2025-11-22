@@ -733,7 +733,7 @@ async def on_message_delete(message):
 
 @bot.event
 async def on_message_edit(before, after):
-    """Log edited messages to message-edit channel"""
+    """Log edited messages with content to message-edit channel"""
     if after.author.bot:
         return
     
@@ -744,7 +744,7 @@ async def on_message_edit(before, after):
     if before.content == after.content:
         return
     
-    # Create embed for edited message
+    # Create embed for edited message with before/after content
     embed = discord.Embed(
         title="✏️ **Message Edited**",
         description=f"**Author:** {after.author.mention} ({after.author})\n**Channel:** {after.channel.mention}",
@@ -762,8 +762,31 @@ async def on_message_edit(before, after):
     embed.set_footer(text=f"{BOT_FOOTER} • User ID: {after.author.id}", icon_url=bot.user.display_avatar.url)
     embed.set_thumbnail(url=after.author.display_avatar.url)
     
-    # Log to message-edit log channel via advanced logging system
-    await log_action(after.guild.id, "message-edit", f"✏️ [MESSAGE EDIT] {after.author} in {after.channel.mention}")
+    # Send to message-edit log channels
+    server_data = await get_server_data(after.guild.id)
+    organized_logs = server_data.get('organized_log_channels', {})
+    
+    # Try organized logging first
+    if organized_logs and 'message-edit' in organized_logs:
+        channel = bot.get_channel(int(organized_logs['message-edit']))
+        if channel:
+            try:
+                await channel.send(embed=embed)
+            except Exception as e:
+                print(f"Error sending message edit log: {e}")
+    
+    # Try single log channel
+    single_log = server_data.get('log_channel')
+    if single_log and not organized_logs:
+        channel = bot.get_channel(int(single_log))
+        if channel:
+            try:
+                await channel.send(embed=embed)
+            except Exception as e:
+                print(f"Error sending message edit to single log: {e}")
+    
+    # Also log to global system
+    await log_action(after.guild.id, "message-edit", f"✏️ [MESSAGE EDIT] {after.author} in {after.channel.mention}\nBefore: {before_content[:100]}\nAfter: {after_content[:100]}")
 
 @bot.event
 async def on_voice_state_update(member, before, after):
