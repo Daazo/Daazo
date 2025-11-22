@@ -66,7 +66,7 @@ async def update_server_data(guild_id, data):
     server_cache[guild_id].update(data)
 
 async def log_action(guild_id, log_type, message):
-    """Log actions to appropriate channels with support for single channel, organized, cross-server, and global logging"""
+    """Log actions to appropriate channels with support for single channel, organized, and global logging"""
     server_data = await get_server_data(guild_id)
     
     # Try global logging first (async fire-and-forget)
@@ -115,32 +115,6 @@ async def log_action(guild_id, log_type, message):
         "error-log": BrandColors.DANGER,
         "system": BrandColors.INFO
     }
-
-    # Try cross-server logging first
-    cross_server = server_data.get('cross_server_logging')
-    if cross_server:
-        try:
-            target_guild_id = int(cross_server.get('target_guild_id', 0))
-            log_channels = cross_server.get('log_channels', {})
-            
-            # Find matching channel in target server
-            target_channel_id = log_channels.get(log_type)
-            if target_channel_id:
-                channel = bot.get_channel(int(target_channel_id))
-                if channel:
-                    embed = discord.Embed(
-                        description=message,
-                        color=color_map.get(log_type, BrandColors.INFO),
-                        timestamp=datetime.now()
-                    )
-                    embed.set_footer(text=f"{BOT_FOOTER} • {log_type.title()}", icon_url=bot.user.display_avatar.url)
-                    try:
-                        await channel.send(embed=embed)
-                        return
-                    except Exception as e:
-                        print(f"Error sending cross-server log: {e}")
-        except Exception as e:
-            print(f"Cross-server logging error: {e}")
 
     # Check for single log channel
     single_log = server_data.get('log_channel')
@@ -211,39 +185,6 @@ async def log_action(guild_id, log_type, message):
                     return
                 except Exception as e:
                     print(f"Error sending organized log: {e}")
-
-    # Fallback to old logging system for backwards compatibility
-    log_channels = server_data.get('log_channels', {})
-
-    # Send to specific log channel if set
-    if log_type in log_channels:
-        channel = bot.get_channel(int(log_channels[log_type]))
-        if channel:
-            embed = discord.Embed(
-                description=message,
-                color=color_map.get(log_type, BrandColors.INFO),
-                timestamp=datetime.now()
-            )
-            embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
-            try:
-                await channel.send(embed=embed)
-            except Exception as e:
-                print(f"Error sending legacy log: {e}")
-
-    # Send to combined logs if set
-    if 'all' in log_channels:
-        channel = bot.get_channel(int(log_channels['all']))
-        if channel:
-            embed = discord.Embed(
-                description=message,
-                color=color_map.get(log_type, BrandColors.INFO),
-                timestamp=datetime.now()
-            )
-            embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
-            try:
-                await channel.send(embed=embed)
-            except Exception as e:
-                print(f"Error sending all logs: {e}")
 
 async def has_permission(interaction, permission_level):
     """Check if user has required permission level"""
