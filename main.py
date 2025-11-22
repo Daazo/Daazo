@@ -938,17 +938,12 @@ class HelpSelect(discord.ui.Select):
         )
         embed.add_field(
             name="🔴 `/setup welcome channel value`",
-            value="**Usage:** `/setup welcome channel:#channel value:\"Welcome {user}!\"`\n**Description:** Configure welcome messages and channel\n**Variables:** {user}, {server}\n**Image support:** Add image URLs for welcome cards",
+            value="**Usage:** `/setup welcome channel:#channel value:\"Welcome {user}!\"`\n**Description:** Configure welcome messages and channel\n**Variables:** {user}, {server}\n**Image support:** Add image URLs for welcome cards\n\u200b",
             inline=False
         )
         embed.add_field(
             name="🔴 `/autorole action role`",
             value="**Usage:** `/autorole action:set role:@role` or `/autorole action:remove`\n**Description:** Set or remove auto role for new members\n**Auto-assigns:** Role given to all new members on join",
-            inline=False
-        )
-        embed.add_field(
-            name="🔴 `/setup logs value channel`",
-            value="**Usage:** `/setup logs value:all channel:#logs`\n**Types:** all, moderation, karma, communication, tickets\n**Description:** Set up logging channels for different bot activities\n**Advanced:** Use `/setup log_category #category` for organized logs",
             inline=False
         )
         embed.add_field(
@@ -958,7 +953,7 @@ class HelpSelect(discord.ui.Select):
         )
         embed.add_field(
             name="🔴 `/setup ticket_support_role role`",
-            value="**Usage:** `/setup ticket_support_role role:@support`\n**Description:** Set support role to be mentioned when tickets are created",
+            value="**Usage:** `/setup ticket_support_role role:@support`\n**Description:** Set support role to be mentioned when tickets are created\n\u200b",
             inline=False
         )
         embed.set_footer(text="🟣 = Everyone • 🟡 = Junior Moderator • 🔴 = Main Moderator • 👑 = Server Owner")
@@ -977,7 +972,7 @@ class HelpSelect(discord.ui.Select):
         )
         embed.add_field(
             name="🟡 `/embed title description [color]`",
-            value="**Usage:** `/embed title:\"Title\" description:\"Text\" [color:blue]`\n**Description:** Send rich embedded message with custom styling and colors",
+            value="**Usage:** `/embed title:\"Title\" description:\"Text\" [color:blue]`\n**Description:** Send rich embedded message with custom styling and colors\n\u200b",
             inline=False
         )
         embed.add_field(
@@ -987,12 +982,12 @@ class HelpSelect(discord.ui.Select):
         )
         embed.add_field(
             name="🟡 `/poll question option1 option2 [option3] [option4]`",
-            value="**Usage:** `/poll question:\"Pizza party?\" option1:\"Yes!\" option2:\"No\"`\n**Description:** Create adipoli interactive polls with automatic reactions (up to 4 options)",
+            value="**Usage:** `/poll question:\"Pizza party?\" option1:\"Yes!\" option2:\"No\"`\n**Description:** Create interactive polls with automatic reactions (up to 4 options)",
             inline=False
         )
         embed.add_field(
             name="🟡 `/reminder message time`",
-            value="**Usage:** `/reminder message:\"Meeting time!\" time:1h30m`\n**Description:** Set personal reminders - I'll DM you when time's up!\n**Formats:** 1h30m, 45s, 2d (max 7 days)",
+            value="**Usage:** `/reminder message:\"Meeting time!\" time:1h30m`\n**Description:** Set personal reminders - I'll DM you when time's up!\n**Formats:** 1h30m, 45s, 2d (max 7 days)\n\u200b",
             inline=False
         )
         embed.add_field(
@@ -1026,12 +1021,12 @@ class HelpSelect(discord.ui.Select):
         )
         embed.add_field(
             name="⭐ **Reaction Karma** (Auto-Karma)",
-            value="**Positive:** 👍 ⭐ ❤️ 🔥 💯 ✨ = +1 karma\n**Negative:** 👎 💀 😴 🤮 🗿 = -1 karma\n**How it works:** Reacting to messages gives/removes karma automatically\n**Cooldown:** 3 minutes between reactions to same user\n**Anti-abuse:** Can't react to your own messages for karma",
+            value="**Positive:** 👍 ⭐ ❤️ 🔥 💯 ✨ = +1 karma\n**Negative:** 👎 💀 😴 🤮 🗿 = -1 karma\n**How it works:** Reacting to messages gives/removes karma automatically\n**Cooldown:** 3 minutes between reactions to same user\n**Anti-abuse:** Can't react to your own messages for karma\n\u200b",
             inline=False
         )
         embed.add_field(
             name="🎉 **Milestones & Level-Ups**",
-            value="**Every 5 karma:** Celebration announcement with motivational quotes\n**Animated GIFs:** Level-up messages include celebration animations\n**Progress tracking:** Visual progress bars toward next 5-karma milestone\n**Channel announcements:** Set with `/setup karma_channel #channel`",
+            value="**Every 5 karma:** Celebration announcement with motivational quotes\n**Animated GIFs:** Level-up messages include celebration animations\n**Progress tracking:** Visual progress bars toward next 5-karma milestone\n**Channel announcements:** Set with `/setup karma_channel #channel`\n\u200b",
             inline=False
         )
         embed.add_field(
@@ -1055,27 +1050,27 @@ class HelpSelect(discord.ui.Select):
         )
         embed.add_field(
             name="📋 **Main Setup Commands**",
-            value="**🔴 `/ticketpanel`** - Create ticket selection panel with dropdown menu\n**🔴 `/ticketcategory category_number`** - Configure ticket category (1-7 options available)\n**🔴 `/ticketfields category_number`** - Set custom form fields for each category\n**🔴 `/setup ticket_support_role role:@support`** - Set support role to mention on ticket creation",
+            value="**🔴 `/ticketpanel`** - Create ticket selection panel with dropdown menu\n**🔴 `/ticketcategory category_number`** - Configure ticket category (1-7 options available)\n**🔴 `/ticketfields category_number`** - Set custom form fields for each category\n**🔴 `/setup ticket_support_role role:@support`** - Set support role to mention on ticket creation\n\u200b",
             inline=False
         )
         embed.add_field(
             name="🎯 **Multi-Category System**",
-            value="**Up to 7 Categories:** Support, Billing, Bug Reports, Suggestions, Appeals, Custom 1, Custom 2\n**Custom Names & Emojis:** Each category has unique icon and description\n**Category Controls:** Enable/disable categories per server\n**Automatic Counters:** Ticket numbers tracked per category\n**Dynamic Routing:** Users select category before filling form",
+            value="**Up to 7 Categories:** Support, Billing, Bug Reports, Suggestions, Appeals, Custom 1, Custom 2\n**Custom Names & Emojis:** Each category has unique icon and description\n**Category Controls:** Enable/disable categories per server\n**Automatic Counters:** Ticket numbers tracked per category\n**Dynamic Routing:** Users select category before filling form\n\u200b",
             inline=False
         )
         embed.add_field(
             name="📝 **Custom Form Fields**",
-            value="**Up to 5 Fields Per Category:** Configure custom questions for each ticket type\n**Field Types:** Short text or long text format\n**Customizable Labels:** Name each field specifically (e.g., 'Account Email', 'Error Code')\n**Field Emojis:** Add visual indicators for each form field\n**Validation:** Required/optional fields with character limits",
+            value="**Up to 5 Fields Per Category:** Configure custom questions for each ticket type\n**Field Types:** Short text or long text format\n**Customizable Labels:** Name each field specifically (e.g., 'Account Email', 'Error Code')\n**Field Emojis:** Add visual indicators for each form field\n**Validation:** Required/optional fields with character limits\n\u200b",
             inline=False
         )
         embed.add_field(
             name="🎫 **Complete Ticket Flow**",
-            value="**1.** User clicks ticket panel → selects category via dropdown menu\n**2.** Modal form appears with category-specific custom fields\n**3.** Private ticket channel created automatically\n**4.** Support role mentioned (if configured)\n**5.** Staff can close/reopen/delete tickets with control buttons\n**6.** 10-minute cooldown between ticket creation\n**7.** Ticket naming: `category-username-ticketnumber`",
+            value="**1.** User clicks ticket panel → selects category via dropdown menu\n**2.** Modal form appears with category-specific custom fields\n**3.** Private ticket channel created automatically\n**4.** Support role mentioned (if configured)\n**5.** Staff can close/reopen/delete tickets with control buttons\n**6.** 10-minute cooldown between ticket creation\n**7.** Ticket naming: `category-username-ticketnumber`\n\u200b",
             inline=False
         )
         embed.add_field(
             name="🔧 **Ticket Control Panel**",
-            value="**✅ Close** - Archive ticket (staff only)\n**🔄 Reopen** - Reopen closed ticket\n**🗑️ Delete** - Permanently delete ticket\n**📝 Rename** - Use `/tnamechange` to rename ticket channel\n**Permissions:** User + Staff roles can see ticket channel",
+            value="**✅ Close** - Archive ticket (staff only)\n**🔄 Reopen** - Reopen closed ticket\n**🗑️ Delete** - Permanently delete ticket\n**📝 Rename** - Use `/tnamechange` to rename ticket channel\n**Permissions:** User + Staff roles can see ticket channel\n\u200b",
             inline=False
         )
         embed.add_field(
@@ -1099,12 +1094,12 @@ class HelpSelect(discord.ui.Select):
         )
         embed.add_field(
             name="✅ **How It Works**",
-            value="**1.** Bot posts verification button in specified channel\n**2.** New members click \"✅ Verify Me\" button\n**3.** Bot generates unique CAPTCHA image\n**4.** Member enters code to verify\n**5.** Verified role assigned automatically",
+            value="**1.** Bot posts verification button in specified channel\n**2.** New members click \"✅ Verify Me\" button\n**3.** Bot generates unique CAPTCHA image\n**4.** Member enters code to verify\n**5.** Verified role assigned automatically\n\u200b",
             inline=False
         )
         embed.add_field(
             name="🎯 **Verification Features**",
-            value="**✓ CAPTCHA-based verification** - Prevents automated bot accounts\n**✓ Custom verified role** - Assign role upon successful verification\n**✓ Optional unverified role removal** - Remove unverified role after verification\n**✓ Persistent system** - Verification button survives bot restarts\n**✓ Unique codes** - Each CAPTCHA is generated uniquely per user",
+            value="**✓ CAPTCHA-based verification** - Prevents automated bot accounts\n**✓ Custom verified role** - Assign role upon successful verification\n**✓ Optional unverified role removal** - Remove unverified role after verification\n**✓ Persistent system** - Verification button survives bot restarts\n**✓ Unique codes** - Each CAPTCHA is generated uniquely per user\n\u200b",
             inline=False
         )
         embed.add_field(
@@ -1123,28 +1118,22 @@ class HelpSelect(discord.ui.Select):
         )
         embed.add_field(
             name="🎭 **Multi-Reaction Role System**",
-            value="**🔴 `/reactionrole message emoji role channel [remove_role]`** - Setup single reaction role\n**🔴 `/quickreactionrole`** - Interactive multi-role setup (up to 10 pairs)\n**🟡 `/listreactionroles`** - View all active reaction role setups\n**Features:** Multiple roles per message, auto-remove roles, persistent storage",
+            value="**🔴 `/reactionrole message emoji role channel [remove_role]`** - Setup single reaction role\n**🔴 `/quickreactionrole`** - Interactive multi-role setup (up to 10 pairs)\n**🟡 `/listreactionroles`** - View all active reaction role setups\n**Features:** Multiple roles per message, auto-remove roles, persistent storage\n\u200b",
             inline=False
         )
         embed.add_field(
             name="✨ **Reaction Role Features**",
-            value="**Multiple Emoji/Roles:** Up to 10 emoji:role pairs per message\n**Auto-Remove Role:** Automatically remove specified role when user gets any reaction role\n**Interactive Setup:** User-friendly forms for complex setups\n**Persistent:** Survives bot restarts with database storage\n**Format:** Supports both single and batch reaction role creation",
-            inline=False
-        )
-
-        embed.add_field(
-            name="📊 **Comprehensive Logging System**",
-            value="**All Logs:** Combined logging channel for everything\n**Moderation:** Kicks, bans, mutes, voice actions\n**Karma:** Karma system activity and level-ups\n**Tickets:** Creation, closing, reopening events\n**Setup:** All configuration changes\n**Communication:** Announcements, polls, messages\n**Security:** Anti-raid, anti-nuke, permission changes",
+            value="**Multiple Emoji/Roles:** Up to 10 emoji:role pairs per message\n**Auto-Remove Role:** Automatically remove specified role when user gets any reaction role\n**Interactive Setup:** User-friendly forms for complex setups\n**Persistent:** Survives bot restarts with database storage\n**Format:** Supports both single and batch reaction role creation\n\u200b",
             inline=False
         )
         embed.add_field(
             name="🌐 **Multi-Server Intelligence**",
-            value="✅ **MongoDB integration** - Persistent data storage\n✅ **Per-server configuration** - Roles, channels, settings\n✅ **Separated tracking** - Each server independent\n✅ **Individual server settings** - Customize per server\n✅ **Database-backed** - Never lose your data",
+            value="✅ **MongoDB integration** - Persistent data storage\n✅ **Per-server configuration** - Roles, channels, settings\n✅ **Separated tracking** - Each server independent\n✅ **Individual server settings** - Customize per server\n✅ **Database-backed** - Never lose your data\n\u200b",
             inline=False
         )
         embed.add_field(
             name="🤖 **Automatic Background Features**",
-            value="👋 **Welcome DMs** - Professional messages to new members\n💔 **Goodbye DMs** - Farewell messages when members leave\n🎉 **Level Up Cards** - Beautiful rank card generation\n📊 **Live Server Count** - Bot status shows current servers\n⚡ **Real-time Logs** - Instant logging with timestamps",
+            value="👋 **Welcome DMs** - Professional messages to new members\n💔 **Goodbye DMs** - Farewell messages when members leave\n🎉 **Level Up Cards** - Beautiful rank card generation\n📊 **Live Server Count** - Bot status shows current servers\n⚡ **Real-time Activity** - Instant system-wide monitoring",
             inline=False
         )
         embed.set_footer(text="🟣 = Everyone • 🟡 = Junior Moderator • 🔴 = Main Moderator • 👑 = Server Owner")
