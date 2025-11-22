@@ -769,6 +769,7 @@ class HelpSelect(discord.ui.Select):
         options = [
             discord.SelectOption(label="General", value="general", emoji="🏠", description="Core utilities and info commands"),
             discord.SelectOption(label="Moderation", value="moderation", emoji="⚔️", description="Security and enforcement tools"),
+            discord.SelectOption(label="Security", value="security", emoji="🛡️", description="Anti-raid, anti-nuke, quarantine system"),
             discord.SelectOption(label="Setup", value="setup", emoji="⚙️", description="Configuration and customization"),
             discord.SelectOption(label="Messages", value="messages", emoji="💬", description="Communication and announcements"),
             discord.SelectOption(label="Karma", value="karma", emoji="⭐", description="Community recognition system"),
@@ -787,6 +788,8 @@ class HelpSelect(discord.ui.Select):
             await self.show_general_help(interaction)
         elif selection == "moderation":
             await self.show_moderation_help(interaction)
+        elif selection == "security":
+            await self.show_security_help(interaction)
         elif selection == "setup":
             await self.show_setup_help(interaction)
         elif selection == "messages":
@@ -876,6 +879,45 @@ class HelpSelect(discord.ui.Select):
         )
 
         embed.set_footer(text="🟣 = Everyone • 🟡 = Junior Moderator • 🔴 = Main Moderator • 👑 = Server Owner")
+        await interaction.response.edit_message(embed=embed, view=HelpView())
+
+    async def show_security_help(self, interaction: discord.Interaction):
+        embed = discord.Embed(
+            title="🛡️ **RXT Security System**",
+            description=f"*Advanced multi-layer protection protocols for comprehensive server defense.*\n\n{VisualElements.CIRCUIT_LINE}",
+            color=BrandColors.WARNING
+        )
+        embed.add_field(
+            name="⚡ **9-Module Protection Suite**",
+            value="**🔴 `/antiraid`** - Detect suspicious join patterns, account age checks, username filtering\n**🔴 `/antinuke`** - Prevent mass channel/role deletion and ban/kick attacks\n**🔴 `/antispam`** - Message rate limiting with configurable thresholds\n**🔴 `/antilink`** - Block malicious links with domain whitelist support\n**🔴 `/webhookguard`** - Detect and remove unauthorized webhooks\n**🔴 `/antirole`** - Prevent high-permission role creation/escalation\n**🔴 `/massmention`** - Block unauthorized @everyone/@here mentions\n**👑 `/timeout`** - Manual timeout management (Discord native)\n**👑 `/whitelist`** - Bypass protection for trusted users, roles, bots",
+            inline=False
+        )
+        embed.add_field(
+            name="🔒 **Quarantine System**",
+            value="**Automatic Containment:** Suspicious users automatically moved to quarantine category\n**Persistent Tracking:** Violation history survives across sessions\n**Role Protection:** Quarantined users cannot receive sensitive roles\n**Manual Control:** `/quarantine action:info/release` for staff override\n**Evidence Logging:** Full violation history with timestamps and details",
+            inline=False
+        )
+        embed.add_field(
+            name="⏱️ **Timeout System**",
+            value="**Discord Native:** Uses Discord's built-in timeout API (ToS-compliant)\n**Complete Silence:** Prevents ALL user communication during timeout\n**No Messages, No Reactions, No Voice:** Complete communication blackout\n**Manual Management:** `/timeout @user <time>` and `/untimeout @user`\n**Moderator Notifications:** Optional timeout channel for staff logging",
+            inline=False
+        )
+        embed.add_field(
+            name="🟩 **Whitelist System**",
+            value="**User Bypass:** `/whitelist add:user @member` - Skip protections for trusted users\n**Role Bypass:** `/whitelist add:role @trusted-role` - Exempt entire roles\n**Bot Bypass:** `/whitelist add:bot @bot-name` - Trusted bots bypass checks\n**Server Owner:** Automatically whitelisted at all times\n**Full Management:** `/whitelist remove/list` to manage exceptions",
+            inline=False
+        )
+        embed.add_field(
+            name="⚙️ **Main Security Control Panel**",
+            value="**🔴 `/security`** - Enable/disable/status/config all protections\n**Setup:** `/security action:enable` to activate security system\n**Status:** `/security action:status` to check all module states\n**Customize:** `/security action:config module:<name>` for fine-tuning\n**Features:** Per-module enable/disable, configurable thresholds, logging",
+            inline=False
+        )
+        embed.add_field(
+            name="📊 **Advanced Features**",
+            value="**Real-time Monitoring:** Live threat detection with instant response\n**Severity Tracking:** Violation levels escalate with repeat offenses\n**Whitelisted User Protection:** Premium members never quarantined\n**Role Escalation Prevention:** Blocks privilege elevation attempts\n**Webhook Monitoring:** Detects unauthorized channel integrations\n**Cross-Session Persistence:** Violation history never resets",
+            inline=False
+        )
+        embed.set_footer(text="🟣 = Everyone • 🔴 = Main Moderator • 👑 = Server Owner")
         await interaction.response.edit_message(embed=embed, view=HelpView())
 
     async def show_setup_help(self, interaction: discord.Interaction):
