@@ -884,7 +884,7 @@ class HelpView(discord.ui.View):
         embed.set_footer(text="🟣 = Everyone • 🟡 = Junior Moderator • 🔴 = Main Moderator • 👑 = Server Owner")
         await interaction.response.edit_message(embed=embed, view=self)
 
-    @discord.ui.button(label="Messages", style=discord.ButtonStyle.success, emoji="💬", row=0)
+    @discord.ui.button(label="Messages", style=discord.ButtonStyle.success, emoji="💬", row=1)
     async def communication_help(self, interaction: discord.Interaction, button: discord.ui.Button):
         embed = discord.Embed(
             title="💬 **Communication & Messaging**",
