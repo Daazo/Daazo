@@ -9,6 +9,9 @@ import re
 from collections import defaultdict
 from brand_config import BrandColors, VisualElements, BOT_FOOTER
 
+# Global logging import (avoid circular import by not importing main)
+_log_to_global = None
+
 user_message_timestamps = defaultdict(lambda: defaultdict(list))
 user_join_timestamps = defaultdict(list)
 user_message_deletion_attempts = defaultdict(lambda: defaultdict(list))
@@ -304,6 +307,27 @@ async def apply_quarantine(member: discord.Member, reason: str, violation_type: 
         
         asyncio.create_task(restore_roles_after_quarantine(member, quarantine_duration))
         
+        # Send to global security-alerts channel AFTER enforcement succeeds
+        if _log_to_global:
+            try:
+                security_embed = discord.Embed(
+                    title="🛡️ **Security Alert - Quarantine Applied**",
+                    description=f"**Server:** {member.guild.name}\n"
+                               f"**User:** {member.name} (ID: {member.id})\n"
+                               f"**Violation Type:** {violation_type.replace('_', ' ').upper()}\n"
+                               f"**Reason:** {reason}\n"
+                               f"**Duration:** {quarantine_duration // 60} minutes\n"
+                               f"**Severity Level:** {current_violations}",
+                    color=BrandColors.DANGER,
+                    timestamp=datetime.now(timezone.utc)
+                )
+                security_embed.set_footer(text=f"Server ID: {member.guild.id}")
+                if member.guild.icon:
+                    security_embed.set_thumbnail(url=member.guild.icon.url)
+                await _log_to_global("security-alerts", security_embed)
+            except Exception as e:
+                print(f"Global security logging failed (non-critical): {e}")
+        
     except Exception as e:
         await _log_action(member.guild.id, "security", 
                         f"⚠️ [QUARANTINE FAILED] {member} - Error: {e}")
@@ -483,8 +507,8 @@ async def remove_quarantine_manual(member: discord.Member):
         return False
 
 
-def setup(bot: commands.Bot, get_server_data_func, update_server_data_func, log_action_func, has_permission_func):
-    global _bot_instance, _get_server_data, _update_server_data, _log_action, _has_permission, _setup_complete
+def setup(bot: commands.Bot, get_server_data_func, update_server_data_func, log_action_func, has_permission_func, log_to_global_func=None):
+    global _bot_instance, _get_server_data, _update_server_data, _log_action, _has_permission, _setup_complete, _log_to_global
     
     if _setup_complete:
         print("⚠️ RXT Security System already initialized, skipping duplicate setup")
@@ -495,6 +519,7 @@ def setup(bot: commands.Bot, get_server_data_func, update_server_data_func, log_
     _update_server_data = update_server_data_func
     _log_action = log_action_func
     _has_permission = has_permission_func
+    _log_to_global = log_to_global_func
     _setup_complete = True
     
     # Background task to check for expired quarantines every minute
@@ -667,10 +692,41 @@ def setup(bot: commands.Bot, get_server_data_func, update_server_data_func, log_
         ]
         
         if len(user_join_timestamps[guild_id]) > config.get('raid_join_threshold', 10):
+            # Capture member data BEFORE kicking
+            member_name = member.name
+            member_id = member.id
+            server_name = member.guild.name
+            server_id = member.guild.id
+            server_icon = member.guild.icon.url if member.guild.icon else None
+            join_count = len(user_join_timestamps[guild_id])
+            time_window = config.get('raid_time_window', 10)
+            threshold = config.get('raid_join_threshold', 10)
+            
             try:
+                # Enforce FIRST - kick the member
                 await member.kick(reason="RXT Security - Raid detected")
-                await _log_action(member.guild.id, "security", 
-                               f"🚫 [ANTI-RAID] {member} kicked - Raid detected ({len(user_join_timestamps[guild_id])} joins)")
+                await _log_action(server_id, "security", 
+                               f"🚫 [ANTI-RAID] {member_name} ({member_id}) kicked - Raid detected ({join_count} joins)")
+                
+                # Log to global security-alerts AFTER successful enforcement
+                if _log_to_global:
+                    try:
+                        raid_embed = discord.Embed(
+                            title="🚨 **CRITICAL ALERT - Raid Detected**",
+                            description=f"**Server:** {server_name}\n"
+                                       f"**Kicked User:** {member_name} (ID: {member_id})\n"
+                                       f"**Join Count:** {join_count} joins in {time_window}s\n"
+                                       f"**Threshold:** {threshold} joins\n"
+                                       f"**Action:** User kicked, raid protection active",
+                            color=0xFF0000,
+                            timestamp=datetime.now(timezone.utc)
+                        )
+                        raid_embed.set_footer(text=f"Server ID: {server_id}")
+                        if server_icon:
+                            raid_embed.set_thumbnail(url=server_icon)
+                        await _log_to_global("security-alerts", raid_embed)
+                    except Exception as e:
+                        print(f"Global raid logging failed (non-critical): {e}")
             except:
                 pass
             return
@@ -867,10 +923,40 @@ def setup(bot: commands.Bot, get_server_data_func, update_server_data_func, log_
                 
                 # Quarantine the actor for attempting to modify a whitelisted user
                 if actor_member:
+                    # Capture data before quarantine
                     role_names = ", ".join([r.name for r in (removed_roles | added_roles)])
-                    await apply_quarantine(actor_member, f"Attempted to modify roles of whitelisted user {before.name}: {role_names}", "whitelist_violation")
-                    await _log_action(before.guild.id, "security",
-                                   f"🚫 [WHITELIST PROTECTION] {actor_member} quarantined - Attempted to modify whitelisted user {before}'s roles")
+                    actor_name = actor_member.name
+                    actor_id = actor_member.id
+                    target_name = before.name
+                    target_id = before.id
+                    server_name = before.guild.name
+                    server_id = before.guild.id
+                    server_icon = before.guild.icon.url if before.guild.icon else None
+                    
+                    # Enforce FIRST - quarantine the actor
+                    await apply_quarantine(actor_member, f"Attempted to modify roles of whitelisted user {target_name}: {role_names}", "whitelist_violation")
+                    await _log_action(server_id, "security",
+                                   f"🚫 [WHITELIST PROTECTION] {actor_name} ({actor_id}) quarantined - Attempted to modify whitelisted user {target_name} ({target_id})")
+                    
+                    # Log to global security-alerts AFTER successful enforcement
+                    if _log_to_global:
+                        try:
+                            alert_embed = discord.Embed(
+                                title="⚠️ **Critical Security Alert - Whitelist Violation**",
+                                description=f"**Server:** {server_name}\n"
+                                           f"**Attacker:** {actor_name} (ID: {actor_id})\n"
+                                           f"**Target (Whitelisted):** {target_name} (ID: {target_id})\n"
+                                           f"**Roles Modified:** {role_names}\n"
+                                           f"**Action:** Roles restored, attacker quarantined",
+                                color=0xFF0000,  # Bright red for critical alerts
+                                timestamp=datetime.now(timezone.utc)
+                            )
+                            alert_embed.set_footer(text=f"Server ID: {server_id}")
+                            if server_icon:
+                                alert_embed.set_thumbnail(url=server_icon)
+                            await _log_to_global("security-alerts", alert_embed)
+                        except Exception as e:
+                            print(f"Global whitelist violation logging failed (non-critical): {e}")
                 return
         
         # If actor is trusted, skip remaining checks

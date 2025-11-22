@@ -1538,20 +1538,28 @@ try:
 except ImportError as e:
     print(f"⚠️ Profile cards module not found: {e}")
 
-# Import and setup RXT Security System
+# Import global logging system FIRST (needed by RXT Security)
+try:
+    from global_logging import log_to_global
+    print("✅ Global logging system loaded")
+except ImportError as e:
+    print(f"⚠️ Global logging module not found: {e}")
+    log_to_global = None
+
+# Import and setup RXT Security System with global logging
 try:
     import rxt_security
-    rxt_security.setup(bot, get_server_data, update_server_data, log_action, has_permission)
+    rxt_security.setup(bot, get_server_data, update_server_data, log_action, has_permission, log_to_global)
     print("✅ RXT Security System loaded and configured")
 except ImportError as e:
     print(f"⚠️ RXT Security System not found: {e}")
 except Exception as e:
     print(f"⚠️ RXT Security System setup failed: {e}")
 
-# Import global logging system
+# Import remaining global logging components
 try:
     from global_logging import *
-    print("✅ Global logging system loaded")
+    print("✅ Global logging system fully loaded")
 except ImportError as e:
     print(f"⚠️ Global logging module not found: {e}")
 
