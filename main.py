@@ -767,13 +767,13 @@ async def on_message_edit(before, after):
 
 @bot.event
 async def on_voice_state_update(member, before, after):
-    """Log voice channel activities"""
+    """Log voice channel activities to voice-log channel"""
     if member.bot:
         return
 
     # Member joined a voice channel
     if before.channel is None and after.channel is not None:
-        await log_action(member.guild.id, "voice", f"🔊 [VOICE JOIN] {member} joined {after.channel.name}")
+        await log_action(member.guild.id, "voice-log", f"🔊 [VOICE JOIN] {member} joined {after.channel.name}")
         try:
             from global_logging import log_global_activity
             await log_global_activity("Voice Activity", member.guild.id, member.id, f"Joined voice channel: {after.channel.name}")
@@ -782,7 +782,7 @@ async def on_voice_state_update(member, before, after):
 
     # Member left a voice channel
     elif before.channel is not None and after.channel is None:
-        await log_action(member.guild.id, "voice", f"🔇 [VOICE LEAVE] {member} left {before.channel.name}")
+        await log_action(member.guild.id, "voice-log", f"🔇 [VOICE LEAVE] {member} left {before.channel.name}")
         try:
             from global_logging import log_global_activity
             await log_global_activity("Voice Activity", member.guild.id, member.id, f"Left voice channel: {before.channel.name}")
@@ -791,7 +791,7 @@ async def on_voice_state_update(member, before, after):
 
     # Member moved between voice channels
     elif before.channel is not None and after.channel is not None and before.channel != after.channel:
-        await log_action(member.guild.id, "voice", f"🔄 [VOICE MOVE] {member} moved from {before.channel.name} to {after.channel.name}")
+        await log_action(member.guild.id, "voice-log", f"🔄 [VOICE MOVE] {member} moved from {before.channel.name} to {after.channel.name}")
         try:
             from global_logging import log_global_activity
             await log_global_activity("Voice Activity", member.guild.id, member.id, f"Moved from {before.channel.name} to {after.channel.name}")
@@ -801,7 +801,7 @@ async def on_voice_state_update(member, before, after):
     # Member was muted/unmuted
     if before.mute != after.mute:
         status = "muted" if after.mute else "unmuted"
-        await log_action(member.guild.id, "voice", f"🔇 [VOICE MUTE] {member} was {status} in {after.channel.name if after.channel else 'voice'}")
+        await log_action(member.guild.id, "voice-log", f"🔇 [VOICE MUTE] {member} was {status} in {after.channel.name if after.channel else 'voice'}")
         try:
             from global_logging import log_global_activity
             await log_global_activity("Voice Moderation", member.guild.id, member.id, f"Was {status}")
@@ -811,7 +811,7 @@ async def on_voice_state_update(member, before, after):
     # Member was deafened/undeafened
     if before.deaf != after.deaf:
         status = "deafened" if after.deaf else "undeafened"
-        await log_action(member.guild.id, "voice", f"🔇 [VOICE DEAF] {member} was {status} in {after.channel.name if after.channel else 'voice'}")
+        await log_action(member.guild.id, "voice-log", f"🔇 [VOICE DEAF] {member} was {status} in {after.channel.name if after.channel else 'voice'}")
         try:
             from global_logging import log_global_activity
             await log_global_activity("Voice Moderation", member.guild.id, member.id, f"Was {status}")
