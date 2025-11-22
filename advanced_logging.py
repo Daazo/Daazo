@@ -218,11 +218,12 @@ async def log_dm_received(user, message_content, guild=None):
         
         embed = discord.Embed(
             title="💬 **DM Received**",
-            description=f"```{message_content[:1000]}```",
+            description=message_content[:1000] if message_content else "*No content*",
             color=BrandColors.SUCCESS,
             timestamp=datetime.now()
         )
-        embed.add_field(name="👤 From User", value=f"{user.mention}\n`{user.id}`", inline=False)
+        embed.add_field(name="👤 From User", value=f"{user.mention}\n`{user.id}`", inline=True)
+        embed.add_field(name="📝 Message", value=f"```{message_content[:500]}```" if message_content else "No message content", inline=False)
         embed.set_footer(text=f"{BOT_FOOTER} • DM Received", icon_url=bot.user.display_avatar.url)
         
         try:
