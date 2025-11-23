@@ -6,6 +6,8 @@ from main import bot, has_permission, log_action
 from brand_config import BOT_FOOTER, BrandColors, VisualElements
 from datetime import datetime
 
+print("✅ Role commands module loading...")
+
 @bot.tree.command(name="listrole", description="📋 Show all users in a role with beautiful embed")
 @app_commands.describe(role="Role to list members from")
 async def listrole(interaction: discord.Interaction, role: discord.Role):
@@ -73,6 +75,8 @@ async def listrole(interaction: discord.Interaction, role: discord.Role):
     except Exception as e:
         await interaction.followup.send(f"❌ Error: {str(e)}", ephemeral=True)
         await log_action(interaction.guild.id, "error-log", f"⚠️ [LISTROLE ERROR] {interaction.user}: {str(e)}")
+
+print("  ✓ /listrole command registered")
 
 @bot.tree.command(name="dm-role", description="📧 Send DM to all users in a role")
 @app_commands.describe(role="Role to send DM to", message="Message to send", image_url="Optional image URL")
@@ -160,3 +164,6 @@ async def dm_role(interaction: discord.Interaction, role: discord.Role, message:
     except Exception as e:
         await interaction.followup.send(f"❌ Error: {str(e)}", ephemeral=True)
         await log_action(interaction.guild.id, "error-log", f"⚠️ [DM-ROLE ERROR] {interaction.user}: {str(e)}")
+
+print("  ✓ /dm-role command registered")
+print("✅ All role commands loaded successfully")
