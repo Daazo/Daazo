@@ -875,7 +875,11 @@ async def on_message(message):
         
         BOT_OWNER_ID_INT = int(BOT_OWNER_ID) if BOT_OWNER_ID else None
         
+        print(f"📨 Message from {message.author} in {message.guild.name}: mentions={[m.name for m in message.mentions]}")
+        print(f"BOT_OWNER_ID_INT: {BOT_OWNER_ID_INT}")
+        
         for mentioned_user in message.mentions:
+            print(f"  → Checking mention: {mentioned_user.name} (ID: {mentioned_user.id})")
             # Always react to bot owner in every server first
             if BOT_OWNER_ID_INT and mentioned_user.id == BOT_OWNER_ID_INT:
                 try:
@@ -1846,24 +1850,38 @@ except ImportError as e:
 
 # Music system removed due to compatibility issues
 
-# Load set_reaction module
+# Load set_reaction module - MUST be before on_ready
 try:
     from set_reaction import initialize_bot_owner_reaction
-    
-    reaction_initialized = False
-    
-    @bot.event
-    async def on_ready():
-        """Initialize on bot ready"""
-        global reaction_initialized
-        if not reaction_initialized:
-            await initialize_bot_owner_reaction()
-            print("✅ Reaction system initialized")
-            reaction_initialized = True
-    
     print("✅ Set reaction system loaded")
 except ImportError as e:
     print(f"⚠️ Set reaction module not found: {e}")
+
+# Store original on_ready handlers and create new one that calls all
+_reaction_initialized = False
+
+@bot.event
+async def on_ready():
+    """Bot ready event - sync commands and initialize reactions"""
+    global _reaction_initialized
+    
+    print(f"✅ Bot connected as {bot.user.name} (ID: {bot.user.id})")
+    print(f"📊 Syncing {len(bot.tree._get_all_commands())} commands...")
+    
+    try:
+        await bot.tree.sync()
+        print(f"✅ Commands synced to Discord")
+    except Exception as e:
+        print(f"❌ Error syncing commands: {e}")
+    
+    if not _reaction_initialized:
+        try:
+            await initialize_bot_owner_reaction()
+            print(f"✅ Reaction system initialized (Owner: {BOT_OWNER_ID})")
+            _reaction_initialized = True
+        except Exception as e:
+            print(f"❌ Error initializing reactions: {e}")
+            _reaction_initialized = True  # Don't retry
 
 # Run the bot with error handling
 if __name__ == "__main__":
