@@ -169,4 +169,100 @@ async def dm_role(interaction: discord.Interaction, role: discord.Role, message:
         await log_action(interaction.guild.id, "error-log", f"⚠️ [DM-ROLE ERROR] {interaction.user}: {str(e)}")
 
 print("  ✓ /dm-role command registered")
+
+@bot.tree.command(name="send-image", description="🖼️ Send up to 10 images to the channel")
+@app_commands.describe(
+    image1="First image URL (jpg, png, gif)",
+    image2="Second image URL (optional)",
+    image3="Third image URL (optional)",
+    image4="Fourth image URL (optional)",
+    image5="Fifth image URL (optional)",
+    image6="Sixth image URL (optional)",
+    image7="Seventh image URL (optional)",
+    image8="Eighth image URL (optional)",
+    image9="Ninth image URL (optional)",
+    image10="Tenth image URL (optional)"
+)
+async def send_image(
+    interaction: discord.Interaction,
+    image1: str,
+    image2: str = None,
+    image3: str = None,
+    image4: str = None,
+    image5: str = None,
+    image6: str = None,
+    image7: str = None,
+    image8: str = None,
+    image9: str = None,
+    image10: str = None
+):
+    """Send up to 10 images to the channel"""
+    
+    # Check permission: junior moderator, main moderator, or server owner
+    if interaction.user.id != interaction.guild.owner_id:
+        if not await has_permission(interaction, "junior_moderator"):
+            await interaction.response.send_message("❌ You need Junior Moderator or higher permissions to use this command!", ephemeral=True)
+            return
+    
+    await interaction.response.defer()
+    
+    try:
+        # Collect all image URLs
+        image_urls = [img for img in [image1, image2, image3, image4, image5, image6, image7, image8, image9, image10] if img]
+        
+        if not image_urls:
+            await interaction.followup.send("❌ At least one image URL is required!", ephemeral=True)
+            return
+        
+        # Create embed with images
+        embed = discord.Embed(
+            title="🖼️ Image Gallery",
+            description=f"**Total Images:** {len(image_urls)}\n\n{VisualElements.CIRCUIT_LINE}",
+            color=BrandColors.PRIMARY,
+            timestamp=datetime.now()
+        )
+        
+        # Set first image as main image
+        embed.set_image(url=image_urls[0])
+        
+        # Add other images as fields with links
+        if len(image_urls) > 1:
+            image_links = []
+            for idx, img_url in enumerate(image_urls[1:], 2):
+                image_links.append(f"**Image {idx}:** [Click here]({img_url})")
+            
+            embed.add_field(
+                name="Additional Images",
+                value="\n".join(image_links),
+                inline=False
+            )
+        
+        embed.add_field(
+            name="📤 Uploaded by",
+            value=f"{interaction.user.mention}",
+            inline=True
+        )
+        
+        embed.set_footer(text=BOT_FOOTER, icon_url=interaction.client.user.display_avatar.url)
+        
+        # Send the embed
+        await interaction.followup.send(embed=embed)
+        
+        # Log action
+        log_msg = f"🖼️ [SEND-IMAGE] {interaction.user.mention} sent {len(image_urls)} image(s) to {interaction.channel.mention}"
+        await log_action(interaction.guild.id, "general", log_msg)
+        
+        # Log to global logging
+        try:
+            from advanced_logging import send_global_log
+            global_log_msg = f"**🖼️ Images Sent**\n**User:** {interaction.user}\n**Channel:** {interaction.channel.name}\n**Image Count:** {len(image_urls)}"
+            await send_global_log("general", global_log_msg, interaction.guild)
+        except:
+            pass
+        
+    except Exception as e:
+        await interaction.followup.send(f"❌ Error: {str(e)}", ephemeral=True)
+        await log_action(interaction.guild.id, "error-log", f"⚠️ [SEND-IMAGE ERROR] {interaction.user}: {str(e)}")
+
+print("  ✓ /send-image command registered")
 print("✅ All role commands loaded successfully")
