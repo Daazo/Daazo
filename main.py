@@ -162,7 +162,7 @@ async def log_action(guild_id, log_type, message):
             "message-edit": "message-edit",
             "member-ban": "member-ban",
             "member-kick": "member-kick",
-            "command-log": "command-log",
+            "command-log": "general",
             "error-log": "error-log",
             "music-log": "music-log",
             "economy-log": "economy-log",

@@ -16,7 +16,7 @@ LOG_CHANNEL_TYPES = [
     "general", "moderation", "security",
     "automod", "join-leave", "role-update", "channel-update", "message-delete",
     "message-edit", "member-ban", "member-kick", "voice-log", "ticket-log",
-    "command-log", "error-log", "karma", "system", "communication", "setup",
+    "error-log", "karma", "system", "communication", "setup",
     "reaction", "timed", "music-log", "economy-log"
 ]
 
