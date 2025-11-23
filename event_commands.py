@@ -11,20 +11,11 @@ print("✅ Event system module loading...")
 
 # Event Entry View with Button
 class EventEntryView(discord.ui.View):
-    def __init__(self, event_name: str, guild_id: int, end_time: datetime = None):
+    def __init__(self, event_name: str, guild_id: int, message_id: str = None):
         super().__init__(timeout=None)
         self.event_name = event_name
         self.guild_id = guild_id
-        self.end_time = end_time
-        
-        # Disable button if event has already ended
-        if end_time and datetime.now() > end_time:
-            for item in self.children:
-                item.disabled = True
-    
-    async def on_timeout(self):
-        """Called when view times out"""
-        pass
+        self.message_id = message_id
     
     @discord.ui.button(label="👑 Enter Event", style=discord.ButtonStyle.primary, custom_id="event_entry_button")
     async def enter_event(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -47,7 +38,12 @@ class EventEntryView(discord.ui.View):
                 return
             
             # Check if event has ended
-            if datetime.now() > event.get('end_time', datetime.now()):
+            end_time = event.get('end_time')
+            if end_time and datetime.now() > end_time:
+                # Disable button immediately
+                button.disabled = True
+                button.label = "❌ Event Ended"
+                
                 ended_embed = discord.Embed(
                     title="❌ Event Ended",
                     description=f"This event has already ended and is no longer accepting entries.",
@@ -89,6 +85,37 @@ class EventEntryView(discord.ui.View):
             success_embed.set_footer(text=BOT_FOOTER, icon_url=interaction.client.user.display_avatar.url)
             
             await interaction.followup.send(embed=success_embed, ephemeral=True)
+            
+            # Update the original event message with new participant count
+            try:
+                if event.get('message_id') and event.get('message_channel'):
+                    channel = bot.get_channel(int(event.get('message_channel')))
+                    if channel:
+                        msg = await channel.fetch_message(int(event.get('message_id')))
+                        if msg:
+                            # Update the embed in the message
+                            if msg.embeds:
+                                old_embed = msg.embeds[0]
+                                # Create updated embed
+                                new_embed = discord.Embed(
+                                    title=old_embed.title,
+                                    description=old_embed.description,
+                                    color=old_embed.color,
+                                    timestamp=old_embed.timestamp
+                                )
+                                # Copy fields and update participant count
+                                for field in old_embed.fields:
+                                    if "Participants" in field.name:
+                                        new_embed.add_field(name=field.name, value=f"**{participant_count} Entered**", inline=field.inline)
+                                    else:
+                                        new_embed.add_field(name=field.name, value=field.value, inline=field.inline)
+                                new_embed.set_footer(text=old_embed.footer.text, icon_url=old_embed.footer.icon_url)
+                                
+                                # Update message
+                                new_view = EventEntryView(self.event_name, self.guild_id, event.get('message_id'))
+                                await msg.edit(embed=new_embed, view=new_view)
+            except Exception as e:
+                print(f"Error updating event message: {e}")
             
             # Log the entry
             guild = bot.get_guild(self.guild_id)
@@ -241,7 +268,7 @@ async def create_event(
     description: str,
     channel: discord.TextChannel
 ):
-    """Create a new event - Server owner, main moderator, junior moderator, or event role"""
+    """Create a new event - Server owner, main moderator, or event role"""
     
     # Check permissions
     if interaction.user.id != interaction.guild.owner_id:
@@ -315,7 +342,7 @@ async def create_event(
         embed.set_footer(text=f"{BOT_FOOTER} • Event: {event_name}", icon_url=interaction.client.user.display_avatar.url)
         
         # Create view and send announcement
-        view = EventEntryView(event_name, interaction.guild.id, end_time)
+        view = EventEntryView(event_name, interaction.guild.id)
         event_msg = await channel.send(embed=embed, view=view)
         
         # Add persistent view to bot
@@ -547,8 +574,58 @@ async def announce_custom_winner(
         await interaction.followup.send(f"❌ Error: {str(e)}", ephemeral=True)
         await log_action(interaction.guild.id, "error-log", f"⚠️ [CUSTOM-WINNER ERROR] {interaction.user}: {str(e)}")
 
+# Load persistent views on startup
+@bot.event
+async def on_ready_load_event_views():
+    """Load all event views from database on bot restart"""
+    if db is None:
+        return
+    
+    try:
+        # Get all active events
+        events = await db.events.find({}).to_list(None)
+        for event in events:
+            if event.get('message_id') and event.get('message_channel'):
+                # Create view for this event
+                view = EventEntryView(event.get('event_name'), int(event.get('guild_id')), event.get('message_id'))
+                bot.add_view(view)
+    except Exception as e:
+        print(f"Error loading event views: {e}")
+
+# Call on bot startup
+@bot.event
+async def on_ready():
+    """Called when bot is ready"""
+    pass
+
+# Add the view loader to bot startup
+original_on_ready = None
+
+async def load_event_views_on_startup():
+    """Load event views when bot connects"""
+    if db is None:
+        return
+    
+    try:
+        events = await db.events.find({}).to_list(None)
+        for event in events:
+            if event.get('message_id') and event.get('message_channel'):
+                view = EventEntryView(event.get('event_name'), int(event.get('guild_id')), event.get('message_id'))
+                bot.add_view(view)
+        print("✅ Event views loaded from database")
+    except Exception as e:
+        print(f"Error loading event views on startup: {e}")
+
+# Hook into bot startup
+@bot.event
+async def on_connect():
+    """Called when bot connects - load event views"""
+    if not hasattr(bot, 'event_views_loaded'):
+        await load_event_views_on_startup()
+        bot.event_views_loaded = True
+
 print("  ✓ /event-role command registered")
 print("  ✓ /create-event command registered")
 print("  ✓ /announce-random-winner command registered")
 print("  ✓ /announce-custom-winner command registered (hidden from menu)")
-print("✅ Event system loaded with button entry & MongoDB persistence")
+print("✅ Event system loaded with button entry, participant count updates & MongoDB persistence")
