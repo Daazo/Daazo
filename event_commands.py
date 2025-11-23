@@ -1,5 +1,5 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from discord import app_commands
 import asyncio
 import random
@@ -8,6 +8,9 @@ from brand_config import BOT_FOOTER, BrandColors, VisualElements
 from datetime import datetime, timedelta
 
 print("✅ Event system module loading...")
+
+# Track expired events to avoid duplicate processing
+expired_events = set()
 
 # Event Entry View with Button
 class EventEntryView(discord.ui.View):
@@ -40,9 +43,37 @@ class EventEntryView(discord.ui.View):
             # Check if event has ended
             end_time = event.get('end_time')
             if end_time and datetime.now() > end_time:
-                # Disable button immediately
-                button.disabled = True
-                button.label = "❌ Event Ended"
+                # Try to edit the message to disable button
+                try:
+                    if event.get('message_id') and event.get('message_channel'):
+                        channel = bot.get_channel(int(event.get('message_channel')))
+                        if channel:
+                            msg = await channel.fetch_message(int(event.get('message_id')))
+                            if msg:
+                                # Create disabled view
+                                disabled_view = discord.ui.View()
+                                disabled_button = discord.ui.Button(label="❌ Event Ended", style=discord.ButtonStyle.danger, disabled=True)
+                                disabled_view.add_item(disabled_button)
+                                
+                                # Update message with disabled button
+                                if msg.embeds:
+                                    embed = msg.embeds[0]
+                                    # Update status field
+                                    new_embed = discord.Embed(
+                                        title=embed.title,
+                                        description=embed.description,
+                                        color=BrandColors.DANGER,
+                                        timestamp=embed.timestamp
+                                    )
+                                    for field in embed.fields:
+                                        if "Status" in field.name:
+                                            new_embed.add_field(name=field.name, value="**CLOSED**", inline=field.inline)
+                                        else:
+                                            new_embed.add_field(name=field.name, value=field.value, inline=field.inline)
+                                    new_embed.set_footer(text=embed.footer.text, icon_url=embed.footer.icon_url)
+                                    await msg.edit(embed=new_embed, view=disabled_view)
+                except Exception as e:
+                    print(f"Error updating expired event message: {e}")
                 
                 ended_embed = discord.Embed(
                     title="❌ Event Ended",
@@ -624,8 +655,98 @@ async def on_connect():
         await load_event_views_on_startup()
         bot.event_views_loaded = True
 
+# Background task to disable expired event buttons
+@tasks.loop(minutes=1)
+async def check_and_disable_expired_events():
+    """Periodically check for expired events and disable their buttons"""
+    if db is None:
+        return
+    
+    try:
+        # Get all events
+        events = await db.events.find({'announced': {'$exists': False}}).to_list(None)
+        
+        for event in events:
+            end_time = event.get('end_time')
+            event_key = f"{event.get('guild_id')}:{event.get('event_name')}"
+            
+            # Check if event has expired
+            if end_time and datetime.now() > end_time:
+                # Skip if already processed
+                if event_key in expired_events:
+                    continue
+                
+                expired_events.add(event_key)
+                
+                # Try to update the message
+                try:
+                    if event.get('message_id') and event.get('message_channel'):
+                        channel = bot.get_channel(int(event.get('message_channel')))
+                        if channel:
+                            msg = await channel.fetch_message(int(event.get('message_id')))
+                            if msg:
+                                # Create disabled view
+                                disabled_view = discord.ui.View()
+                                disabled_button = discord.ui.Button(label="❌ Event Ended", style=discord.ButtonStyle.danger, disabled=True)
+                                disabled_view.add_item(disabled_button)
+                                
+                                # Update message with disabled button
+                                if msg.embeds:
+                                    embed = msg.embeds[0]
+                                    new_embed = discord.Embed(
+                                        title=embed.title,
+                                        description=embed.description,
+                                        color=BrandColors.DANGER,
+                                        timestamp=embed.timestamp
+                                    )
+                                    for field in embed.fields:
+                                        if "Status" in field.name:
+                                            new_embed.add_field(name=field.name, value="**CLOSED**", inline=field.inline)
+                                        else:
+                                            new_embed.add_field(name=field.name, value=field.value, inline=field.inline)
+                                    new_embed.set_footer(text=embed.footer.text, icon_url=embed.footer.icon_url)
+                                    await msg.edit(embed=new_embed, view=disabled_view)
+                except Exception as e:
+                    print(f"Error disabling expired event {event_key}: {e}")
+    
+    except Exception as e:
+        print(f"Error in check_and_disable_expired_events: {e}")
+
+@check_and_disable_expired_events.before_loop
+async def before_check_events():
+    """Wait for bot to be ready before starting the loop"""
+    await bot.wait_until_ready()
+
+# Hook to start the background task when bot connects
+@bot.event
+async def on_connect_start_event_checker():
+    """Start the background event checker when bot connects"""
+    if not check_and_disable_expired_events.is_running():
+        try:
+            check_and_disable_expired_events.start()
+        except Exception as e:
+            print(f"Error starting event checker: {e}")
+
+# Store original on_connect if it exists
+original_on_connect = None
+if hasattr(bot, 'on_connect'):
+    original_on_connect = bot.on_connect
+
+async def new_on_connect():
+    """Modified on_connect with event checker start"""
+    if not check_and_disable_expired_events.is_running():
+        try:
+            check_and_disable_expired_events.start()
+        except Exception as e:
+            print(f"Error starting event checker: {e}")
+    if original_on_connect:
+        await original_on_connect()
+
+bot.on_connect = new_on_connect
+
 print("  ✓ /event-role command registered")
 print("  ✓ /create-event command registered")
 print("  ✓ /announce-random-winner command registered")
 print("  ✓ /announce-custom-winner command registered (hidden from menu)")
 print("✅ Event system loaded with button entry, participant count updates & MongoDB persistence")
+print("✅ Background task for disabling expired events configured")
