@@ -698,12 +698,6 @@ async def on_ready_load_event_views():
     except Exception as e:
         print(f"Error loading event views: {e}")
 
-# Call on bot startup
-@bot.event
-async def on_ready():
-    """Called when bot is ready"""
-    pass
-
 # Add the view loader to bot startup
 original_on_ready = None
 
