@@ -186,47 +186,280 @@ async def announce(
 
     await log_action(interaction.guild.id, "communication", f"📢 [ANNOUNCEMENT] Announcement sent to {channel.name} by {interaction.user}")
 
-@bot.tree.command(name="poll", description="Create a poll")
+# ═══════════════════════════════════════════════════════════════════════════
+# INTERACTIVE POLL SYSTEM WITH BUTTONS
+# ═══════════════════════════════════════════════════════════════════════════
+
+class PollView(discord.ui.View):
+    def __init__(self, question, options, allow_multiple, creator):
+        super().__init__(timeout=None)  # Poll never times out
+        self.question = question
+        self.options = options
+        self.allow_multiple = allow_multiple
+        self.creator = creator
+        self.votes = {i: set() for i in range(len(options))}  # Track voters for each option
+        
+        # Add buttons for each option
+        button_styles = [
+            discord.ButtonStyle.primary,   # Purple
+            discord.ButtonStyle.primary,   # Purple
+            discord.ButtonStyle.secondary, # Gray
+            discord.ButtonStyle.secondary, # Gray
+            discord.ButtonStyle.success,   # Green
+            discord.ButtonStyle.success,   # Green
+            discord.ButtonStyle.danger     # Red
+        ]
+        
+        button_emojis = ["🟣", "💠", "⚡", "◆", "✦", "🔮", "⬡"]
+        
+        for i, option in enumerate(options):
+            button = discord.ui.Button(
+                label=f"Option {i+1}",
+                style=button_styles[i],
+                emoji=button_emojis[i],
+                custom_id=f"poll_vote_{i}"
+            )
+            button.callback = self.create_vote_callback(i)
+            self.add_item(button)
+        
+        # Add "View Results" button
+        results_button = discord.ui.Button(
+            label="View Results",
+            style=discord.ButtonStyle.success,
+            emoji="📊",
+            custom_id="poll_results"
+        )
+        results_button.callback = self.view_results
+        self.add_item(results_button)
+    
+    def create_vote_callback(self, option_index):
+        async def vote_callback(interaction: discord.Interaction):
+            user_id = interaction.user.id
+            
+            # Check if user is trying to vote multiple times
+            if not self.allow_multiple:
+                # Remove user's vote from all other options
+                for i in range(len(self.options)):
+                    if user_id in self.votes[i]:
+                        self.votes[i].discard(user_id)
+            
+            # Toggle vote
+            if user_id in self.votes[option_index]:
+                self.votes[option_index].discard(user_id)
+                action = "removed"
+            else:
+                self.votes[option_index].add(user_id)
+                action = "added"
+            
+            # Update the poll embed
+            await self.update_poll_embed(interaction.message)
+            
+            # Send ephemeral response
+            option_text = self.options[option_index]
+            emoji = ["🟣", "💠", "⚡", "◆", "✦", "🔮", "⬡"][option_index]
+            
+            if action == "added":
+                response = discord.Embed(
+                    title="✅ Vote Recorded",
+                    description=f"**You voted for:**\n{emoji} {option_text}",
+                    color=BrandColors.SUCCESS
+                )
+            else:
+                response = discord.Embed(
+                    title="🔄 Vote Removed",
+                    description=f"**You removed your vote from:**\n{emoji} {option_text}",
+                    color=BrandColors.WARNING
+                )
+            
+            response.set_footer(text=BOT_FOOTER)
+            await interaction.response.send_message(embed=response, ephemeral=True)
+        
+        return vote_callback
+    
+    async def view_results(self, interaction: discord.Interaction):
+        """Show detailed poll results"""
+        total_votes = sum(len(voters) for voters in self.votes.values())
+        
+        results_embed = discord.Embed(
+            title="📊 **Detailed Poll Results**",
+            description=f"**❓ {self.question}**\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+            color=BrandColors.PRIMARY
+        )
+        
+        # Show results for each option
+        for i, option in enumerate(self.options):
+            vote_count = len(self.votes[i])
+            percentage = (vote_count / total_votes * 100) if total_votes > 0 else 0
+            
+            # Create progress bar
+            bar_length = 15
+            filled = int(bar_length * percentage / 100)
+            bar = "█" * filled + "░" * (bar_length - filled)
+            
+            emoji = ["🟣", "💠", "⚡", "◆", "✦", "🔮", "⬡"][i]
+            
+            results_embed.add_field(
+                name=f"{emoji} **Option {i+1}:** {option}",
+                value=f"`{bar}` {vote_count} votes ({percentage:.1f}%)",
+                inline=False
+            )
+        
+        # Add total votes
+        vote_mode = "🔄 Multiple votes allowed" if self.allow_multiple else "⚡ Single vote only"
+        results_embed.add_field(
+            name="📈 Statistics",
+            value=f"**Total Votes:** {total_votes}\n**Mode:** {vote_mode}\n**Created by:** {self.creator.mention}",
+            inline=False
+        )
+        
+        results_embed.set_footer(text=BOT_FOOTER, icon_url=interaction.user.display_avatar.url)
+        
+        await interaction.response.send_message(embed=results_embed, ephemeral=True)
+    
+    async def update_poll_embed(self, message):
+        """Update the poll embed with current results"""
+        total_votes = sum(len(voters) for voters in self.votes.values())
+        
+        # Create updated embed
+        embed = discord.Embed(
+            title="⚡ **Quantum Poll Active**",
+            description=f"**❓ {self.question}**\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+            color=BrandColors.PRIMARY
+        )
+        
+        # Add options
+        options_text = ""
+        for i, option in enumerate(self.options):
+            emoji = ["🟣", "💠", "⚡", "◆", "✦", "🔮", "⬡"][i]
+            options_text += f"{emoji} **Option {i+1}:** {option}\n"
+        
+        embed.add_field(
+            name="📋 Vote Options",
+            value=options_text,
+            inline=False
+        )
+        
+        # Add voting mode
+        vote_mode = "🔄 **Multiple votes allowed**" if self.allow_multiple else "⚡ **Single vote only**"
+        embed.add_field(
+            name="🎯 Voting Mode",
+            value=vote_mode,
+            inline=False
+        )
+        
+        # Add results preview
+        if total_votes == 0:
+            results_text = "*No votes yet - Click buttons below to vote!*"
+        else:
+            results_text = ""
+            for i, option in enumerate(self.options):
+                vote_count = len(self.votes[i])
+                percentage = (vote_count / total_votes * 100) if total_votes > 0 else 0
+                bar_length = 10
+                filled = int(bar_length * percentage / 100)
+                bar = "█" * filled + "░" * (bar_length - filled)
+                emoji = ["🟣", "💠", "⚡", "◆", "✦", "🔮", "⬡"][i]
+                results_text += f"{emoji} `{bar}` {vote_count} ({percentage:.0f}%)\n"
+            
+            results_text += f"\n**💠 Total Votes:** {total_votes}"
+        
+        embed.add_field(
+            name="📊 Results",
+            value=results_text,
+            inline=False
+        )
+        
+        embed.set_footer(text=f"{BOT_FOOTER} • Poll by {self.creator.display_name}", icon_url=self.creator.display_avatar.url)
+        
+        await message.edit(embed=embed, view=self)
+
+@bot.tree.command(name="poll", description="⚡ Create an interactive poll with buttons")
 @app_commands.describe(
     question="Poll question",
     option1="First option",
     option2="Second option",
     option3="Third option (optional)",
-    option4="Fourth option (optional)"
+    option4="Fourth option (optional)",
+    option5="Fifth option (optional)",
+    option6="Sixth option (optional)",
+    option7="Seventh option (optional)",
+    multiple_votes="Allow users to vote for multiple options (default: No)"
 )
+@app_commands.choices(multiple_votes=[
+    app_commands.Choice(name="Yes - Allow multiple votes", value="yes"),
+    app_commands.Choice(name="No - One vote only", value="no")
+])
 async def poll(
     interaction: discord.Interaction,
     question: str,
     option1: str,
     option2: str,
     option3: str = None,
-    option4: str = None
+    option4: str = None,
+    option5: str = None,
+    option6: str = None,
+    option7: str = None,
+    multiple_votes: str = "no"
 ):
     if not await has_permission(interaction, "junior_moderator"):
         await interaction.response.send_message(embed=create_permission_denied_embed("Junior Moderator"), ephemeral=True)
         return
 
+    # Collect options
     options = [option1, option2]
     if option3:
         options.append(option3)
     if option4:
         options.append(option4)
+    if option5:
+        options.append(option5)
+    if option6:
+        options.append(option6)
+    if option7:
+        options.append(option7)
 
+    # Create poll view
+    allow_multiple = (multiple_votes == "yes")
+    poll_view = PollView(question, options, allow_multiple, interaction.user)
+
+    # Create quantum-themed poll embed
     embed = discord.Embed(
-        title="📊 Poll",
-        description=f"**{question}**\n" + "\n".join([f"{chr(0x1f1e6 + i)} {option}" for i, option in enumerate(options)]),
-        color=BrandColors.INFO
+        title="⚡ **Quantum Poll Active**",
+        description=f"**❓ {question}**\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+        color=BrandColors.PRIMARY
     )
-    embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
 
-    await interaction.response.send_message(embed=embed)
-    message = await interaction.original_response()
+    # Add options with quantum styling
+    options_text = ""
+    for i, option in enumerate(options):
+        emoji = ["🟣", "💠", "⚡", "◆", "✦", "🔮", "⬡"][i]
+        options_text += f"{emoji} **Option {i+1}:** {option}\n"
+    
+    embed.add_field(
+        name="📋 Vote Options",
+        value=options_text,
+        inline=False
+    )
 
-    # Add reactions
-    for i in range(len(options)):
-        await message.add_reaction(chr(0x1f1e6 + i))
+    # Add voting rules
+    vote_mode = "🔄 **Multiple votes allowed**" if allow_multiple else "⚡ **Single vote only**"
+    embed.add_field(
+        name="🎯 Voting Mode",
+        value=vote_mode,
+        inline=False
+    )
 
-    await log_action(interaction.guild.id, "communication", f"📊 [POLL] Poll created by {interaction.user}: {question}")
+    embed.add_field(
+        name="📊 Results",
+        value="*No votes yet - Click buttons below to vote!*",
+        inline=False
+    )
+
+    embed.set_footer(text=f"{BOT_FOOTER} • Poll by {interaction.user.display_name}", icon_url=interaction.user.display_avatar.url)
+
+    await interaction.response.send_message(embed=embed, view=poll_view)
+    
+    await log_action(interaction.guild.id, "communication", f"📊 [POLL] Interactive poll created by {interaction.user}: {question}")
 
 @bot.tree.command(name="reminder", description="Set a reminder")
 @app_commands.describe(
