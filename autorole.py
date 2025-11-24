@@ -6,12 +6,17 @@ from main import bot
 from brand_config import create_permission_denied_embed, create_owner_only_embed,  BOT_FOOTER, BrandColors, create_success_embed, create_error_embed, create_info_embed, create_command_embed, create_warning_embed
 from main import has_permission, get_server_data, update_server_data, log_action
 
-@bot.tree.command(name="autorole", description="🎭 Configure auto role for new members")\n@app_commands.describe(\n    action="Set or remove auto role",
+@bot.tree.command(name="autorole", description="🎭 Configure auto role for new members")
+@app_commands.describe(\n    action="Set or remove auto role",
     role="Role to automatically assign to new members"
 )
 @app_commands.choices(action=[
-    app_commands.Choice(name="set", value="set"),\n    app_commands.Choice(name="remove", value="remove")\n])\nasync def autorole_setup(\n    interaction: discord.Interaction,\n    action: str,\n    role: discord.Role = None\n):\n    if not await has_permission(interaction, "main_moderator"):\n        await interaction.response.send_message(embed=create_permission_denied_embed("Main Moderator"), ephemeral=True)\n        return\n\n    server_data = await get_server_data(interaction.guild.id)\n\n    if action == "set":\n        if not role:\n            await interaction.response.send_message(embed=create_error_embed("Please specify a role to set as auto role!"), ephemeral=True)\n            return\n\n        # Check if bot can assign this role\n        if role >= interaction.guild.me.top_role:\n            await interaction.response.send_message(embed=create_error_embed("I cannot assign this role! Please make sure my role is higher than the auto role."), ephemeral=True)\n            return\n\n        await update_server_data(interaction.guild.id, {'auto_role': str(role.id)})\n\n        embed = discord.Embed(\n            title="✅ Auto Role Set",
-            description=f"**Auto Role:** {role.mention}\n**Action:** New members will automatically receive this role\n**Set by:** {interaction.user.mention}",
+    app_commands.Choice(name="set", value="set"),
+    app_commands.Choice(name="remove", value="remove")\n])\nasync def autorole_setup(\n    interaction: discord.Interaction,
+    action: str,
+    role: discord.Role = None\n):\n    if not await has_permission(interaction, "main_moderator"):\n        await interaction.response.send_message(embed=create_permission_denied_embed("Main Moderator"), ephemeral=True)\n        return\n\n    server_data = await get_server_data(interaction.guild.id)\n\n    if action == "set":\n        if not role:\n            await interaction.response.send_message(embed=create_error_embed("Please specify a role to set as auto role!"), ephemeral=True)\n            return\n\n        # Check if bot can assign this role\n        if role >= interaction.guild.me.top_role:\n            await interaction.response.send_message(embed=create_error_embed("I cannot assign this role! Please make sure my role is higher than the auto role."), ephemeral=True)\n            return\n\n        await update_server_data(interaction.guild.id, {'auto_role': str(role.id)})\n\n        embed = discord.Embed(\n            title="✅ Auto Role Set",
+            description=f"**Auto Role:** {role.mention}
+**Action:** New members will automatically receive this role\n**Set by:** {interaction.user.mention}",
             color=BrandColors.SUCCESS
         )
         embed.set_footer(text=BOT_FOOTER)
@@ -27,7 +32,8 @@ from main import has_permission, get_server_data, update_server_data, log_action
         
         embed = discord.Embed(
             title="✅ Auto Role Removed",
-            description=f"**Action:** Auto role has been disabled\n**Removed by:** {interaction.user.mention}",
+            description=f"**Action:** Auto role has been disabled
+**Removed by:** {interaction.user.mention}",
             color=BrandColors.WARNING
         )
         embed.set_footer(text=BOT_FOOTER)

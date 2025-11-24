@@ -6,8 +6,10 @@ from main import bot
 from brand_config import create_permission_denied_embed, create_owner_only_embed,  BOT_FOOTER, BrandColors, create_success_embed, create_error_embed, create_info_embed, create_command_embed, create_warning_embed
 from main import has_permission, log_action
 
-@bot.tree.command(name="kick", description="⚔️ Kick a user from the server")\n@app_commands.describe(user="User to kick", reason="Reason for kick")\nasync def kick(interaction: discord.Interaction, user: discord.Member, reason: str = "No reason provided"):\n    if not await has_permission(interaction, "main_moderator"):\n        await interaction.response.send_message(embed=create_permission_denied_embed("Main Moderator"), ephemeral=True)\n        return\n\n    if user.top_role >= interaction.user.top_role and interaction.user.id != interaction.guild.owner_id:\n        await interaction.response.send_message(create_error_embed("You cannot kick someone with equal or higher role!", ephemeral=True)\n        return\n\n    try:\n        # Send DM to user before kicking\n        try:\n            dm_embed = discord.Embed(\n                title=f"⚔️ You were kicked from {interaction.guild.name}",
-                description=f"**Reason:** {reason}\n**Moderator:** {interaction.user}",
+@bot.tree.command(name="kick", description="⚔️ Kick a user from the server")
+@app_commands.describe(user="User to kick", reason="Reason for kick")\nasync def kick(interaction: discord.Interaction, user: discord.Member, reason: str = "No reason provided"):\n    if not await has_permission(interaction, "main_moderator"):\n        await interaction.response.send_message(embed=create_permission_denied_embed("Main Moderator"), ephemeral=True)\n        return\n\n    if user.top_role >= interaction.user.top_role and interaction.user.id != interaction.guild.owner_id:\n        await interaction.response.send_message(create_error_embed("You cannot kick someone with equal or higher role!", ephemeral=True)\n        return\n\n    try:\n        # Send DM to user before kicking\n        try:\n            dm_embed = discord.Embed(\n                title=f"⚔️ You were kicked from {interaction.guild.name}",
+                description=f"**Reason:** {reason}
+**Moderator:** {interaction.user}",
                 color=BrandColors.WARNING
             )
             dm_embed.set_footer(text=BOT_FOOTER)
@@ -16,14 +18,17 @@ from main import has_permission, log_action
             pass  # User has DMs disabled
 
         await user.kick(reason=f"Kicked by {interaction.user}: {reason}")\n\n        embed = discord.Embed(\n            title="⚔️ User Kicked",
-            description=f"**User:** {user.mention}\n**Moderator:** {interaction.user.mention}\n**Reason:** {reason}",
+            description=f"**User:** {user.mention}
+**Moderator:** {interaction.user.mention}\n**Reason:** {reason}",
             color=BrandColors.WARNING
         )
         embed.set_footer(text=BOT_FOOTER, icon_url=interaction.client.user.display_avatar.url)
         await interaction.response.send_message(embed=embed)
 
-        await log_action(interaction.guild.id, "moderation", f"⚔️ [KICK] {user} kicked by {interaction.user} - Reason: {reason}")\n\n        # Log to global per-server channel\n        try:\n            from advanced_logging import send_global_log\n            await send_global_log("moderation", f"**⚔️ Kick**\n**User:** {user}\n**Moderator:** {interaction.user}\n**Reason:** {reason}", interaction.guild)\n        except:\n            pass\n\n    except discord.Forbidden:\n        await interaction.response.send_message(create_error_embed("I don't have permission to kick this user!", ephemeral=True)\n    except Exception as e:\n        await interaction.response.send_message(f"❌ An error occurred: {str(e)}", ephemeral=True)\n\n@bot.tree.command(name="ban", description="🔨 Ban a user from the server")\n@app_commands.describe(user="User to ban", reason="Reason for ban")\nasync def ban(interaction: discord.Interaction, user: discord.Member, reason: str = "No reason provided"):\n    if not await has_permission(interaction, "main_moderator"):\n        await interaction.response.send_message(embed=create_permission_denied_embed("Main Moderator"), ephemeral=True)\n        return\n\n    if user.top_role >= interaction.user.top_role and interaction.user.id != interaction.guild.owner_id:\n        await interaction.response.send_message(create_error_embed("You cannot ban someone with equal or higher role!", ephemeral=True)\n        return\n\n    try:\n        # Send DM to user before banning\n        try:\n            dm_embed = discord.Embed(\n                title=f"🔨 You were banned from {interaction.guild.name}",
-                description=f"**Reason:** {reason}\n**Moderator:** {interaction.user}",
+        await log_action(interaction.guild.id, "moderation", f"⚔️ [KICK] {user} kicked by {interaction.user} - Reason: {reason}")\n\n        # Log to global per-server channel\n        try:\n            from advanced_logging import send_global_log\n            await send_global_log("moderation", f"**⚔️ Kick**\n**User:** {user}\n**Moderator:** {interaction.user}\n**Reason:** {reason}", interaction.guild)\n        except:\n            pass\n\n    except discord.Forbidden:\n        await interaction.response.send_message(create_error_embed("I don't have permission to kick this user!", ephemeral=True)\n    except Exception as e:\n        await interaction.response.send_message(f"❌ An error occurred: {str(e)}", ephemeral=True)\n\n@bot.tree.command(name="ban", description="🔨 Ban a user from the server")
+@app_commands.describe(user="User to ban", reason="Reason for ban")\nasync def ban(interaction: discord.Interaction, user: discord.Member, reason: str = "No reason provided"):\n    if not await has_permission(interaction, "main_moderator"):\n        await interaction.response.send_message(embed=create_permission_denied_embed("Main Moderator"), ephemeral=True)\n        return\n\n    if user.top_role >= interaction.user.top_role and interaction.user.id != interaction.guild.owner_id:\n        await interaction.response.send_message(create_error_embed("You cannot ban someone with equal or higher role!", ephemeral=True)\n        return\n\n    try:\n        # Send DM to user before banning\n        try:\n            dm_embed = discord.Embed(\n                title=f"🔨 You were banned from {interaction.guild.name}",
+                description=f"**Reason:** {reason}
+**Moderator:** {interaction.user}",
                 color=BrandColors.DANGER
             )
             await user.send(embed=dm_embed)
@@ -31,13 +36,15 @@ from main import has_permission, log_action
             pass  # User has DMs disabled
 
         await user.ban(reason=f"Banned by {interaction.user}: {reason}")\n\n        embed = discord.Embed(\n            title="🔨 User Banned",
-            description=f"**User:** {user.mention}\n**Moderator:** {interaction.user.mention}\n**Reason:** {reason}",
+            description=f"**User:** {user.mention}
+**Moderator:** {interaction.user.mention}\n**Reason:** {reason}",
             color=BrandColors.DANGER
         )
         await interaction.response.send_message(embed=embed)
 
         await log_action(interaction.guild.id, "moderation", f"🔨 [BAN] {user} banned by {interaction.user} - Reason: {reason}")\n\n        # Log to global per-server channel\n        try:\n            from advanced_logging import send_global_log\n            await send_global_log("moderation", f"**🔨 Ban**\n**User:** {user}\n**Moderator:** {interaction.user}\n**Reason:** {reason}", interaction.guild)\n        except:\n            pass\n\n    except discord.Forbidden:\n        await interaction.response.send_message(create_error_embed("I don't have permission to ban this user!", ephemeral=True)\n    except Exception as e:\n        await interaction.response.send_message(f"❌ An error occurred: {str(e)}", ephemeral=True)\n\n@bot.tree.command(name="nuke", description="💥 Delete all messages in current channel")\nasync def nuke(interaction: discord.Interaction):\n    if not await has_permission(interaction, "main_moderator"):\n        await interaction.response.send_message(embed=create_permission_denied_embed("Main Moderator"), ephemeral=True)\n        return\n\n    # Confirmation embed\n    embed = discord.Embed(\n        title="⚠️ **DANGER: CHANNEL NUKE** ⚠️",
-        description=f"**This will DELETE ALL messages in {interaction.channel.mention}!**\n\n**❌ This action CANNOT be undone!**\n**💀 All chat history will be permanently lost!**\n\n**Are you absolutely sure?**",
+        description=f"**This will DELETE ALL messages in {interaction.channel.mention}!**
+\n**❌ This action CANNOT be undone!**\n**💀 All chat history will be permanently lost!**\n\n**Are you absolutely sure?**",
         color=BrandColors.DANGER
     )
 
@@ -48,13 +55,17 @@ class NukeConfirmView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=30)
 
-    @discord.ui.button(label='💥 CONFIRM NUKE', style=discord.ButtonStyle.danger, emoji='💥')\n    async def confirm_nuke(self, interaction: discord.Interaction, button: discord.ui.Button):\n        if not await has_permission(interaction, "main_moderator"):\n            await interaction.response.send_message("❌ You need Main Moderator permissions!", ephemeral=True)\n            return\n\n        channel = interaction.channel\n        channel_name = channel.name\n        channel_topic = channel.topic\n        channel_category = channel.category\n        channel_overwrites = channel.overwrites\n\n        await interaction.response.send_message("💥 **NUKING CHANNEL...** 💥", ephemeral=True)\n\n        try:\n            # Delete the channel\n            await channel.delete(reason=f"Channel nuked by {interaction.user}")\n\n            # Recreate the channel\n            new_channel = await channel_category.create_text_channel(\n                name=channel_name,\n                topic=channel_topic,\n                overwrites=channel_overwrites,\n                reason=f"Channel recreated after nuke by {interaction.user}"
+    @discord.ui.button(label='💥 CONFIRM NUKE', style=discord.ButtonStyle.danger, emoji='💥')\n    async def confirm_nuke(self, interaction: discord.Interaction, button: discord.ui.Button):\n        if not await has_permission(interaction, "main_moderator"):\n            await interaction.response.send_message("❌ You need Main Moderator permissions!", ephemeral=True)\n            return\n\n        channel = interaction.channel\n        channel_name = channel.name\n        channel_topic = channel.topic\n        channel_category = channel.category\n        channel_overwrites = channel.overwrites\n\n        await interaction.response.send_message("💥 **NUKING CHANNEL...** 💥", ephemeral=True)\n\n        try:\n            # Delete the channel\n            await channel.delete(reason=f"Channel nuked by {interaction.user}")\n\n            # Recreate the channel\n            new_channel = await channel_category.create_text_channel(\n                name=channel_name,
+                topic=channel_topic,
+                overwrites=channel_overwrites,
+                reason=f"Channel recreated after nuke by {interaction.user}"
             )
 
             # Send confirmation in new channel
             embed = discord.Embed(
                 title="💥 **Channel Nuked Successfully** 💥",
-                description=f"**All messages have been deleted!**\n\n**Moderator:** {interaction.user.mention}\n**Time:** {discord.utils.format_dt(discord.utils.utcnow())}\n\n*This channel has been completely reset.*",
+                description=f"**All messages have been deleted!**
+\n**Moderator:** {interaction.user.mention}\n**Time:** {discord.utils.format_dt(discord.utils.utcnow())}\n\n*This channel has been completely reset.*",
                 color=BrandColors.DANGER
             )
             embed.set_footer(text=BOT_FOOTER, icon_url=interaction.client.user.display_avatar.url)
