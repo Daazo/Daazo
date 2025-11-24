@@ -172,8 +172,7 @@ async def give_karma(interaction: discord.Interaction, user: discord.Member, amo
 
     embed = discord.Embed(
         title="⚡ **Quantum Karma Transferred**",
-        description=f"**{interaction.user.mention}** ({role_text}) transmitted **+{karma_points} karma** to **{user.mention}**{reason_text}
-*◆ Neural network updated*",
+        description=f"**{interaction.user.mention}** ({role_text}) transmitted **+{karma_points} karma** to **{user.mention}**{reason_text}\n*◆ Neural network updated*",
         color=BrandColors.PRIMARY
     )
     embed.add_field(name="◆ New Karma Index", value=f"{new_karma} points", inline=True)
@@ -237,8 +236,7 @@ async def check_karma(interaction: discord.Interaction, user: discord.Member = N
         progress_segments = 15  # More detailed progress bar
         filled_segments = min(progress_segments, int((progress / max_progress) * progress_segments))
         progress_bar = "█" * filled_segments + "░" * (progress_segments - filled_segments)
-        progress_text = f"`{progress_bar}` {progress}/{max_progress}
-*Next level: {next_level['title']} at {next_milestone} karma*"
+        progress_text = f"`{progress_bar}` {progress}/{max_progress}\n*Next level: {next_level['title']} at {next_milestone} karma*"
     else:
         progress_text = "⚡ **QUANTUM MAXIMUM ACHIEVED** ⚡
 *Holographic Master — peak neural resonance!*"
@@ -311,8 +309,7 @@ async def my_karma(interaction: discord.Interaction):
         progress_segments = 15  # More detailed progress bar
         filled_segments = min(progress_segments, int((progress / max_progress) * progress_segments))
         progress_bar = "█" * filled_segments + "░" * (progress_segments - filled_segments)
-        progress_text = f"`{progress_bar}` {progress}/{max_progress}
-*Next level: {next_level['title']} at {next_milestone} karma*"
+        progress_text = f"`{progress_bar}` {progress}/{max_progress}\n*Next level: {next_level['title']} at {next_milestone} karma*"
     else:
         progress_text = "⚡ **QUANTUM MAXIMUM ACHIEVED** ⚡
 *Holographic Master — peak neural resonance!*"
@@ -389,8 +386,7 @@ async def karma_leaderboard(interaction: discord.Interaction):
             else:
                 medal = f"**{i+1}.**"
 
-            leaderboard_text += f"{medal} **{user.display_name}** ({level_title}) - {karma} karma ✨
-"
+            leaderboard_text += f"{medal} **{user.display_name}** ({level_title}) - {karma} karma ✨\n"
 
     embed = discord.Embed(
         title="💠 **Community Karma Leaderboard**",
@@ -431,9 +427,7 @@ async def reset_karma(interaction: discord.Interaction, scope: str, user: discor
         if result.deleted_count > 0:
             embed = discord.Embed(
                 title="⚡ **User Karma Reset**",
-                description=f"**◆ User:** {user.mention}
-**◆ Action:** Karma data has been reset
-**◆ Reset by:** {interaction.user.mention}",
+                description=f"**◆ User:** {user.mention}\n**◆ Action:** Karma data has been reset\n**◆ Reset by:** {interaction.user.mention}",
                 color=BrandColors.PRIMARY
             )
         else:
@@ -448,9 +442,7 @@ async def reset_karma(interaction: discord.Interaction, scope: str, user: discor
 
         embed = discord.Embed(
             title="⚡ **Server Karma Reset**",
-            description=f"**◆ Action:** All karma data has been reset
-**◆ Users affected:** {result.deleted_count}
-**◆ Reset by:** {interaction.user.mention}",
+            description=f"**◆ Action:** All karma data has been reset\n**◆ Users affected:** {result.deleted_count}\n**◆ Reset by:** {interaction.user.mention}",
             color=BrandColors.PRIMARY
         )
 
@@ -487,8 +479,7 @@ async def send_karma_levelup(guild, user, karma):
                 progress_segments = 15
                 filled_segments = min(progress_segments, int((progress / max_progress) * progress_segments))
                 progress_bar = "█" * filled_segments + "░" * (progress_segments - filled_segments)
-                progress_text = f"`{progress_bar}` {progress}/{max_progress}
-*Next level: {next_level['title']} at {next_milestone} karma*"
+                progress_text = f"`{progress_bar}` {progress}/{max_progress}\n*Next level: {next_level['title']} at {next_milestone} karma*"
             else:
                 progress_text = "🎆 **MAXIMUM LEVEL ACHIEVED!** 🎆
 *You are a Transcendent Master!*"
@@ -509,10 +500,7 @@ async def send_karma_levelup(guild, user, karma):
 
             embed = discord.Embed(
                 title="⚡ **QUANTUM MILESTONE ACHIEVED!** 💠",
-                description=f"**{user.mention} neural index elevated to {karma} karma points!**
-**◆ Neural Rank:** {current_level['title']}
-
-*{quote}*",
+                description=f"**{user.mention} neural index elevated to {karma} karma points!**\n**◆ Neural Rank:** {current_level['title']}\n\n*{quote}*",
                 color=current_level["color"] if current_level else BrandColors.WARNING
             )
             embed.set_thumbnail(url=user.display_avatar.url)
@@ -523,8 +511,7 @@ async def send_karma_levelup(guild, user, karma):
             )
             embed.add_field(
                 name="🏆 Community Impact",
-                value=f"✨ This member is making our community amazing!
-🌟 Keep up the positive vibes!",
+                value=f"✨ This member is making our community amazing!\n🌟 Keep up the positive vibes!",
                 inline=False
             )
             embed.set_image(url=selected_gif)

@@ -54,15 +54,7 @@ async def verification_setup(
     # Create verification embed and button - RXT ENGINE Quantum Purple Theme
     embed = discord.Embed(
         title="🔐 **Server Verification Required**",
-        description=f"**{message}**
-⚡ **Quantum Security Protocol Active**
-
-◆ **What verification grants you:**
-• Full server channel access
-• Participation in community
-• Complete member privileges
-
-🔒 Complete CAPTCHA to verify",
+        description=f"**{message}**\n⚡ **Quantum Security Protocol Active**\n\n◆ **What verification grants you:**\n• Full server channel access\n• Participation in community\n• Complete member privileges\n\n🔒 Complete CAPTCHA to verify",
         color=BrandColors.PRIMARY
     )
     embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
@@ -70,15 +62,10 @@ async def verification_setup(
     view = VerificationView()  # Database-driven verification
     await channel.send(embed=embed, view=view)
 
-    description = f"**Channel:** {channel.mention}
-**Verified Role:** {verified_role.mention}"
+    description = f"**Channel:** {channel.mention}\n**Verified Role:** {verified_role.mention}"
     if remove_role:
-        description += f"
-**Remove Role:** {remove_role.mention}"
-    description += f"
-**Status:** Active
-
-*New members will need to verify before accessing the server.*"
+        description += f"\n**Remove Role:** {remove_role.mention}"
+    description += f"\n**Status:** Active\n\n*New members will need to verify before accessing the server.*"
     
     response_embed = discord.Embed(
         title="⚡ **Verification System Setup Complete**",
@@ -146,11 +133,7 @@ class CaptchaModal(discord.ui.Modal, title='🔐 CAPTCHA Verification'):
             # Incorrect CAPTCHA - RXT ENGINE Theme
             embed = discord.Embed(
                 title="✗ **Verification Failed**",
-                description=f"**◆ Incorrect CAPTCHA code**
-**You entered:** `{user_input}`
-
-⚡ Click the **Verify Me** button to get a new CAPTCHA
-💠 Each attempt generates a unique code",
+                description=f"**◆ Incorrect CAPTCHA code**\n**You entered:** `{user_input}`\n\n⚡ Click the **Verify Me** button to get a new CAPTCHA\n💠 Each attempt generates a unique code",
                 color=BrandColors.DANGER
             )
             embed.set_footer(text="◆ Quantum security active", icon_url=bot.user.display_avatar.url)

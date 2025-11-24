@@ -161,12 +161,7 @@ async def give_timed_role(
             # Send confirmation for permanent role
             embed = discord.Embed(
                 title="✅ **Permanent Role Assigned**",
-                description=f"**User:** {user.mention}
-**Role:** {role.mention}
-**Type:** `Permanent`
-**Assigned by:** {interaction.user.mention}
-
-*This role will remain until manually removed.*",
+                description=f"**User:** {user.mention}\n**Role:** {role.mention}\n**Type:** `Permanent`\n**Assigned by:** {interaction.user.mention}\n\n*This role will remain until manually removed.*",
                 color=BrandColors.SUCCESS
             )
             embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
@@ -176,11 +171,7 @@ async def give_timed_role(
             try:
                 dm_embed = discord.Embed(
                     title="🎭 **You've been given a permanent role!**",
-                    description=f"**Server:** {interaction.guild.name}
-**Role:** {role.name}
-**Type:** Permanent
-
-*This role will remain until a moderator removes it.*",
+                    description=f"**Server:** {interaction.guild.name}\n**Role:** {role.name}\n**Type:** Permanent\n\n*This role will remain until a moderator removes it.*",
                     color=BrandColors.SUCCESS
                 )
                 dm_embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
@@ -212,11 +203,7 @@ async def give_timed_role(
             # Send confirmation for timed role
             embed = discord.Embed(
                 title="✅ **Timed Role Assigned**",
-                description=f"**User:** {user.mention}
-**Role:** {role.mention}
-**Duration:** `{format_duration(duration_seconds)}`
-**Expires:** {discord.utils.format_dt(expires_at, style='R')}
-**Assigned by:** {interaction.user.mention}",
+                description=f"**User:** {user.mention}\n**Role:** {role.mention}\n**Duration:** `{format_duration(duration_seconds)}`\n**Expires:** {discord.utils.format_dt(expires_at, style='R')}\n**Assigned by:** {interaction.user.mention}",
                 color=BrandColors.SUCCESS
             )
             embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
@@ -224,12 +211,7 @@ async def give_timed_role(
 
             # Send DM to user for timed role
             try:
-                dm_content = f"**Server:** {interaction.guild.name}
-**Role:** {role.name}
-**Duration:** `{format_duration(duration_seconds)}`
-**Expires:** {discord.utils.format_dt(expires_at, style='F')}
-
-*This role will be automatically removed when it expires.*"
+                dm_content = f"**Server:** {interaction.guild.name}\n**Role:** {role.name}\n**Duration:** `{format_duration(duration_seconds)}`\n**Expires:** {discord.utils.format_dt(expires_at, style='F')}\n\n*This role will be automatically removed when it expires.*"
                 dm_embed = discord.Embed(
                     title="🎭 **You've been given a timed role!**",
                     description=dm_content,
@@ -292,9 +274,7 @@ async def remove_role(
         # Send confirmation
         embed = discord.Embed(
             title="✅ **Role Removed**",
-            description=f"**User:** {user.mention}
-**Role:** {role.mention}
-**Removed by:** {interaction.user.mention}" + (f"
+            description=f"**User:** {user.mention}\n**Role:** {role.mention}\n**Removed by:** {interaction.user.mention}" + (f"
 **Note:** This was a timed role that has been cancelled." if was_timed else ""),
             color=BrandColors.WARNING
         )
@@ -356,8 +336,7 @@ async def view_timed_roles(interaction: discord.Interaction):
         # Create embed with timed roles
         embed = discord.Embed(
             title="📋 **Active Timed Roles**",
-            description=f"*Showing {len(timed_roles)} active timed role(s)*
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+            description=f"*Showing {len(timed_roles)} active timed role(s)*\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
             color=BrandColors.INFO
         )
 
@@ -381,9 +360,7 @@ async def view_timed_roles(interaction: discord.Interaction):
 
                 embed.add_field(
                     name=f"#{i+1} {role_name}",
-                    value=f"**User:** {user_name}
-**Assigned by:** {assigned_by_name}
-**Status:** {status}",
+                    value=f"**User:** {user_name}\n**Assigned by:** {assigned_by_name}\n**Status:** {status}",
                     inline=True
                 )
 

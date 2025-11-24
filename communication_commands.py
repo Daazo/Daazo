@@ -154,8 +154,7 @@ async def announce(
             # Try to find role by name
             role = discord.utils.get(interaction.guild.roles, name=mention)
             if role:
-                announcement_content = f"{role.mention}
-"
+                announcement_content = f"{role.mention}\n"
 
     # Use custom heading or default
     announcement_title = heading if heading else "📢 **Server Announcement** 📢"
@@ -216,8 +215,7 @@ async def poll(
 
     embed = discord.Embed(
         title="📊 Poll",
-        description=f"**{question}**
-" + "
+        description=f"**{question}**\n" + "
 ".join([f"{chr(0x1f1e6 + i)} {option}" for i, option in enumerate(options)]),
         color=BrandColors.INFO
     )
@@ -269,8 +267,7 @@ async def reminder(interaction: discord.Interaction, message: str, time: str):
 
     embed = discord.Embed(
         title="⏰ Reminder Set",
-        description=f"I'll remind you about: **{message}**
-In: **{time}**",
+        description=f"I'll remind you about: **{message}**\nIn: **{time}**",
         color=BrandColors.SUCCESS
     )
     embed.set_footer(text=BOT_FOOTER)

@@ -141,9 +141,7 @@ async def reaction_role_setup(
                 # Success response
                 success_embed = discord.Embed(
                     title="✅ Reaction Role Setup Complete",
-                    description=f"**Message:** {self.channel.mention}
-**Emoji/Role Pairs:** {len(pairs)}
-**Auto-Remove Role:** {self.auto_remove_role.mention if self.auto_remove_role else 'None'}",
+                    description=f"**Message:** {self.channel.mention}\n**Emoji/Role Pairs:** {len(pairs)}\n**Auto-Remove Role:** {self.auto_remove_role.mention if self.auto_remove_role else 'None'}",
                     color=BrandColors.SUCCESS
                 )
 
@@ -225,10 +223,7 @@ async def quick_reaction_role_setup(
 
         response_embed = discord.Embed(
             title="✅ Quick Reaction Role Setup Complete",
-            description=f"**Message:** {channel.mention}
-**Emoji:** {emoji}
-**Role:** {role.mention}
-**Auto-Remove Role:** {auto_remove_role.mention if auto_remove_role else 'None'}",
+            description=f"**Message:** {channel.mention}\n**Emoji:** {emoji}\n**Role:** {role.mention}\n**Auto-Remove Role:** {auto_remove_role.mention if auto_remove_role else 'None'}",
             color=BrandColors.SUCCESS
         )
         response_embed.set_footer(text=BOT_FOOTER)
@@ -372,8 +367,7 @@ Use `/reactionrole` or `/quickreactionrole` to create one!",
 
     embed = discord.Embed(
         title="📋 **Active Reaction Role Setups**",
-        description=f"*Found {len(reaction_roles)} reaction role setup(s)*
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+        description=f"*Found {len(reaction_roles)} reaction role setup(s)*\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
         color=BrandColors.PRIMARY
     )
 
@@ -396,11 +390,9 @@ Use `/reactionrole` or `/quickreactionrole` to create one!",
         if len(pairs) > 3:
             pair_text.append(f"... +{len(pairs)-3} more")
 
-        field_value = f"**Channel:** {channel_name}
-**Pairs:** {', '.join(pair_text) if pair_text else 'None'}"
+        field_value = f"**Channel:** {channel_name}\n**Pairs:** {', '.join(pair_text) if pair_text else 'None'}"
         if auto_remove_role:
-            field_value += f"
-**Auto-Remove:** {auto_remove_role.mention}"
+            field_value += f"\n**Auto-Remove:** {auto_remove_role.mention}"
 
         embed.add_field(
             name=f"#{count} Message ID: {message_id}",
