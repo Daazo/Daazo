@@ -72,9 +72,7 @@ def get_karma_level_info(karma):
     return current_level, next_level
 
 
-@bot.tree.command(name="givekarma", description="Give karma points to another user for their positive contribution")
-@app_commands.describe(
-    user="User to give karma to",
+@bot.tree.command(name="givekarma", description="Give karma points to another user for their positive contribution")\n@app_commands.describe(\n    user="User to give karma to",
     amount="Amount of karma to give (Server Owner: unlimited, Main Mod: 1-2, Junior Mod: can't give)",
     reason="Reason for giving karma (optional but recommended)"
 )
@@ -172,73 +170,11 @@ async def give_karma(interaction: discord.Interaction, user: discord.Member, amo
 
     embed = discord.Embed(
         title="⚡ **Quantum Karma Transferred**",
-        description=f"**{interaction.user.mention}** ({role_text}) transmitted **+{karma_points} karma** to **{user.mention}**{reason_text}
-\n*◆ Neural network updated*",
+        description=f"**{interaction.user.mention}** ({role_text}) transmitted **+{karma_points} karma** to **{user.mention}**{reason_text}\n\n*◆ Neural network updated*",
         color=BrandColors.PRIMARY
     )
-    embed.add_field(name="◆ New Karma Index", value=f"{new_karma} points", inline=True)
-    embed.set_footer(text="💠 Quantum recognition protocol active", icon_url=bot.user.display_avatar.url)
-
-    await interaction.response.send_message(embed=embed)
-
-    # Check for level up (milestones are now defined in KARMA_LEVELS)
-    old_level_info, _ = get_karma_level_info(old_karma)
-    new_level_info, _ = get_karma_level_info(new_karma)
-
-    if new_level_info and old_level_info and new_level_info["milestone"] > old_level_info["milestone"]:
-        await send_karma_levelup(interaction.guild, user, new_karma)
-
-    await log_action(interaction.guild.id, "karma", f"✨ [KARMA] {interaction.user} gave +{karma_points} karma to {user}")
-
-@bot.tree.command(name="karma", description="Check someone's karma points and server rank")
-@app_commands.describe(user="User to check karma for (optional)")
-async def check_karma(interaction: discord.Interaction, user: discord.Member = None):
-    # Check if command is used in correct channel
-    server_data = await get_server_data(interaction.guild.id)
-    karma_channels = server_data.get('karma_channels', {})
-    karma_zone_channel_id = karma_channels.get('karma_zone_channel')
-    
-    if karma_zone_channel_id and str(interaction.channel.id) != karma_zone_channel_id:
-        karma_zone_channel = bot.get_channel(int(karma_zone_channel_id))
-        channel_mention = karma_zone_channel.mention if karma_zone_channel else "#karma-zone"
-        await interaction.response.send_message(embed=create_error_embed(f"This command can only be used in {channel_mention}!"), ephemeral=True)
-        return
-    
-    target_user = user or interaction.user
-
-    if db is None:
-        await interaction.response.send_message(embed=create_error_embed("Database not connected!"), ephemeral=True)
-        return
-
-    user_data = await db.karma.find_one({'user_id': str(target_user.id), 'guild_id': str(interaction.guild.id)})
-
-    if not user_data:
-        karma = 0
-    else:
-        karma = user_data.get('karma', 0)
-
-    # Get user rank
-    users_sorted = await db.karma.find({'guild_id': str(interaction.guild.id)}).sort('karma', -1).to_list(None)
-    rank = next((i + 1 for i, u in enumerate(users_sorted) if u['user_id'] == str(target_user.id)), len(users_sorted) + 1)
-
-    # Get current and next level info
-    current_level, next_level = get_karma_level_info(karma)
-
-    # Calculate progress to next level
-    if next_level:
-        next_milestone = next_level["milestone"]
-        if current_level:
-            progress = karma - current_level["milestone"]
-            max_progress = next_milestone - current_level["milestone"]
-        else:
-            progress = karma
-            max_progress = next_milestone
-
-        progress_segments = 15  # More detailed progress bar
-        filled_segments = min(progress_segments, int((progress / max_progress) * progress_segments))
-        progress_bar = "█" * filled_segments + "░" * (progress_segments - filled_segments)
-        progress_text = f"`{progress_bar}` {progress}/{max_progress}
-*Next level: {next_level['title']} at {next_milestone} karma*"
+    embed.add_field(name="◆ New Karma Index", value=f"{new_karma} points", inline=True)\n    embed.set_footer(text="💠 Quantum recognition protocol active", icon_url=bot.user.display_avatar.url)\n\n    await interaction.response.send_message(embed=embed)\n\n    # Check for level up (milestones are now defined in KARMA_LEVELS)\n    old_level_info, _ = get_karma_level_info(old_karma)\n    new_level_info, _ = get_karma_level_info(new_karma)\n\n    if new_level_info and old_level_info and new_level_info["milestone"] > old_level_info["milestone"]:\n        await send_karma_levelup(interaction.guild, user, new_karma)\n\n    await log_action(interaction.guild.id, "karma", f"✨ [KARMA] {interaction.user} gave +{karma_points} karma to {user}")\n\n@bot.tree.command(name="karma", description="Check someone's karma points and server rank")\n@app_commands.describe(user="User to check karma for (optional)")\nasync def check_karma(interaction: discord.Interaction, user: discord.Member = None):\n    # Check if command is used in correct channel\n    server_data = await get_server_data(interaction.guild.id)\n    karma_channels = server_data.get('karma_channels', {})\n    karma_zone_channel_id = karma_channels.get('karma_zone_channel')\n\n    if karma_zone_channel_id and str(interaction.channel.id) != karma_zone_channel_id:\n        karma_zone_channel = bot.get_channel(int(karma_zone_channel_id))\n        channel_mention = karma_zone_channel.mention if karma_zone_channel else "#karma-zone"
+        await interaction.response.send_message(embed=create_error_embed(f"This command can only be used in {channel_mention}!"), ephemeral=True)\n        return\n\n    target_user = user or interaction.user\n\n    if db is None:\n        await interaction.response.send_message(embed=create_error_embed("Database not connected!"), ephemeral=True)\n        return\n\n    user_data = await db.karma.find_one({'user_id': str(target_user.id), 'guild_id': str(interaction.guild.id)})\n\n    if not user_data:\n        karma = 0\n    else:\n        karma = user_data.get('karma', 0)\n\n    # Get user rank\n    users_sorted = await db.karma.find({'guild_id': str(interaction.guild.id)}).sort('karma', -1).to_list(None)\n    rank = next((i + 1 for i, u in enumerate(users_sorted) if u['user_id'] == str(target_user.id)), len(users_sorted) + 1)\n\n    # Get current and next level info\n    current_level, next_level = get_karma_level_info(karma)\n\n    # Calculate progress to next level\n    if next_level:\n        next_milestone = next_level["milestone"]\n        if current_level:\n            progress = karma - current_level["milestone"]\n            max_progress = next_milestone - current_level["milestone"]\n        else:\n            progress = karma\n            max_progress = next_milestone\n\n        progress_segments = 15  # More detailed progress bar\n        filled_segments = min(progress_segments, int((progress / max_progress) * progress_segments))\n        progress_bar = "█" * filled_segments + "░" * (progress_segments - filled_segments)\n        progress_text = f"`{progress_bar}` {progress}/{max_progress}\n*Next level: {next_level['title']} at {next_milestone} karma*"
     else:
         progress_text = "⚡ **QUANTUM MAXIMUM ACHIEVED** ⚡
 *Holographic Master — peak neural resonance!*"
@@ -253,66 +189,8 @@ async def check_karma(interaction: discord.Interaction, user: discord.Member = N
         color=embed_color
     )
     embed.set_thumbnail(url=target_user.display_avatar.url)
-    embed.add_field(name="⚡ Karma Index", value=f"**{karma}** points", inline=True)
-    embed.add_field(name="🏆 Server Position", value=f"#{rank}", inline=True)
-
-    if next_level:
-        embed.add_field(name="◆ Quantum Advancement", value=progress_text, inline=False)
-    else:
-        embed.add_field(name="⚡ Status", value="**HOLOGRAPHIC MASTER** — Maximum quantum level achieved!", inline=False)
-
-    embed.set_footer(text="💠 Karma matrix reflects your quantum contribution index", icon_url=bot.user.display_avatar.url)
-
-    await interaction.response.send_message(embed=embed)
-
-@bot.tree.command(name="mykarma", description="Check your own karma points quickly")
-async def my_karma(interaction: discord.Interaction):
-    # Check if command is used in correct channel
-    server_data = await get_server_data(interaction.guild.id)
-    karma_channels = server_data.get('karma_channels', {})
-    karma_zone_channel_id = karma_channels.get('karma_zone_channel')
-    
-    if karma_zone_channel_id and str(interaction.channel.id) != karma_zone_channel_id:
-        karma_zone_channel = bot.get_channel(int(karma_zone_channel_id))
-        channel_mention = karma_zone_channel.mention if karma_zone_channel else "#karma-zone"
-        await interaction.response.send_message(embed=create_error_embed(f"This command can only be used in {channel_mention}!"), ephemeral=True)
-        return
-    
-    target_user = interaction.user
-
-    if db is None:
-        await interaction.response.send_message(embed=create_error_embed("Database not connected!"), ephemeral=True)
-        return
-
-    user_data = await db.karma.find_one({'user_id': str(target_user.id), 'guild_id': str(interaction.guild.id)})
-
-    if not user_data:
-        karma = 0
-    else:
-        karma = user_data.get('karma', 0)
-
-    # Get user rank
-    users_sorted = await db.karma.find({'guild_id': str(interaction.guild.id)}).sort('karma', -1).to_list(None)
-    rank = next((i + 1 for i, u in enumerate(users_sorted) if u['user_id'] == str(target_user.id)), len(users_sorted) + 1)
-
-    # Get current and next level info
-    current_level, next_level = get_karma_level_info(karma)
-
-    # Calculate progress to next level
-    if next_level:
-        next_milestone = next_level["milestone"]
-        if current_level:
-            progress = karma - current_level["milestone"]
-            max_progress = next_milestone - current_level["milestone"]
-        else:
-            progress = karma
-            max_progress = next_milestone
-
-        progress_segments = 15  # More detailed progress bar
-        filled_segments = min(progress_segments, int((progress / max_progress) * progress_segments))
-        progress_bar = "█" * filled_segments + "░" * (progress_segments - filled_segments)
-        progress_text = f"`{progress_bar}` {progress}/{max_progress}
-*Next level: {next_level['title']} at {next_milestone} karma*"
+    embed.add_field(name="⚡ Karma Index", value=f"**{karma}** points", inline=True)\n    embed.add_field(name="🏆 Server Position", value=f"#{rank}", inline=True)\n\n    if next_level:\n        embed.add_field(name="◆ Quantum Advancement", value=progress_text, inline=False)\n    else:\n        embed.add_field(name="⚡ Status", value="**HOLOGRAPHIC MASTER** — Maximum quantum level achieved!", inline=False)\n\n    embed.set_footer(text="💠 Karma matrix reflects your quantum contribution index", icon_url=bot.user.display_avatar.url)\n\n    await interaction.response.send_message(embed=embed)\n\n@bot.tree.command(name="mykarma", description="Check your own karma points quickly")\nasync def my_karma(interaction: discord.Interaction):\n    # Check if command is used in correct channel\n    server_data = await get_server_data(interaction.guild.id)\n    karma_channels = server_data.get('karma_channels', {})\n    karma_zone_channel_id = karma_channels.get('karma_zone_channel')\n\n    if karma_zone_channel_id and str(interaction.channel.id) != karma_zone_channel_id:\n        karma_zone_channel = bot.get_channel(int(karma_zone_channel_id))\n        channel_mention = karma_zone_channel.mention if karma_zone_channel else "#karma-zone"
+        await interaction.response.send_message(embed=create_error_embed(f"This command can only be used in {channel_mention}!"), ephemeral=True)\n        return\n\n    target_user = interaction.user\n\n    if db is None:\n        await interaction.response.send_message(embed=create_error_embed("Database not connected!"), ephemeral=True)\n        return\n\n    user_data = await db.karma.find_one({'user_id': str(target_user.id), 'guild_id': str(interaction.guild.id)})\n\n    if not user_data:\n        karma = 0\n    else:\n        karma = user_data.get('karma', 0)\n\n    # Get user rank\n    users_sorted = await db.karma.find({'guild_id': str(interaction.guild.id)}).sort('karma', -1).to_list(None)\n    rank = next((i + 1 for i, u in enumerate(users_sorted) if u['user_id'] == str(target_user.id)), len(users_sorted) + 1)\n\n    # Get current and next level info\n    current_level, next_level = get_karma_level_info(karma)\n\n    # Calculate progress to next level\n    if next_level:\n        next_milestone = next_level["milestone"]\n        if current_level:\n            progress = karma - current_level["milestone"]\n            max_progress = next_milestone - current_level["milestone"]\n        else:\n            progress = karma\n            max_progress = next_milestone\n\n        progress_segments = 15  # More detailed progress bar\n        filled_segments = min(progress_segments, int((progress / max_progress) * progress_segments))\n        progress_bar = "█" * filled_segments + "░" * (progress_segments - filled_segments)\n        progress_text = f"`{progress_bar}` {progress}/{max_progress}\n*Next level: {next_level['title']} at {next_milestone} karma*"
     else:
         progress_text = "⚡ **QUANTUM MAXIMUM ACHIEVED** ⚡
 *Holographic Master — peak neural resonance!*"
@@ -327,49 +205,12 @@ async def my_karma(interaction: discord.Interaction):
         color=embed_color
     )
     embed.set_thumbnail(url=target_user.display_avatar.url)
-    embed.add_field(name="⚡ Karma Index", value=f"**{karma}** points", inline=True)
-    embed.add_field(name="🏆 Server Position", value=f"#{rank}", inline=True)
-
-    if next_level:
-        embed.add_field(name="◆ Quantum Advancement", value=progress_text, inline=False)
-    else:
-        embed.add_field(name="⚡ Status", value="**HOLOGRAPHIC MASTER** — Maximum quantum level achieved!", inline=False)
-
-    embed.set_footer(text="💠 Karma matrix reflects your quantum contribution index", icon_url=bot.user.display_avatar.url)
-
-    await interaction.response.send_message(embed=embed)
-
-@bot.tree.command(name="karmaboard", description="Show server karma leaderboard with top 10 contributors")
-async def karma_leaderboard(interaction: discord.Interaction):
-    # Check if command is used in correct channel
-    server_data = await get_server_data(interaction.guild.id)
-    karma_channels = server_data.get('karma_channels', {})
-    karma_zone_channel_id = karma_channels.get('karma_zone_channel')
-    
-    if karma_zone_channel_id and str(interaction.channel.id) != karma_zone_channel_id:
-        karma_zone_channel = bot.get_channel(int(karma_zone_channel_id))
-        channel_mention = karma_zone_channel.mention if karma_zone_channel else "#karma-zone"
-        await interaction.response.send_message(embed=create_error_embed(f"This command can only be used in {channel_mention}!"), ephemeral=True)
-        return
-    
-    if db is None:
-        await interaction.response.send_message(embed=create_error_embed("Database not connected!"), ephemeral=True)
-        return
-
-    users_sorted = await db.karma.find({'guild_id': str(interaction.guild.id)}).sort('karma', -1).limit(10).to_list(None)
-
-    if not users_sorted:
-        embed = discord.Embed(
-            title="🏆 Karma Leaderboard",
+    embed.add_field(name="⚡ Karma Index", value=f"**{karma}** points", inline=True)\n    embed.add_field(name="🏆 Server Position", value=f"#{rank}", inline=True)\n\n    if next_level:\n        embed.add_field(name="◆ Quantum Advancement", value=progress_text, inline=False)\n    else:\n        embed.add_field(name="⚡ Status", value="**HOLOGRAPHIC MASTER** — Maximum quantum level achieved!", inline=False)\n\n    embed.set_footer(text="💠 Karma matrix reflects your quantum contribution index", icon_url=bot.user.display_avatar.url)\n\n    await interaction.response.send_message(embed=embed)\n\n@bot.tree.command(name="karmaboard", description="Show server karma leaderboard with top 10 contributors")\nasync def karma_leaderboard(interaction: discord.Interaction):\n    # Check if command is used in correct channel\n    server_data = await get_server_data(interaction.guild.id)\n    karma_channels = server_data.get('karma_channels', {})\n    karma_zone_channel_id = karma_channels.get('karma_zone_channel')\n\n    if karma_zone_channel_id and str(interaction.channel.id) != karma_zone_channel_id:\n        karma_zone_channel = bot.get_channel(int(karma_zone_channel_id))\n        channel_mention = karma_zone_channel.mention if karma_zone_channel else "#karma-zone"
+        await interaction.response.send_message(embed=create_error_embed(f"This command can only be used in {channel_mention}!"), ephemeral=True)\n        return\n\n    if db is None:\n        await interaction.response.send_message(embed=create_error_embed("Database not connected!"), ephemeral=True)\n        return\n\n    users_sorted = await db.karma.find({'guild_id': str(interaction.guild.id)}).sort('karma', -1).limit(10).to_list(None)\n\n    if not users_sorted:\n        embed = discord.Embed(\n            title="🏆 Karma Leaderboard",
             description="No karma has been given yet! Start appreciating community members!",
             color=BrandColors.DANGER
         )
-        embed.set_footer(text="🌟 Be the first to spread positivity!", icon_url=bot.user.display_avatar.url)
-        await interaction.response.send_message(embed=embed)
-        return
-
-    # Build leaderboard text
-    leaderboard_text = ""
+        embed.set_footer(text="🌟 Be the first to spread positivity!", icon_url=bot.user.display_avatar.url)\n        await interaction.response.send_message(embed=embed)\n        return\n\n    # Build leaderboard text\n    leaderboard_text = ""
     for i, user_data in enumerate(users_sorted):
         user = bot.get_user(int(user_data['user_id']))
         if user:
@@ -389,50 +230,19 @@ async def karma_leaderboard(interaction: discord.Interaction):
             else:
                 medal = f"**{i+1}.**"
 
-            leaderboard_text += f"{medal} **{user.display_name}** ({level_title}) - {karma} karma ✨
-"
+            leaderboard_text += f"{medal} **{user.display_name}** ({level_title}) - {karma} karma ✨\n"
 
     embed = discord.Embed(
         title="💠 **Community Karma Leaderboard**",
         description=leaderboard_text,
         color=BrandColors.PRIMARY
     )
-    embed.set_footer(text="🌟 These members are making our community amazing!", icon_url=bot.user.display_avatar.url)
-    await interaction.response.send_message(embed=embed)
-
-
-
-
-@bot.tree.command(name="resetkarma", description="Reset karma data for user or entire server (Main Moderator only)")
-@app_commands.describe(
-    scope="Reset scope",
+    embed.set_footer(text="🌟 These members are making our community amazing!", icon_url=bot.user.display_avatar.url)\n    await interaction.response.send_message(embed=embed)\n\n\n\n\n@bot.tree.command(name="resetkarma", description="Reset karma data for user or entire server (Main Moderator only)")\n@app_commands.describe(\n    scope="Reset scope",
     user="User to reset (if scope is user)"
 )
 @app_commands.choices(scope=[
-    app_commands.Choice(name="user", value="user"),
-    app_commands.Choice(name="server", value="server")
-])
-async def reset_karma(interaction: discord.Interaction, scope: str, user: discord.Member = None):
-    if not await has_permission(interaction, "main_moderator"):
-        await interaction.response.send_message(embed=create_permission_denied_embed("Main Moderator"), ephemeral=True)
-        return
-
-    if db is None:
-        await interaction.response.send_message(embed=create_error_embed("Database not connected!"), ephemeral=True)
-        return
-
-    if scope == "user":
-        if not user:
-            await interaction.response.send_message(embed=create_error_embed("Please specify a user to reset!"), ephemeral=True)
-            return
-
-        result = await db.karma.delete_one({'user_id': str(user.id), 'guild_id': str(interaction.guild.id)})
-
-        if result.deleted_count > 0:
-            embed = discord.Embed(
-                title="⚡ **User Karma Reset**",
-                description=f"**◆ User:** {user.mention}
-**◆ Action:** Karma data has been reset\n**◆ Reset by:** {interaction.user.mention}",
+    app_commands.Choice(name="user", value="user"),\n    app_commands.Choice(name="server", value="server")\n])\nasync def reset_karma(interaction: discord.Interaction, scope: str, user: discord.Member = None):\n    if not await has_permission(interaction, "main_moderator"):\n        await interaction.response.send_message(embed=create_permission_denied_embed("Main Moderator"), ephemeral=True)\n        return\n\n    if db is None:\n        await interaction.response.send_message(embed=create_error_embed("Database not connected!"), ephemeral=True)\n        return\n\n    if scope == "user":\n        if not user:\n            await interaction.response.send_message(embed=create_error_embed("Please specify a user to reset!"), ephemeral=True)\n            return\n\n        result = await db.karma.delete_one({'user_id': str(user.id), 'guild_id': str(interaction.guild.id)})\n\n        if result.deleted_count > 0:\n            embed = discord.Embed(\n                title="⚡ **User Karma Reset**",
+                description=f"**◆ User:** {user.mention}\n**◆ Action:** Karma data has been reset\n**◆ Reset by:** {interaction.user.mention}",
                 color=BrandColors.PRIMARY
             )
         else:
@@ -447,18 +257,11 @@ async def reset_karma(interaction: discord.Interaction, scope: str, user: discor
 
         embed = discord.Embed(
             title="⚡ **Server Karma Reset**",
-            description=f"**◆ Action:** All karma data has been reset
-**◆ Users affected:** {result.deleted_count}\n**◆ Reset by:** {interaction.user.mention}",
+            description=f"**◆ Action:** All karma data has been reset\n**◆ Users affected:** {result.deleted_count}\n**◆ Reset by:** {interaction.user.mention}",
             color=BrandColors.PRIMARY
         )
 
-    embed.set_footer(text="🌟 Fresh start for karma system!", icon_url=bot.user.display_avatar.url)
-    await interaction.response.send_message(embed=embed)
-
-    await log_action(interaction.guild.id, "moderation", f"🔄 [KARMA RESET] {scope} reset by {interaction.user}")
-
-async def send_karma_levelup(guild, user, karma):
-    """Send karma level-up announcement with animated GIF and motivational quotes"""
+    embed.set_footer(text="🌟 Fresh start for karma system!", icon_url=bot.user.display_avatar.url)\n    await interaction.response.send_message(embed=embed)\n\n    await log_action(interaction.guild.id, "moderation", f"🔄 [KARMA RESET] {scope} reset by {interaction.user}")\n\nasync def send_karma_levelup(guild, user, karma):\n    """Send karma level-up announcement with animated GIF and motivational quotes"""
     server_data = await get_server_data(guild.id)
     karma_channels = server_data.get('karma_channels', {})
     levelup_channel_id = karma_channels.get('levelup_channel')
@@ -485,30 +288,15 @@ async def send_karma_levelup(guild, user, karma):
                 progress_segments = 15
                 filled_segments = min(progress_segments, int((progress / max_progress) * progress_segments))
                 progress_bar = "█" * filled_segments + "░" * (progress_segments - filled_segments)
-                progress_text = f"`{progress_bar}` {progress}/{max_progress}
-*Next level: {next_level['title']} at {next_milestone} karma*"
+                progress_text = f"`{progress_bar}` {progress}/{max_progress}\n*Next level: {next_level['title']} at {next_milestone} karma*"
             else:
                 progress_text = "🎆 **MAXIMUM LEVEL ACHIEVED!** 🎆
 *You are a Transcendent Master!*"
 
             # Select celebration GIF based on milestone level (can be expanded)
             celebration_gifs = [
-                "https://media.giphy.com/media/3oz8xAFtqoOUUrsh7W/giphy.gif",  # Confetti
-                "https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif",  # Party
-                "https://media.giphy.com/media/g9582DNuQppxC/giphy.gif",      # Celebration
-                "https://media.giphy.com/media/26u4cqiYI30juCOGY/giphy.gif",  # Fireworks
-                "https://media.giphy.com/media/3o6fJ1BM7R2EBRDnxK/giphy.gif", # Victory
-                "https://media.giphy.com/media/l0HlNQ03J5JxX6lva/giphy.gif",  # Achievement
-                "https://media.giphy.com/media/3o7absbD7PbTFQa0c8/giphy.gif", # Success
-                "https://media.giphy.com/media/3o6ZtaO9BZHcOjmErm/giphy.gif"  # Celebration dance
-            ]
-
-            selected_gif = random.choice(celebration_gifs)
-
-            embed = discord.Embed(
-                title="⚡ **QUANTUM MILESTONE ACHIEVED!** 💠",
-                description=f"**{user.mention} neural index elevated to {karma} karma points!**
-\n**◆ Neural Rank:** {current_level['title']}\n\n*{quote}*",
+                "https://media.giphy.com/media/3oz8xAFtqoOUUrsh7W/giphy.gif",  # Confetti\n                "https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif",  # Party\n                "https://media.giphy.com/media/g9582DNuQppxC/giphy.gif",      # Celebration\n                "https://media.giphy.com/media/26u4cqiYI30juCOGY/giphy.gif",  # Fireworks\n                "https://media.giphy.com/media/3o6fJ1BM7R2EBRDnxK/giphy.gif", # Victory\n                "https://media.giphy.com/media/l0HlNQ03J5JxX6lva/giphy.gif",  # Achievement\n                "https://media.giphy.com/media/3o7absbD7PbTFQa0c8/giphy.gif", # Success\n                "https://media.giphy.com/media/3o6ZtaO9BZHcOjmErm/giphy.gif"  # Celebration dance\n            ]\n\n            selected_gif = random.choice(celebration_gifs)\n\n            embed = discord.Embed(\n                title="⚡ **QUANTUM MILESTONE ACHIEVED!** 💠",
+                description=f"**{user.mention} neural index elevated to {karma} karma points!**\n\n**◆ Neural Rank:** {current_level['title']}\n\n*{quote}*",
                 color=current_level["color"] if current_level else BrandColors.WARNING
             )
             embed.set_thumbnail(url=user.display_avatar.url)
@@ -519,8 +307,7 @@ async def send_karma_levelup(guild, user, karma):
             )
             embed.add_field(
                 name="🏆 Community Impact",
-                value=f"✨ This member is making our community amazing!
-🌟 Keep up the positive vibes!",
+                value=f"✨ This member is making our community amazing!\n🌟 Keep up the positive vibes!",
                 inline=False
             )
             embed.set_image(url=selected_gif)
@@ -528,76 +315,4 @@ async def send_karma_levelup(guild, user, karma):
             embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
 
             # Send announcement
-            await levelup_channel.send(f"🎉 **KARMA CELEBRATION TIME!** 🎊", embed=embed)
-
-            print(f"✨ [KARMA MILESTONE] {user} reached {karma} karma in {guild.name}")
-    else:
-        print(f"⚠️ [KARMA] No karma level-up channel set for {guild.name}")
-
-# Reaction-based karma system
-@bot.event
-async def on_reaction_add(reaction, user):
-    # Don't give karma for bot reactions or self-reactions
-    if user.bot or user.id == reaction.message.author.id:
-        return
-
-    # Process both positive and negative karma emojis
-    positive_emojis = ['👍', '⭐', '❤️', '🔥', '💯', '✨', '🌟', '💖', '👏', '🙌', '🎉', '🥳', '😍', '🥰', '🏆', '🚀', '🌈', '💎', '👑']
-    negative_emojis = ['👎', '💀', '😴', '🤮', '🗿', '😤', '😠', '😡', '🤬', '💔', '🖕', '😵', '🤢', '❌', '⛔', '🚫', '💩', '🤡']
-
-    emoji_str = str(reaction.emoji)
-    karma_change = 0
-
-    if emoji_str in positive_emojis:
-        karma_change = 1
-    elif emoji_str in negative_emojis:
-        karma_change = -1
-    else:
-        return  # Not a karma emoji
-
-    # Don't give karma in DMs
-    if not reaction.message.guild:
-        return
-
-    # Check cooldown (3 minutes)
-    current_time = time.time()
-    giver_id = user.id
-    receiver_id = reaction.message.author.id
-
-    if giver_id not in karma_cooldowns:
-        karma_cooldowns[giver_id] = {}
-
-    last_given = karma_cooldowns[giver_id].get(receiver_id, 0)
-    cooldown_time = 180  # 3 minutes
-
-    if current_time - last_given < cooldown_time:
-        return
-
-    # Update cooldown
-    karma_cooldowns[giver_id][receiver_id] = current_time
-
-    # Update karma
-    if db is None:
-        return
-
-    user_data = await db.karma.find_one({'user_id': str(receiver_id), 'guild_id': str(reaction.message.guild.id)})
-    if not user_data:
-        user_data = {'user_id': str(receiver_id), 'guild_id': str(reaction.message.guild.id), 'karma': 0}
-
-    old_karma = user_data.get('karma', 0)
-    new_karma = max(0, old_karma + karma_change)  # Don't allow negative karma
-    user_data['karma'] = new_karma
-
-    await db.karma.update_one(
-        {'user_id': str(receiver_id), 'guild_id': str(reaction.message.guild.id)},
-        {'$set': user_data},
-        upsert=True
-    )
-
-    # Check for level up only on positive karma
-    if karma_change > 0:
-        old_level_info, _ = get_karma_level_info(old_karma)
-        new_level_info, _ = get_karma_level_info(new_karma)
-
-        if new_level_info and old_level_info and new_level_info["milestone"] > old_level_info["milestone"]:
-            await send_karma_levelup(reaction.message.guild, reaction.message.author, new_karma), create_success_embed, create_error_embed, create_info_embed, create_command_embed, create_warning_embed, create_permission_denied_embed, create_owner_only_embed
+            await levelup_channel.send(f"🎉 **KARMA CELEBRATION TIME!** 🎊", embed=embed)\n\n            print(f"✨ [KARMA MILESTONE] {user} reached {karma} karma in {guild.name}")\n    else:\n        print(f"⚠️ [KARMA] No karma level-up channel set for {guild.name}")\n\n# Reaction-based karma system\n@bot.event\nasync def on_reaction_add(reaction, user):\n    # Don't give karma for bot reactions or self-reactions\n    if user.bot or user.id == reaction.message.author.id:\n        return\n\n    # Process both positive and negative karma emojis\n    positive_emojis = ['👍', '⭐', '❤️', '🔥', '💯', '✨', '🌟', '💖', '👏', '🙌', '🎉', '🥳', '😍', '🥰', '🏆', '🚀', '🌈', '💎', '👑']\n    negative_emojis = ['👎', '💀', '😴', '🤮', '🗿', '😤', '😠', '😡', '🤬', '💔', '🖕', '😵', '🤢', '❌', '⛔', '🚫', '💩', '🤡']\n\n    emoji_str = str(reaction.emoji)\n    karma_change = 0\n\n    if emoji_str in positive_emojis:\n        karma_change = 1\n    elif emoji_str in negative_emojis:\n        karma_change = -1\n    else:\n        return  # Not a karma emoji\n\n    # Don't give karma in DMs\n    if not reaction.message.guild:\n        return\n\n    # Check cooldown (3 minutes)\n    current_time = time.time()\n    giver_id = user.id\n    receiver_id = reaction.message.author.id\n\n    if giver_id not in karma_cooldowns:\n        karma_cooldowns[giver_id] = {}\n\n    last_given = karma_cooldowns[giver_id].get(receiver_id, 0)\n    cooldown_time = 180  # 3 minutes\n\n    if current_time - last_given < cooldown_time:\n        return\n\n    # Update cooldown\n    karma_cooldowns[giver_id][receiver_id] = current_time\n\n    # Update karma\n    if db is None:\n        return\n\n    user_data = await db.karma.find_one({'user_id': str(receiver_id), 'guild_id': str(reaction.message.guild.id)})\n    if not user_data:\n        user_data = {'user_id': str(receiver_id), 'guild_id': str(reaction.message.guild.id), 'karma': 0}\n\n    old_karma = user_data.get('karma', 0)\n    new_karma = max(0, old_karma + karma_change)  # Don't allow negative karma\n    user_data['karma'] = new_karma\n\n    await db.karma.update_one(\n        {'user_id': str(receiver_id), 'guild_id': str(reaction.message.guild.id)},\n        {'$set': user_data},\n        upsert=True\n    )\n\n    # Check for level up only on positive karma\n    if karma_change > 0:\n        old_level_info, _ = get_karma_level_info(old_karma)\n        new_level_info, _ = get_karma_level_info(new_karma)\n\n        if new_level_info and old_level_info and new_level_info["milestone"] > old_level_info["milestone"]:\n            await send_karma_levelup(reaction.message.guild, reaction.message.author, new_karma), create_success_embed, create_error_embed, create_info_embed, create_command_embed, create_warning_embed, create_permission_denied_embed, create_owner_only_embed
