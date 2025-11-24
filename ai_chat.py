@@ -195,18 +195,24 @@ async def handle_ai_message(message):
     
     # Check if AI is enabled for this server
     if db is None:
+        print(f"⚠️ [AI CHAT] DB is None, skipping message from {message.author}")
         return
     
     try:
         ai_settings = await db.ai_settings.find_one({'guild_id': str(message.guild.id)})
+        print(f"🔍 [AI CHAT DEBUG] Guild ID: {message.guild.id}, Channel ID: {message.channel.id}, AI Settings: {ai_settings}")
         
         # No AI channel set
         if not ai_settings or not ai_settings.get('ai_channel_id'):
+            print(f"⚠️ [AI CHAT] No AI settings found for guild {message.guild.id}")
             return
         
         # Check if message is in the AI channel
         if str(message.channel.id) != ai_settings.get('ai_channel_id'):
+            print(f"⚠️ [AI CHAT] Message in wrong channel: {message.channel.id} != {ai_settings.get('ai_channel_id')}")
             return
+        
+        print(f"✅ [AI CHAT] Processing message in AI channel: {message.content[:100]}")
         
         # Check if Gemini client is initialized
         if not gemini_client:
