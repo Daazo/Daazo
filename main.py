@@ -227,12 +227,12 @@ async def has_permission(interaction, permission_level):
 
 @tasks.loop(seconds=30)
 async def cleanup_empty_custom_vcs():
-    """Auto-delete empty custom VCs after 5 minutes of inactivity"""
+    """Auto-delete empty custom VCs after 1 minute of inactivity"""
     if db is None:
         return
     
     try:
-        cutoff_time = datetime.utcnow() - timedelta(minutes=5)
+        cutoff_time = datetime.utcnow() - timedelta(minutes=1)
         expired_vcs = await db.custom_vcs.find({'last_activity': {'$lt': cutoff_time}}).to_list(length=None)
         
         if expired_vcs:
@@ -255,7 +255,7 @@ async def cleanup_empty_custom_vcs():
                     continue
                 
                 if len(channel.members) == 0:
-                    await channel.delete(reason="Auto-cleanup - 5 min inactivity")
+                    await channel.delete(reason="Auto-cleanup - 1 min inactivity")
                     await db.custom_vcs.delete_one({'_id': vc_data['_id']})
                     print(f"✅ [CLEANUP] Deleted {channel_name}")
                     await log_action(guild_id, "custom_vc", f"🗑️ [VC DELETED] {channel_name} - auto cleanup")
@@ -309,7 +309,7 @@ async def on_ready():
         if not cleanup_empty_custom_vcs.is_running():
             cleanup_empty_custom_vcs.start()
             print("✅ Custom VC cleanup task STARTED (30s interval)")
-            print("✅ Empty VCs will auto-delete after 5 minutes of inactivity")
+            print("✅ Empty VCs will auto-delete after 1 minute of inactivity")
         else:
             print("⚠️ Custom VC cleanup task already running")
     except Exception as e:

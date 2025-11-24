@@ -285,7 +285,7 @@ async def custom_vc_setup(interaction: discord.Interaction, category: discord.Ca
         )
         embed.add_field(
             name="🎯 How It Works",
-            value="✓ Users join 🔊 CUSTOM VC\n✓ Bot automatically creates personal channel\n✓ User auto-moved to their VC\n✓ Auto-deletes after 5 min inactivity",
+            value="✓ Users join 🔊 CUSTOM VC\n✓ Bot automatically creates personal channel\n✓ User auto-moved to their VC\n✓ Auto-deletes after 1 min inactivity",
             inline=False
         )
         embed.set_footer(text=BOT_FOOTER)
@@ -334,7 +334,7 @@ async def on_voice_state_update(member, before, after):
                         'last_activity': datetime.utcnow()
                     })
                     
-                    print(f"✅ [VC CREATED] {vc_name} (ID: {new_vc.id}) - Will auto-delete after 5 min inactivity")
+                    print(f"✅ [VC CREATED] {vc_name} (ID: {new_vc.id}) - Will auto-delete after 1 min inactivity")
                     await log_action(guild.id, "custom_vc", f"🔊 [AUTO VC] Created for {member}: {vc_name}")
                     
                     try:
