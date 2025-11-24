@@ -15,3 +15,4 @@ requests
 flask
 PyNaCl
 yt-dlp
+google-genai

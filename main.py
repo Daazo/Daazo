@@ -653,6 +653,13 @@ async def on_message(message):
     
     print(f"🔍 [ON_MESSAGE] Message from {message.author} in {message.guild.name if message.guild else 'DM'}: {message.content[:100]}")
     
+    # Handle AI chat in designated channels (must be before DM check)
+    if message.guild and handle_ai_message:
+        try:
+            await handle_ai_message(message)
+        except Exception as e:
+            print(f"❌ [AI CHAT ERROR] {e}")
+    
     # Handle DM mentions
     if not message.guild:  # This is a DM
         # Log DM received to global logging
@@ -1883,6 +1890,14 @@ try:
     print("✅ Event system loaded")
 except ImportError as e:
     print(f"⚠️ Event system module not found: {e}")
+
+# Import AI chat system
+try:
+    from ai_chat import handle_ai_message
+    print("✅ AI Chat system loaded (Gemini)")
+except ImportError as e:
+    print(f"⚠️ AI Chat module not found: {e}")
+    handle_ai_message = None
 
 # Music system removed due to compatibility issues
 
