@@ -221,6 +221,54 @@ async def has_permission(interaction, permission_level):
 
 # Karma system will be handled in xp_commands.py (now karma_commands.py)
 
+# ═══════════════════════════════════════════════════════════════════════════
+# CUSTOM VC CLEANUP TASK - DEFINED BEFORE on_ready() SO IT EXISTS WHEN NEEDED
+# ═══════════════════════════════════════════════════════════════════════════
+
+@tasks.loop(seconds=30)
+async def cleanup_empty_custom_vcs():
+    """Auto-delete empty custom VCs after 5 minutes of inactivity"""
+    if db is None:
+        return
+    
+    try:
+        cutoff_time = datetime.utcnow() - timedelta(minutes=5)
+        expired_vcs = await db.custom_vcs.find({'last_activity': {'$lt': cutoff_time}}).to_list(length=None)
+        
+        if expired_vcs:
+            print(f"🔍 [CLEANUP SCAN] Found {len(expired_vcs)} expired VCs to check")
+        
+        for vc_data in expired_vcs:
+            try:
+                guild_id = int(vc_data['guild_id'])
+                channel_id = int(vc_data['channel_id'])
+                channel_name = vc_data.get('channel_name', 'Unknown')
+                
+                guild = bot.get_guild(guild_id)
+                if not guild:
+                    await db.custom_vcs.delete_one({'_id': vc_data['_id']})
+                    continue
+                
+                channel = guild.get_channel(channel_id)
+                if not channel:
+                    await db.custom_vcs.delete_one({'_id': vc_data['_id']})
+                    continue
+                
+                if len(channel.members) == 0:
+                    await channel.delete(reason="Auto-cleanup - 5 min inactivity")
+                    print(f"✅ [CLEANUP] Deleted {channel_name}")
+                    await log_action(guild_id, "custom_vc", f"🗑️ [VC DELETED] {channel_name} - auto cleanup")
+                
+                await db.custom_vcs.delete_one({'_id': vc_data['_id']})
+            except Exception as e:
+                print(f"❌ [CLEANUP ERROR] {e}")
+                try:
+                    await db.custom_vcs.delete_one({'_id': vc_data['_id']})
+                except:
+                    pass
+    except Exception as e:
+        print(f"❌ [CLEANUP FATAL] {e}")
+
 # Bot Events
 @bot.event
 async def on_ready():
@@ -302,81 +350,6 @@ async def on_ready():
             print("✅ Console output capture enabled - live console logging active")
     except Exception as e:
         print(f"⚠️ Failed to enable console capture: {e}")
-
-# ═══════════════════════════════════════════════════════════════════════════
-# CUSTOM VC CLEANUP TASK - BUILT INTO MAIN.PY FOR RELIABILITY
-# ═══════════════════════════════════════════════════════════════════════════
-
-@tasks.loop(seconds=30)
-async def cleanup_empty_custom_vcs():
-    """Auto-delete empty custom VCs after 5 minutes of inactivity"""
-    if db is None:
-        return
-    
-    try:
-        cutoff_time = datetime.utcnow() - timedelta(minutes=5)
-        
-        # Find all VCs that have been inactive for 5+ minutes
-        expired_vcs = await db.custom_vcs.find({
-            'last_activity': {'$lt': cutoff_time}
-        }).to_list(length=None)
-        
-        if expired_vcs:
-            print(f"🔍 [CLEANUP SCAN] Found {len(expired_vcs)} expired VCs to check")
-        
-        for vc_data in expired_vcs:
-            try:
-                guild_id = int(vc_data['guild_id'])
-                channel_id = int(vc_data['channel_id'])
-                channel_name = vc_data.get('channel_name', 'Unknown')
-                last_activity = vc_data.get('last_activity', 'Unknown')
-                
-                guild = bot.get_guild(guild_id)
-                if not guild:
-                    await db.custom_vcs.delete_one({'_id': vc_data['_id']})
-                    print(f"🗑️ [CLEANUP] Guild not found, removed DB entry for {channel_name}")
-                    continue
-                
-                channel = guild.get_channel(channel_id)
-                
-                if not channel:
-                    await db.custom_vcs.delete_one({'_id': vc_data['_id']})
-                    print(f"🗑️ [CLEANUP] Channel not found, removed DB entry for {channel_name}")
-                    continue
-                
-                member_count = len(channel.members)
-                
-                if member_count == 0:
-                    # Channel is empty - delete it
-                    print(f"🗑️ [CLEANUP] Deleting empty {channel_name} (ID: {channel_id}, Last activity: {last_activity})")
-                    
-                    try:
-                        await channel.delete(reason="Auto-cleanup - 5 min inactivity")
-                        print(f"✅ [CLEANUP] Successfully deleted {channel_name}")
-                        await log_action(guild_id, "custom_vc", f"🗑️ [VC DELETED] {channel_name} - auto cleanup")
-                        
-                        try:
-                            from advanced_logging import send_global_log
-                            await send_global_log("custom_vc", f"**🗑️ Auto VC Deleted**\n**Channel:** {channel_name}\n**Reason:** Inactivity (5 mins)", guild)
-                        except:
-                            pass
-                    except Exception as del_error:
-                        print(f"❌ [CLEANUP] Failed to delete {channel_name}: {del_error}")
-                else:
-                    print(f"⏭️ [CLEANUP] Keeping {channel_name} - still has {member_count} member(s)")
-                
-                # Always remove from database after checking
-                await db.custom_vcs.delete_one({'_id': vc_data['_id']})
-            
-            except Exception as e:
-                print(f"❌ [CLEANUP ERROR] Processing VC {vc_data.get('channel_id')}: {e}")
-                try:
-                    await db.custom_vcs.delete_one({'_id': vc_data['_id']})
-                except:
-                    pass
-    
-    except Exception as e:
-        print(f"❌ [CLEANUP FATAL] {e}")
 
 @bot.event
 async def on_guild_join(guild):
