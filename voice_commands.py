@@ -416,7 +416,7 @@ async def create_custom_vc(interaction: discord.Interaction, name: str):
         await interaction.response.send_message(embed=create_error_embed(f"Error: {str(e)}"), ephemeral=True)
 
 @bot.event
-async def on_voice_state_update_custom(member, before, after):
+async def on_voice_state_update(member, before, after):
     """Update activity timestamp for custom VCs"""
     if after.channel and db:
         try:
@@ -465,7 +465,11 @@ async def cleanup_empty_custom_vcs():
     except Exception as e:
         print(f"Error in cleanup_empty_custom_vcs: {e}")
 
-# Start cleanup task
-if not cleanup_empty_custom_vcs.is_running():
-    cleanup_empty_custom_vcs.start()
-    print("✅ Custom VC cleanup task started")
+def start_custom_vc_cleanup():
+    """Start the custom VC cleanup task"""
+    try:
+        if not cleanup_empty_custom_vcs.is_running():
+            cleanup_empty_custom_vcs.start()
+            print("✅ Custom VC cleanup task started")
+    except Exception as e:
+        print(f"⚠️ Custom VC cleanup task failed to start: {e}")

@@ -256,6 +256,13 @@ async def on_ready():
     bot.add_view(TicketControlView())
     bot.add_view(ReopenDeleteTicketView())
     print("✅ Persistent views added for ticket system")
+    
+    # Start custom VC cleanup task
+    try:
+        from voice_commands import start_custom_vc_cleanup
+        start_custom_vc_cleanup()
+    except Exception as e:
+        print(f"⚠️ Custom VC cleanup task setup failed: {e}")
 
     # Add persistent views for security system
     from security_system import VerificationView
