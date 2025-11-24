@@ -173,7 +173,6 @@ async def give_karma(interaction: discord.Interaction, user: discord.Member, amo
     embed = discord.Embed(
         title="⚡ **Quantum Karma Transferred**",
         description=f"**{interaction.user.mention}** ({role_text}) transmitted **+{karma_points} karma** to **{user.mention}**{reason_text}
-
 *◆ Neural network updated*",
         color=BrandColors.PRIMARY
     )
@@ -511,7 +510,6 @@ async def send_karma_levelup(guild, user, karma):
             embed = discord.Embed(
                 title="⚡ **QUANTUM MILESTONE ACHIEVED!** 💠",
                 description=f"**{user.mention} neural index elevated to {karma} karma points!**
-
 **◆ Neural Rank:** {current_level['title']}
 
 *{quote}*",

@@ -122,7 +122,6 @@ async def nuke(interaction: discord.Interaction):
     embed = discord.Embed(
         title="⚠️ **DANGER: CHANNEL NUKE** ⚠️",
         description=f"**This will DELETE ALL messages in {interaction.channel.mention}!**
-
 **❌ This action CANNOT be undone!**
 **💀 All chat history will be permanently lost!**
 
@@ -167,7 +166,6 @@ class NukeConfirmView(discord.ui.View):
             embed = discord.Embed(
                 title="💥 **Channel Nuked Successfully** 💥",
                 description=f"**All messages have been deleted!**
-
 **Moderator:** {interaction.user.mention}
 **Time:** {discord.utils.format_dt(discord.utils.utcnow())}
 

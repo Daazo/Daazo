@@ -217,7 +217,6 @@ async def poll(
     embed = discord.Embed(
         title="📊 Poll",
         description=f"**{question}**
-
 " + "
 ".join([f"{chr(0x1f1e6 + i)} {option}" for i, option in enumerate(options)]),
         color=BrandColors.INFO

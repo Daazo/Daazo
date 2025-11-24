@@ -373,7 +373,6 @@ Use `/reactionrole` or `/quickreactionrole` to create one!",
     embed = discord.Embed(
         title="📋 **Active Reaction Role Setups**",
         description=f"*Found {len(reaction_roles)} reaction role setup(s)*
-
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
         color=BrandColors.PRIMARY
     )

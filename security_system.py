@@ -55,7 +55,6 @@ async def verification_setup(
     embed = discord.Embed(
         title="🔐 **Server Verification Required**",
         description=f"**{message}**
-
 ⚡ **Quantum Security Protocol Active**
 
 ◆ **What verification grants you:**
@@ -148,7 +147,6 @@ class CaptchaModal(discord.ui.Modal, title='🔐 CAPTCHA Verification'):
             embed = discord.Embed(
                 title="✗ **Verification Failed**",
                 description=f"**◆ Incorrect CAPTCHA code**
-
 **You entered:** `{user_input}`
 
 ⚡ Click the **Verify Me** button to get a new CAPTCHA

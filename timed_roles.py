@@ -357,7 +357,6 @@ async def view_timed_roles(interaction: discord.Interaction):
         embed = discord.Embed(
             title="📋 **Active Timed Roles**",
             description=f"*Showing {len(timed_roles)} active timed role(s)*
-
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
             color=BrandColors.INFO
         )
