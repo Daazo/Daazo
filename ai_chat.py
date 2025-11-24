@@ -8,11 +8,19 @@ from google import genai
 from google.genai import types
 
 from brand_config import BrandColors, BOT_FOOTER
-from main import bot, db, has_permission, get_server_data, log_action, create_error_embed, create_permission_denied_embed
 
 # IMPORTANT: KEEP THIS COMMENT
 # Integration: blueprint:python_gemini
 # Using Gemini 2.5 Flash for fast AI responses and Gemini 2.0 Flash for image generation
+
+# Module-level variables (set by setup function)
+bot = None
+db = None
+has_permission = None
+log_action = None
+create_error_embed = None
+create_permission_denied_embed = None
+_setup_complete = False
 
 # Initialize Gemini client
 try:
@@ -21,6 +29,28 @@ try:
 except Exception as e:
     gemini_client = None
     print(f"⚠️ Gemini AI client failed to initialize: {e}")
+
+def setup(bot_instance, db_instance, permission_func, log_func, error_embed_func, permission_denied_func):
+    """Setup the AI chat module with bot instance and helper functions"""
+    global bot, db, has_permission, log_action, create_error_embed, create_permission_denied_embed, _setup_complete
+    
+    # Prevent double setup
+    if _setup_complete:
+        return
+    
+    bot = bot_instance
+    db = db_instance
+    has_permission = permission_func
+    log_action = log_func
+    create_error_embed = error_embed_func
+    create_permission_denied_embed = permission_denied_func
+    
+    # Register the command after bot is set
+    bot.tree.command(name="set-ai-channel", description="🤖 Set the AI chat channel (Owner/Main Moderator only)")(
+        app_commands.describe(channel="Channel where AI will respond to messages")(set_ai_channel_command)
+    )
+    
+    _setup_complete = True
 
 # Image generation keywords
 IMAGE_KEYWORDS = [
@@ -96,10 +126,8 @@ async def get_ai_response(prompt: str) -> str:
         print(f"❌ [AI ERROR] {e}")
         return f"❌ An error occurred: {str(e)}"
 
-@bot.tree.command(name="set-ai-channel", description="🤖 Set the AI chat channel (Owner/Main Moderator only)")
-@app_commands.describe(channel="Channel where AI will respond to messages")
-async def set_ai_channel(interaction: discord.Interaction, channel: discord.TextChannel):
-    """Set the AI chat channel for the server"""
+async def set_ai_channel_command(interaction: discord.Interaction, channel: discord.TextChannel):
+    """Set the AI chat channel for the server (registered dynamically during setup)"""
     if not await has_permission(interaction, "main_moderator"):
         await interaction.response.send_message(
             embed=create_permission_denied_embed("Main Moderator"),

@@ -115,7 +115,9 @@ async def log_action(guild_id, log_type, message):
         "command-log": BrandColors.INFO,
         "error-log": BrandColors.DANGER,
         "system": BrandColors.INFO,
-        "events": BrandColors.PRIMARY
+        "events": BrandColors.PRIMARY,
+        "ai_chat": BrandColors.ACCENT,
+        "ai": BrandColors.ACCENT
     }
 
     # Check for single log channel
@@ -1891,12 +1893,17 @@ try:
 except ImportError as e:
     print(f"⚠️ Event system module not found: {e}")
 
-# Import AI chat system
+# Import and setup AI chat system
 try:
-    from ai_chat import handle_ai_message
+    import ai_chat
+    ai_chat.setup(bot, db, has_permission, log_action, create_error_embed, create_permission_denied_embed)
+    handle_ai_message = ai_chat.handle_ai_message
     print("✅ AI Chat system loaded (Gemini)")
 except ImportError as e:
     print(f"⚠️ AI Chat module not found: {e}")
+    handle_ai_message = None
+except Exception as e:
+    print(f"⚠️ AI Chat setup failed: {e}")
     handle_ai_message = None
 
 # Music system removed due to compatibility issues
