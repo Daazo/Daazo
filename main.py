@@ -658,7 +658,51 @@ async def on_message(message):
     
     print(f"🔍 [ON_MESSAGE] Message from {message.author} in {message.guild.name if message.guild else 'DM'}: {message.content[:100]}")
     
-    # Handle AI chat in designated channels (must be before DM check)
+    # Handle Reaction Role Setup (text-based command)
+    if message.guild and message.content.startswith("reaction role setup"):
+        if not await has_permission(message, "main_moderator"):
+            await message.channel.send("❌ Only Main Moderators can set up reaction roles!")
+            return
+        
+        await message.channel.send("Please provide the message ID, emoji, role, and channel for the reaction role.")
+        
+        def check(m):
+            return m.author == message.author and m.channel == message.channel
+        
+        try:
+            # Get message ID
+            msg_prompt = await bot.wait_for("message", check=check, timeout=60)
+            message_id = int(msg_prompt.content.split()[0])
+            message_to_react = await message.channel.fetch_message(message_id)
+            
+            # Get emoji
+            emoji_prompt = await bot.wait_for("message", check=check, timeout=60)
+            emoji_str = emoji_prompt.content
+            
+            # Get role name
+            role_prompt = await bot.wait_for("message", check=check, timeout=60)
+            role_name = role_prompt.content
+            role = discord.utils.get(message.guild.roles, name=role_name)
+            if not role:
+                await message.channel.send(f"❌ Role '{role_name}' not found.")
+                return
+            
+            # Add reaction to message
+            try:
+                await message_to_react.add_reaction(emoji_str)
+            except discord.HTTPException:
+                await message.channel.send("❌ Invalid emoji provided.")
+                return
+            
+            await message.channel.send("✅ Reaction role setup complete!")
+            
+        except asyncio.TimeoutError:
+            await message.channel.send("❌ Timeout. Please try the command again.")
+        except Exception as e:
+            await message.channel.send(f"❌ An error occurred: {e}")
+        return
+    
+    # Handle AI chat in designated channels (must be after reaction role check)
     if message.guild:
         print(f"📤 [AI HANDLER] handle_ai_message is: {handle_ai_message}")
         if handle_ai_message:
