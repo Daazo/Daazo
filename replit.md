@@ -1,7 +1,7 @@
 # RXT ENGINE Discord Bot
 
 ### Overview
-RXT ENGINE is a multi-functional Discord bot designed for community management and server automation. It features a futuristic cyberpunk aesthetic, having been rebranded from its previous "VAAZHA" identity. The bot is fully operational and provides comprehensive moderation tools, karma system, ticket management, and CAPTCHA-based verification.
+RXT ENGINE is a multi-functional Discord bot designed for comprehensive community management and server automation with a futuristic cyberpunk aesthetic. Its purpose is to provide advanced moderation, a robust karma system, efficient ticket management, secure CAPTCHA-based verification, and AI-powered chat capabilities, aiming to be a central tool for server administration and community engagement.
 
 ### User Preferences
 - Professional futuristic cyberpunk aesthetic
@@ -9,219 +9,55 @@ RXT ENGINE is a multi-functional Discord bot designed for community management a
 - Consolidated branding through brand_config.py
 - Focus on automation, moderation, and community engagement
 
-## Recent Changes
-
-### November 24, 2025 - AI CHAT FEATURE WITH GEMINI INTEGRATION (PRODUCTION-READY)
-- 🤖 **GEMINI AI CHAT SYSTEM**
-  - **Integration**: Uses Replit's python_gemini blueprint with google-genai package
-  - **AI Models**: Gemini 2.5 Flash for text responses, Gemini 2.0 Flash for image generation
-  - **Channel-Based**: AI only responds in designated channels (set via `/set-ai-channel`)
-  - **Smart Detection**: Auto-detects image generation requests from natural language
-  - **No Circular Imports**: Uses setup() pattern to avoid bot initialization issues
-  
-- 💬 **FEATURES**:
-  - **Channel Setup**: `/set-ai-channel` command (Owner/Main Moderator only)
-  - **Natural Conversations**: Just type normally, no special commands needed
-  - **Image Generation**: Auto-detects keywords like "create", "generate", "draw", "design"
-  - **Dual Logging**: Logs to both global and per-server channels
-  - **Graceful Degradation**: Works without API key (shows error message to users)
-  
-- 🔧 **TECHNICAL IMPLEMENTATION**:
-  - **Module**: ai_chat.py with setup() function pattern
-  - **No Circular Imports**: Fixed circular dependency between main.py and ai_chat.py
-  - **Idempotent Setup**: Guard prevents double command registration
-  - **Database Storage**: AI channel settings stored in MongoDB `ai_settings` collection
-  - **Command Count**: 68 commands total (up from 67)
-  
-- 🎨 **UI/UX**:
-  - RXT ENGINE Quantum Purple theme for embeds
-  - Clean error messages when API key missing
-  - Setup confirmation with usage instructions
-  - Image detection requires 2+ keywords for accuracy
-
-### November 22, 2025 - GLOBAL LOGGING SYSTEM FIXED & COMPLETE (PRODUCTION-READY)
-- 🌍 **DUAL LOGGING ARCHITECTURE (FIXED)**
-  - **Two Separate Logging Systems**:
-    - **`/log-category`** = Per-Server Logging (each server's own moderation/security logs)
-    - **`/setup-global-logging`** = Bot Owner's Central Command Center (ALL bot activity from ALL servers)
-  
-- ✅ **PER-SERVER LOGGING** (`/log-category`):
-  - Creates 18 dedicated log channels in each server
-  - Each server's logs stay within that server
-  - Includes: moderation, security, message-delete, message-edit, voice, member events, etc.
-  - Example: Server A's message logs go to Server A's channel
-  
-- 🌐 **GLOBAL BOT LOGGING** (`/setup-global-logging`):
-  - Bot owner only command
-  - Creates central logging category in ONE server (the bot owner's server)
-  - ALL logs from ALL servers automatically route to that one place
-  - 5 Global Channels: live-console, dm-received, dm-sent, command-errors, system-log
-  - Example: Logs from Servers A, B, C all appear in bot owner's system-log channel
-  
-- 🔧 **KEY FIX**:
-  - Global logging config stored in `global_config` collection (bot-wide, not per-server)
-  - Each server's per-server logs stored in `servers` collection
-  - Message edit logs show full before/after content with embeds
-  - Proper motor driver: Fixed database checks to use `is not None`
-  
-- 📋 **COMPLETE ARCHITECTURE**:
-  1. **Per-Server Logs**: Server A's moderation → Server A's channels
-  2. **Per-Server Logs**: Server B's moderation → Server B's channels
-  3. **Global Logs**: All events from ALL servers → Bot Owner's system-log
-  4. **No Mixing**: Server logs stay private, global logs are bot-wide
-  5. **Bot Owner View**: One place to see everything happening across all servers
-
-### November 22, 2025 - Complete Logging System with Auto Event Listeners (PRODUCTION-READY)
-- 📝 **COMPLETE LOGGING SYSTEM IMPLEMENTATION**
-  - **18 Log Channel Types**: moderation, security, quarantine, anti-raid, anti-nuke, automod, join-leave, role-update, channel-update, message-delete, message-edit, member-ban, member-kick, voice-log, ticket-log, command-log, error-log, karma, system
-  - **Removed**: economy-log and music-log (not supported by bot)
-  
-- 🔔 **AUTO EVENT LISTENERS** (Fire-and-forget logging):
-  - **on_message_delete**: Auto-logs deleted messages to `message-delete` channel
-  - **on_message_edit**: Auto-logs message edits to `message-edit` channel with before/after content
-  - **on_member_join**: Auto-logs member joins to `join-leave` channel
-  - **on_member_remove**: Auto-logs member leaves to `join-leave` channel
-  - **on_member_ban**: Auto-logs member bans to `member-ban` channel
-  - **on_guild_role_create**: Auto-logs role creation to `role-update` channel
-  - **on_guild_role_delete**: Auto-logs role deletion to `role-update` channel
-  - **on_guild_role_update**: Auto-logs role changes to `role-update` channel
-  - **on_guild_channel_create**: Auto-logs channel creation to `channel-update` channel
-  - **on_guild_channel_delete**: Auto-logs channel deletion to `channel-update` channel
-  - **on_guild_channel_update**: Auto-logs channel updates to `channel-update` channel
-  - **on_voice_state_update**: Auto-logs voice activities to `voice-log` channel
-  
-- 🌐 **ADVANCED LOGGING SYSTEM**
-  - **Single Channel Mode**: `/log-channel` - All logs in one channel
-  - **Organized Multi-Channel**: `/log-category` - Auto-creates 18 dedicated channels
-  - **Cross-Server Logging**: Redirect all logs to another server's category
-  - **Global Bot-Wide Logging**: `/setup-global-logging` - Centralized logging for all bot activity
-  
-- 📊 **Commands** (5 logging commands):
-  - `/log-channel` - Set single channel for all logs
-  - `/log-category` - Create organized multi-channel logging
-  - `/setup-global-logging` - Bot-wide logging (owner only)
-  - `/log-status` - Check logging configuration
-  - `/log-disable` - Disable all logging
-  
-- ✨ **Features**:
-  - All events automatically logged without manual intervention
-  - Before/after content tracking for audit trails
-  - Role and channel change history
-  - Member join/leave tracking
-  - Automatic routing to correct channels based on log type
-  - Color-coded embeds with RXT ENGINE theme
-  - Fallback system for backwards compatibility
-  - MongoDB storage for persistent configuration
-
-### November 21, 2025 - RXT SECURITY SYSTEM Implementation (PRODUCTION-READY)
-- 🔐 **COMPLETE RXT SECURITY SYSTEM ADDED**
-  - **New Module**: rxt_security.py - comprehensive security protection system
-  - **Database Schema**: Security configuration storage in MongoDB
-  - **ToS-Compliant**: Uses Discord's native timeout API exclusively
-  - **Production-Ready**: Architect-verified, fully functional and tested
-  
-- 🛡️ **Core Security Features** (9 Protection Modules):
-  - **Anti-Mass Mention**: Blocks unauthorized @everyone/@here mentions
-  - **Anti-Raid**: Detects suspicious join patterns, account age checks, username filtering
-  - **Anti-Nuke**: Prevents mass channel/role deletion, mass ban/kick attacks
-  - **Anti-Spam/Flood**: Message rate limiting with configurable thresholds
-  - **Anti-Link**: Blocks malicious links with domain whitelist support
-  - **Webhook Guard**: Detects and removes unauthorized webhooks
-  - **Anti-Role Abuse**: Prevents high-permission role creation/escalation
-  - **Timeout System**: Discord native timeout with moderator notification channel
-  - **Whitelist System**: Users/roles/bots bypass protection
-  
-- 🔒 **Timeout System**:
-  - Uses Discord's native `Member.timeout()` API (ToS-compliant)
-  - Optional timeout notification channel for moderator logging
-  - Prevents ALL user communication during timeout (messages, reactions, voice, threads)
-  - Manual timeout management: `/timeout`, `/untimeout`
-  - Proper error handling for permission failures
-  
-- 🟩 **Whitelist System**:
-  - Bypass protection for trusted users, roles, and bots
-  - Server owner automatically whitelisted
-  - Full whitelist management: `/whitelist add/remove/list`
-  
-- ⚙️ **Security Commands** (11 new commands):
-  - `/security` - Enable/disable/status/config main control panel
-  - `/antiraid`, `/antinuke`, `/antilink`, `/antispam`, `/massmention`, `/webhookguard`, `/antirole` - Toggle individual protections
-  - `/timeout`, `/untimeout` - Manual timeout management
-  - `/whitelist` - Whitelist management for users/roles/bots
-  
-- 📊 **Command Count**:
-  - Added 11 security commands
-  - Total: 57 commands synced
-  - All security features follow RXT ENGINE Quantum Purple theme
-  
-- 🏗️ **Technical Architecture**:
-  - Idempotent setup prevents duplicate command registration
-  - Event listeners use `@bot.listen()` to coexist with existing handlers
-  - Proper integration with existing logging system
-  - Rate-limit and error handling for production resilience
-
 ### System Architecture
 
-**Core Components:**
-- **main.py**: Entry point, event handlers, and help command system.
-- **brand_config.py**: Centralized branding configuration (colors, constants, footer).
-- **keep_alive.py**: Flask web server for bot uptime monitoring.
-
-**Modular Design:**
-The bot's functionalities are organized into distinct modules:
-- **xp_commands.py**: Manages the karma/XP system.
-- **moderation_commands.py**: Provides moderation tools (ban, kick, mute, voice moderation).
-- **setup_commands.py**: Handles server configuration and setup.
-- **communication_commands.py**: Facilitates announcements, messages, and DM tools.
-- **ticket_system.py**: Implements a support ticket system.
-- **reaction_roles.py**: Manages reaction-based role assignments.
-- **security_system.py**: Contains CAPTCHA verification system.
-- **rxt_security.py**: Full RXT Security System with anti-raid, anti-nuke, timeout management, and whitelist.
-- **timed_roles.py**: Manages timed role assignments.
-- **autorole.py**: Handles auto-role assignment for new members.
-- **voice_commands.py**: Voice channel moderation commands.
-- **advanced_logging.py**: Dual logging system with single-channel, organized multi-channel, cross-server, and global logging modes.
-- **ai_chat.py**: Gemini-powered AI chat with image generation and channel-based responses.
+**Core Components & Modular Design:**
+The bot's architecture is modular, with `main.py` serving as the entry point. Key functionalities are organized into distinct modules:
+- **`xp_commands.py`**: Karma/XP system.
+- **`moderation_commands.py`**: Moderation tools (ban, kick, mute, voice moderation).
+- **`setup_commands.py`**: Server configuration.
+- **`communication_commands.py`**: Announcements, messages, DMs.
+- **`ticket_system.py`**: Support ticket management.
+- **`reaction_roles.py`**: Reaction-based role assignments.
+- **`rxt_security.py`**: Comprehensive security system (anti-raid, anti-nuke, anti-spam, anti-link, webhook guard, anti-role abuse, Discord native timeout, mass mention protection, whitelist system).
+- **`timed_roles.py`**: Timed role assignments.
+- **`autorole.py`**: Auto-role for new members.
+- **`voice_commands.py`**: Voice channel moderation.
+- **`advanced_logging.py`**: Dual logging system (single-channel, multi-channel, cross-server, global).
+- **`ai_chat.py`**: Gemini-powered AI chat with image generation.
 
 **Visual Systems:**
-- **profile_cards.py**: Generates futuristic profile cards using PIL.
-- **captcha_generator.py**: Generates unique CAPTCHA images for verification.
-- **global_logging.py**: Centralized logging system for server events.
-- **server_list.py**: Monitors and tracks server list.
+- **`profile_cards.py`**: Generates futuristic profile cards.
+- **`captcha_generator.py`**: Creates unique CAPTCHA images.
 
 **UI/UX and Theming:**
-- **RXT ENGINE Quantum Purple Theme**: Utilizes a consistent color scheme across all embeds and notifications.
-- **Brand Colors**: Primary (#8A4FFF - Quantum Purple), Secondary (#4F8CFF - Hyper Blue), Accent (#00E68A - Neon Green), Warning (#FFD700 - Gold), Error (#FF4444 - Red), Background (#0A0A0F - Deep Space), Text (#E0E0E0 - Silver).
-- **Consistent Branding**: All branding elements are centralized in `brand_config.py`.
+- **RXT ENGINE Quantum Purple Theme**: Consistent color scheme (`#8A4FFF`, `#4F8CFF`, `#00E68A`, `#FFD700`, `#FF4444`, `#0A0A0F`, `#E0E0E0`) across all embeds and notifications, centralized in `brand_config.py`.
 
 **Key Features:**
-- **AI Chat with Gemini**: Natural AI conversations in designated channels with automatic image generation detection. Powered by Gemini 2.5 Flash for text and Gemini 2.0 Flash for images. Supports dual logging to global and per-server channels.
-- **RXT Security System**: Production-ready comprehensive server protection with 9 modules: anti-raid, anti-nuke, anti-spam, anti-link, webhook guard, anti-role abuse, Discord native timeout, mass mention protection, and whitelist system. ToS-compliant and architect-verified.
-- **Advanced Logging System**: Dual logging with single-channel, organized multi-channel, cross-server, and global bot-wide modes. Automatic message delete/edit logging.
-- **Message Logging**: Auto-logs all deleted and edited messages with content snapshots for audit trails.
-- **CAPTCHA Verification**: Secure, modal-based CAPTCHA challenge using PIL-generated images for user verification.
-- **Karma/XP System**: Community recognition and leveling system with custom rank cards.
-- **Ticket System**: Comprehensive support ticket management with categories and custom fields.
-- **Reaction Roles**: Role assignment through interactive reactions.
-- **Timed Roles**: Assign roles to users for specific time periods with automatic removal.
-- **Auto Role**: Automatically assign roles to new members on join.
-- **Moderation Tools**: Kick, ban, nuke, voice moderation (mute, unmute, move, kick, lock/unlock, limit).
-- **Communication Tools**: Announcements, embeds, polls, reminders, DM management.
-- **Profile Cards**: Beautiful profile cards with circular avatars, karma stats, and modern design.
-- **Global Logging**: Centralized logging for all significant server events across multiple servers.
+- **AI Chat with Gemini**: Natural conversations, automatic image generation, dual logging. Uses `gemini-2.5-flash` for text and `gemini-2.5-flash-image` for images.
+- **RXT Security System**: Production-ready, ToS-compliant server protection with 9 modules, integrated with Discord's native timeout API.
+- **Advanced Logging System**: Dual logging capabilities (per-server and global bot-wide) with auto-event listeners for message edits/deletions, member events, role/channel updates, and voice activity.
+- **CAPTCHA Verification**: Secure, modal-based verification using PIL-generated images.
+- **Karma/XP System**: Community leveling with custom rank cards.
+- **Ticket System**: Comprehensive support ticket management.
+- **Reaction Roles & Timed/Auto Roles**: Flexible role assignment.
+- **Moderation Tools**: Full suite of moderation commands including voice moderation.
+- **Communication Tools**: Announcements, embeds, polls, reminders, DMs.
+- **Profile Cards**: Visually appealing profile cards with circular avatars.
 
 **Architectural Decisions:**
-- Centralized branding via `brand_config.py` for consistency.
+- Centralized branding via `brand_config.py`.
 - PIL image generation uses `BrandColorsRGB` for compatibility.
-- Owner mentions are clickable using the `BOT_OWNER_ID` environment variable.
+- Owner mentions are clickable using `BOT_OWNER_ID`.
 - Focus on a professional, modern, and futuristic theme.
-- RXT Security System uses Discord's native timeout API for ToS compliance.
-- Security system integrates seamlessly with existing moderation and logging infrastructure.
-- Idempotent setup pattern prevents duplicate command registration across module imports.
+- Security system utilizes Discord's native timeout API for ToS compliance and integrates with existing moderation and logging.
+- Idempotent setup pattern prevents duplicate command registration.
+- Comprehensive error handling and logging for production resilience.
 
 ### External Dependencies
 - **discord.py**: Python API wrapper for Discord.
 - **motor**: Asynchronous MongoDB driver for database interactions.
-- **Pillow (PIL)**: Used for image generation, particularly for profile cards and CAPTCHAs.
-- **Flask**: Utilized for the `keep_alive.py` web server to maintain bot uptime.
-- **MongoDB**: Primary database for persistent storage, including server configurations, user data, tickets, logs, reaction roles, and karma stats.
+- **Pillow (PIL)**: Used for image generation (profile cards, CAPTCHAs).
+- **Flask**: Utilized by `keep_alive.py` for bot uptime monitoring.
+- **MongoDB**: Primary database for persistent storage of server configurations, user data, tickets, logs, reaction roles, karma stats, and AI channel settings.
+- **Google Gemini API**: For AI chat and image generation capabilities.
