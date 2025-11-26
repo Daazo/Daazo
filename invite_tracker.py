@@ -173,28 +173,32 @@ class InviteTrackerCog(commands.Cog):
     )
     async def invite_tracker(self, interaction: discord.Interaction, title: str, description: str, channel: discord.TextChannel, image_url: str = ""):
         """Setup invite tracker for server"""
-        # Permission check
-        if not await has_permission(interaction, "main_moderator"):
-            await interaction.response.send_message(
-                embed=create_error_embed("You need Main Moderator permission to use this command"),
-                ephemeral=True
-            )
-            return
+        # Permission check - Main Moderator OR Server Owner
+        is_main_mod = await has_permission(interaction, "main_moderator")
+        is_owner = interaction.user.id == interaction.guild.owner_id
         
-        if not await has_permission(interaction, "server_owner"):
+        if not (is_main_mod or is_owner):
             await interaction.response.send_message(
-                embed=create_error_embed("You need Server Owner permission to use this command"),
+                embed=create_error_embed("You need Main Moderator or Server Owner permission"),
                 ephemeral=True
             )
             return
         
         try:
+            # Validate channel exists and is accessible
+            if not channel:
+                await interaction.response.send_message(
+                    embed=create_error_embed("Invalid channel provided"),
+                    ephemeral=True
+                )
+                return
+            
             # Save config
             config = {
                 'enabled': True,
                 'title': title,
                 'description': description,
-                'channel_id': str(channel.id),
+                'channel_id': channel.id,
                 'image_url': image_url,
                 'created_at': datetime.utcnow(),
                 'created_by': str(interaction.user.id)
