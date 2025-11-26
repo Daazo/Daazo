@@ -33,7 +33,7 @@ def setup(bot_instance, db_instance, get_server_data_func, update_server_data_fu
 async def get_invite_tracker(guild_id):
     """Get invite tracker config for server"""
     guild_id = str(guild_id)
-    if db:
+    if db is not None:
         server_data = await get_server_data(guild_id)
         return server_data.get('invite_tracker', {})
     return {}
@@ -41,13 +41,13 @@ async def get_invite_tracker(guild_id):
 async def set_invite_tracker(guild_id, config):
     """Save invite tracker config"""
     guild_id = str(guild_id)
-    if db:
+    if db is not None:
         await update_server_data(guild_id, {'invite_tracker': config})
 
 async def track_invites(before, after):
     """Track invite data before member join (for comparison)"""
     guild_id = str(before.guild.id)
-    if not db:
+    if db is None:
         return
     
     try:
@@ -64,7 +64,7 @@ async def track_invites(before, after):
 async def get_previous_invites(guild_id):
     """Get previous invite data"""
     guild_id = str(guild_id)
-    if db:
+    if db is not None:
         data = await db.invite_data.find_one({'guild_id': guild_id})
         return data.get('invites', {}) if data else {}
     return {}
@@ -136,7 +136,7 @@ async def check_rejoin(guild_id, member_id):
     guild_id = str(guild_id)
     member_id = str(member_id)
     
-    if db:
+    if db is not None:
         try:
             rejoin_data = await db.member_rejoin.find_one({'guild_id': guild_id, 'member_id': member_id})
             return rejoin_data is not None
@@ -149,7 +149,7 @@ async def record_member_join(guild_id, member_id):
     guild_id = str(guild_id)
     member_id = str(member_id)
     
-    if db:
+    if db is not None:
         try:
             await db.member_rejoin.update_one(
                 {'guild_id': guild_id, 'member_id': member_id},
