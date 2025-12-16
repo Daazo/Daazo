@@ -86,11 +86,13 @@ async def generate_ai_image(prompt: str, temp_path: str) -> bool:
             return False
         
         print(f"🎨 [AI IMAGE] Calling Gemini API for image generation...")
+        # IMPORTANT: Use gemini-2.0-flash-preview-image-generation for image generation
+        # Integration: blueprint:python_gemini
         response = gemini_client.models.generate_content(
-            model="gemini-2.5-flash-image",
+            model="gemini-2.0-flash-preview-image-generation",
             contents=prompt,
             config=types.GenerateContentConfig(
-                response_modalities=['IMAGE']
+                response_modalities=['TEXT', 'IMAGE']
             )
         )
         
@@ -104,7 +106,9 @@ async def generate_ai_image(prompt: str, temp_path: str) -> bool:
             return False
         
         for part in content.parts:
-            if part.inline_data and part.inline_data.data:
+            if part.text:
+                print(f"🎨 [AI IMAGE] Model response text: {part.text[:100]}...")
+            elif part.inline_data and part.inline_data.data:
                 with open(temp_path, 'wb') as f:
                     f.write(part.inline_data.data)
                 print(f"✅ [AI IMAGE] Image saved to {temp_path}")

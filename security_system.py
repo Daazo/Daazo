@@ -18,18 +18,29 @@ captcha_gen = CaptchaGenerator()
 # CAPTCHA VERIFICATION SYSTEM
 # ═══════════════════════════════════════════════════════════════════════════
 
+# Verification type choices
+class VerificationType:
+    CAPTCHA = "captcha"
+    BUTTON = "button"
+
 # Verification setup command
 @bot.tree.command(name="verification-setup", description="✅ Setup verification system for new members")
 @app_commands.describe(
     channel="Channel where verification button will be posted",
     verified_role="Role to give verified members",
+    verification_type="Type of verification: captcha (solve image) or button (one-click)",
     message="Custom verification message",
     remove_role="Role to remove from user when they verify (optional)"
 )
+@app_commands.choices(verification_type=[
+    app_commands.Choice(name="🔐 CAPTCHA Verification (Solve image code)", value="captcha"),
+    app_commands.Choice(name="✅ Button Verification (One-click verify)", value="button")
+])
 async def verification_setup(
     interaction: discord.Interaction,
     channel: discord.TextChannel,
     verified_role: discord.Role,
+    verification_type: str = "captcha",
     message: str = "Click the button below to verify and gain access to the server!",
     remove_role: discord.Role = None
 ):
@@ -43,7 +54,8 @@ async def verification_setup(
     verification_config = {
         'enabled': True,
         'verified_role': str(verified_role.id),
-        'channel': str(channel.id)
+        'channel': str(channel.id),
+        'verification_type': verification_type
     }
     if remove_role:
         verification_config['remove_role'] = str(remove_role.id)
@@ -51,18 +63,26 @@ async def verification_setup(
     security_settings['verification_system'] = verification_config
     await update_server_data(interaction.guild.id, {'security_settings': security_settings})
 
-    # Create verification embed and button - RXT ENGINE Quantum Purple Theme
-    embed = discord.Embed(
-        title="🔐 **Server Verification Required**",
-        description=f"**{message}**\n⚡ **Quantum Security Protocol Active**\n\n◆ **What verification grants you:**\n• Full server channel access\n• Participation in community\n• Complete member privileges\n\n🔒 Complete CAPTCHA to verify",
-        color=BrandColors.PRIMARY
-    )
+    # Create verification embed based on type
+    if verification_type == "button":
+        embed = discord.Embed(
+            title="🔐 **Server Verification Required**",
+            description=f"**{message}**\n⚡ **Quantum Security Protocol Active**\n\n◆ **What verification grants you:**\n• Full server channel access\n• Participation in community\n• Complete member privileges\n\n✅ Click the button below to verify",
+            color=BrandColors.PRIMARY
+        )
+    else:
+        embed = discord.Embed(
+            title="🔐 **Server Verification Required**",
+            description=f"**{message}**\n⚡ **Quantum Security Protocol Active**\n\n◆ **What verification grants you:**\n• Full server channel access\n• Participation in community\n• Complete member privileges\n\n🔒 Complete CAPTCHA to verify",
+            color=BrandColors.PRIMARY
+        )
     embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
 
     view = VerificationView()  # Database-driven verification
     await channel.send(embed=embed, view=view)
 
-    description = f"**Channel:** {channel.mention}\n**Verified Role:** {verified_role.mention}"
+    type_display = "🔐 CAPTCHA Verification" if verification_type == "captcha" else "✅ Button Verification"
+    description = f"**Channel:** {channel.mention}\n**Verified Role:** {verified_role.mention}\n**Verification Type:** {type_display}"
     if remove_role:
         description += f"\n**Remove Role:** {remove_role.mention}"
     description += f"\n**Status:** Active\n\n*New members will need to verify before accessing the server.*"
@@ -73,7 +93,7 @@ async def verification_setup(
         color=BrandColors.PRIMARY
     )
     await interaction.response.send_message(embed=response_embed)
-    await log_action(interaction.guild.id, "security", f"✅ [VERIFICATION] Verification system setup by {interaction.user}")
+    await log_action(interaction.guild.id, "security", f"✅ [VERIFICATION] Verification system setup by {interaction.user} (Type: {verification_type})")
 
 class CaptchaModal(discord.ui.Modal, title='🔐 CAPTCHA Verification'):
     """Modal for CAPTCHA input"""
@@ -153,6 +173,7 @@ class VerificationView(discord.ui.View):
 
         verified_role_id = verification_config.get('verified_role')
         remove_role_id = verification_config.get('remove_role')
+        verification_type = verification_config.get('verification_type', 'captcha')
 
         if not verified_role_id:
             await interaction.response.send_message(embed=create_error_embed("Verification role not configured! Contact administrators."), ephemeral=True)
@@ -171,6 +192,44 @@ class VerificationView(discord.ui.View):
         if remove_role_id:
             remove_role = interaction.guild.get_role(int(remove_role_id))
 
+        # Handle Button Verification (one-click)
+        if verification_type == "button":
+            try:
+                # Remove the specified role if configured
+                if remove_role and remove_role in interaction.user.roles:
+                    await interaction.user.remove_roles(remove_role, reason="Role removed during button verification")
+
+                # Add verified role
+                await interaction.user.add_roles(verified_role, reason="Button verification successful")
+
+                embed = discord.Embed(
+                    title="⚡ **Verification Successful!**",
+                    description="**Welcome to the server!**\n\n✓ Button verification completed\n✓ Quantum security check passed\n✓ Full server access granted\n\n◆ You are now a verified member!",
+                    color=BrandColors.PRIMARY
+                )
+                embed.set_footer(text=BOT_FOOTER, icon_url=bot.user.display_avatar.url)
+                
+                await interaction.response.send_message(embed=embed, ephemeral=True)
+                await log_action(interaction.guild.id, "security", f"✅ [BUTTON VERIFICATION] {interaction.user} verified successfully")
+                
+                # Global logging for button verification
+                try:
+                    from advanced_logging import send_global_log
+                    await send_global_log(
+                        "security",
+                        f"**✅ Button Verification**\n**User:** {interaction.user.mention}\n**Server:** {interaction.guild.name}",
+                        interaction.guild
+                    )
+                except:
+                    pass
+
+            except discord.Forbidden:
+                await interaction.response.send_message(embed=create_error_embed("I don't have permission to assign the verified role. Contact administrators."), ephemeral=True)
+            except Exception as e:
+                await interaction.response.send_message(embed=create_error_embed(f"Verification failed: {str(e)}"), ephemeral=True)
+            return
+
+        # Handle CAPTCHA Verification
         try:
             # Generate unique CAPTCHA for this user
             captcha_text, captcha_file = captcha_gen.generate()
