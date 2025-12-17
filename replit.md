@@ -23,6 +23,7 @@ The bot's architecture is modular, with `main.py` serving as the entry point. Ke
 - **`timed_roles.py`**: Timed role assignments.
 - **`autorole.py`**: Auto-role for new members.
 - **`voice_commands.py`**: Voice channel moderation.
+- **`voice_tracker.py`**: Voice channel time tracking system with milestones.
 - **`advanced_logging.py`**: Dual logging system (single-channel, multi-channel, cross-server, global).
 - **`ai_chat.py`**: Gemini-powered AI chat with image generation.
 
@@ -44,6 +45,7 @@ The bot's architecture is modular, with `main.py` serving as the entry point. Ke
 - **Moderation Tools**: Full suite of moderation commands including voice moderation.
 - **Communication Tools**: Announcements, embeds, polls, reminders, DMs.
 - **Profile Cards**: Visually appealing profile cards with circular avatars.
+- **Voice Channel Tracker**: Tracks total voice time per user per server with milestones (24h, 50h, 100h, +50h infinitely), leaderboards, in-memory session tracking with DB writes only on leave/milestone, AFK channel exclusion.
 
 **Architectural Decisions:**
 - Centralized branding via `brand_config.py`.
