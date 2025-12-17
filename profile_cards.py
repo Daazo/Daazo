@@ -280,7 +280,7 @@ async def create_bot_profile_card(bot, owner_status, owner_status_emoji, uptime_
     # Column 3 features
     draw.text((500, features_y + 25), "🎨 Welcome Cards", fill=(200, 200, 200), font=small_font)
     draw.text((500, features_y + 40), "📢 Announcements", fill=(200, 200, 200), font=small_font)
-    draw.text((500, features_y + 55), "📊 Violation Tracking", fill=(200, 200, 200), font=small_font)
+    draw.text((500, features_y + 55), "🔊 Custom Voice Channels", fill=(200, 200, 200), font=small_font)
     draw.text((500, features_y + 70), "🔐 Whitelist System", fill=(200, 200, 200), font=small_font)
 
     # Build info section

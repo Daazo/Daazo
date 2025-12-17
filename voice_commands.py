@@ -253,6 +253,8 @@ async def vclimit(interaction: discord.Interaction, limit: int):
 # CUSTOM VOICE CHANNEL SYSTEM - FULLY AUTOMATIC WITH ROBUST CLEANUP
 # ═══════════════════════════════════════════════════════════════════════════
 
+MAX_CUSTOM_VC_HUBS = 5
+
 @bot.tree.command(name="custom-vc", description="🔊 Setup dynamic custom voice channel system")
 @app_commands.describe(category="Category to create custom VCs in")
 async def custom_vc_setup(interaction: discord.Interaction, category: discord.CategoryChannel):
@@ -261,26 +263,38 @@ async def custom_vc_setup(interaction: discord.Interaction, category: discord.Ca
         return
     
     try:
+        if db is not None:
+            existing_count = await db.custom_vc_hubs.count_documents({'guild_id': str(interaction.guild.id)})
+            if existing_count >= MAX_CUSTOM_VC_HUBS:
+                embed = discord.Embed(
+                    title="⚠️ **Limit Reached**",
+                    description=f"You can only have up to **{MAX_CUSTOM_VC_HUBS}** custom VC hubs per server.\n\nUse `/custom-vc-remove` to remove existing hubs.",
+                    color=BrandColors.WARNING
+                )
+                embed.set_footer(text=BOT_FOOTER)
+                await interaction.response.send_message(embed=embed, ephemeral=True)
+                print(f"⚠️ [CUSTOM VC] Hub limit reached for guild {interaction.guild.id} ({existing_count}/{MAX_CUSTOM_VC_HUBS})")
+                return
+        
         hub_channel = await category.create_voice_channel(
             name="🔊 CUSTOM VC",
             reason=f"Custom VC hub created by {interaction.user}"
         )
         
         if db is not None:
-            await db.custom_vc_hubs.update_one(
-                {'guild_id': str(interaction.guild.id)},
-                {'$set': {
-                    'hub_channel_id': str(hub_channel.id),
-                    'category_id': str(category.id),
-                    'created_by': str(interaction.user.id),
-                    'created_at': datetime.utcnow()
-                }},
-                upsert=True
-            )
+            await db.custom_vc_hubs.insert_one({
+                'guild_id': str(interaction.guild.id),
+                'hub_channel_id': str(hub_channel.id),
+                'category_id': str(category.id),
+                'created_by': str(interaction.user.id),
+                'created_at': datetime.utcnow()
+            })
+        
+        hub_count = await db.custom_vc_hubs.count_documents({'guild_id': str(interaction.guild.id)}) if db else 1
         
         embed = discord.Embed(
             title="⚡ **Custom VC System Setup Complete**",
-            description=f"**🔊 Hub Channel:** {hub_channel.mention}\n**📁 Category:** {category.mention}\n**Status:** Active & Ready",
+            description=f"**🔊 Hub Channel:** {hub_channel.mention}\n**📁 Category:** {category.mention}\n**📊 Total Hubs:** {hub_count}/{MAX_CUSTOM_VC_HUBS}\n**Status:** Active & Ready",
             color=BrandColors.PRIMARY
         )
         embed.add_field(
@@ -291,10 +305,115 @@ async def custom_vc_setup(interaction: discord.Interaction, category: discord.Ca
         embed.set_footer(text=BOT_FOOTER)
         await interaction.response.send_message(embed=embed)
         
-        await log_action(interaction.guild.id, "custom_vc", f"⚡ [CUSTOM VC SETUP] System setup by {interaction.user}")
+        print(f"✅ [CUSTOM VC] Hub created in guild {interaction.guild.id} by {interaction.user} (Hub {hub_count}/{MAX_CUSTOM_VC_HUBS})")
+        await log_action(interaction.guild.id, "custom_vc", f"⚡ [CUSTOM VC SETUP] Hub created by {interaction.user} ({hub_count}/{MAX_CUSTOM_VC_HUBS})")
         
     except Exception as e:
+        print(f"❌ [CUSTOM VC] Setup failed in guild {interaction.guild.id}: {e}")
         await interaction.response.send_message(embed=create_error_embed(f"Setup failed: {str(e)}"), ephemeral=True)
+
+
+@bot.tree.command(name="custom-vc-remove", description="🗑️ Remove a custom VC hub from this server")
+async def custom_vc_remove(interaction: discord.Interaction):
+    if not await has_permission(interaction, "main_moderator"):
+        await interaction.response.send_message(embed=create_permission_denied_embed("Main Moderator"), ephemeral=True)
+        return
+    
+    try:
+        if db is None:
+            await interaction.response.send_message(embed=create_error_embed("Database not available"), ephemeral=True)
+            return
+        
+        hubs = await db.custom_vc_hubs.find({'guild_id': str(interaction.guild.id)}).to_list(None)
+        
+        if not hubs:
+            embed = discord.Embed(
+                title="ℹ️ **No Hubs Found**",
+                description="There are no custom VC hubs set up in this server.\n\nUse `/custom-vc` to create one.",
+                color=BrandColors.INFO
+            )
+            embed.set_footer(text=BOT_FOOTER)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            print(f"ℹ️ [CUSTOM VC] No hubs found in guild {interaction.guild.id}")
+            return
+        
+        view = CustomVCRemoveView(hubs, interaction.guild)
+        embed = discord.Embed(
+            title="🗑️ **Remove Custom VC Hub**",
+            description=f"Select a hub to remove from the dropdown below.\n\n**Current Hubs:** {len(hubs)}/{MAX_CUSTOM_VC_HUBS}",
+            color=BrandColors.WARNING
+        )
+        embed.set_footer(text=BOT_FOOTER)
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+        
+    except Exception as e:
+        print(f"❌ [CUSTOM VC] Remove command failed in guild {interaction.guild.id}: {e}")
+        await interaction.response.send_message(embed=create_error_embed(f"Failed to load hubs: {str(e)}"), ephemeral=True)
+
+
+class CustomVCHubSelect(discord.ui.Select):
+    def __init__(self, hubs, guild):
+        self.hubs = hubs
+        self.guild_obj = guild
+        
+        options = []
+        for hub in hubs[:25]:
+            channel = guild.get_channel(int(hub['hub_channel_id']))
+            channel_name = channel.name if channel else f"Unknown (ID: {hub['hub_channel_id']})"
+            category = guild.get_channel(int(hub['category_id']))
+            category_name = category.name if category else "Unknown Category"
+            
+            options.append(discord.SelectOption(
+                label=channel_name[:100],
+                value=hub['hub_channel_id'],
+                description=f"Category: {category_name[:50]}"
+            ))
+        
+        super().__init__(placeholder="Select a hub to remove...", min_values=1, max_values=1, options=options)
+    
+    async def callback(self, interaction: discord.Interaction):
+        hub_id = self.values[0]
+        
+        try:
+            from main import db
+            
+            channel = self.guild_obj.get_channel(int(hub_id))
+            if channel:
+                await channel.delete(reason=f"Custom VC hub removed by {interaction.user}")
+            
+            await db.custom_vc_hubs.delete_one({
+                'guild_id': str(self.guild_obj.id),
+                'hub_channel_id': hub_id
+            })
+            
+            remaining = await db.custom_vc_hubs.count_documents({'guild_id': str(self.guild_obj.id)})
+            
+            embed = discord.Embed(
+                title="✅ **Hub Removed**",
+                description=f"The custom VC hub has been successfully removed.\n\n**Remaining Hubs:** {remaining}/{MAX_CUSTOM_VC_HUBS}",
+                color=BrandColors.SUCCESS
+            )
+            embed.set_footer(text=BOT_FOOTER)
+            await interaction.response.edit_message(embed=embed, view=None)
+            
+            print(f"✅ [CUSTOM VC] Hub removed in guild {self.guild_obj.id} by {interaction.user} (Remaining: {remaining}/{MAX_CUSTOM_VC_HUBS})")
+            await log_action(self.guild_obj.id, "custom_vc", f"🗑️ [CUSTOM VC REMOVED] Hub removed by {interaction.user} ({remaining}/{MAX_CUSTOM_VC_HUBS} remaining)")
+            
+        except Exception as e:
+            print(f"❌ [CUSTOM VC] Failed to remove hub in guild {self.guild_obj.id}: {e}")
+            embed = discord.Embed(
+                title="❌ **Removal Failed**",
+                description=f"Failed to remove the hub: {str(e)}",
+                color=BrandColors.DANGER
+            )
+            embed.set_footer(text=BOT_FOOTER)
+            await interaction.response.edit_message(embed=embed, view=None)
+
+
+class CustomVCRemoveView(discord.ui.View):
+    def __init__(self, hubs, guild):
+        super().__init__(timeout=120)
+        self.add_item(CustomVCHubSelect(hubs, guild))
 
 @bot.event
 async def on_voice_state_update(member, before, after):

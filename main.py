@@ -1221,7 +1221,12 @@ class HelpSelect(discord.ui.Select):
         )
         embed.add_field(
             name="🟡 **Voice Moderation Commands**",
-            value="**`/mute @user`** - Mute user in voice channel\n**`/unmute @user`** - Unmute user in voice channel\n**`/movevc @user #channel`** - Move user to different voice channel\n**`/vckick @user`** - Kick user from voice channel\n**`/vckick`** - Lock current voice channel\n**`/vcunlock`** - Unlock voice channel\n**`/vclimit <0-99>`** - Set voice channel user limit",
+            value="**`/mute @user`** - Mute user in voice channel\n**`/unmute @user`** - Unmute user in voice channel\n**`/movevc @user #channel`** - Move user to different voice channel\n**`/vckick @user`** - Kick user from voice channel\n**`/vclock`** - Lock current voice channel\n**`/vcunlock`** - Unlock voice channel\n**`/vclimit <0-99>`** - Set voice channel user limit",
+            inline=False
+        )
+        embed.add_field(
+            name="🔊 **Custom Voice Channels**",
+            value="**🔴 `/custom-vc <category>`** - Create auto VC hub (up to 5 per server)\n**🔴 `/custom-vc-remove`** - Remove a custom VC hub\n**Auto-Create:** Users join hub, get personal VC\n**Auto-Delete:** Empty VCs deleted after 1 min",
             inline=False
         )
         embed.add_field(
