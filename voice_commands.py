@@ -277,7 +277,7 @@ async def custom_vc_setup(interaction: discord.Interaction, category: discord.Ca
                 return
         
         hub_channel = await category.create_voice_channel(
-            name="🔊 CUSTOM VC",
+            name="🔊 ᴄᴜsᴛᴏᴍ ᴠᴄ",
             reason=f"Custom VC hub created by {interaction.user}"
         )
         
