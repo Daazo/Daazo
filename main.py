@@ -271,15 +271,32 @@ async def cleanup_empty_custom_vcs():
         print(f"❌ [CLEANUP FATAL] {e}")
 
 # Bot Events
-@bot.event
-async def on_ready():
-    print(f'⚡ {bot.user} | RXT ENGINE Online')
+rotating_status_index = 0
+
+@tasks.loop(seconds=5)
+async def rotate_status():
+    """Rotate bot status between two messages every 5 seconds"""
+    global rotating_status_index
+    statuses = [
+        f"ᴡᴀᴛᴄʜɪɴɢ {len(bot.guilds)} sᴇʀᴠᴇʀs",
+        "ᴘᴏᴡᴇʀᴇᴅ ʙʏ ʀ!ᴏ</>"
+    ]
+    
     await bot.change_presence(
         activity=discord.Activity(
             type=discord.ActivityType.watching,
-            name=f"{len(bot.guilds)} servers | Powered by R!O</>"
+            name=statuses[rotating_status_index]
         )
     )
+    rotating_status_index = (rotating_status_index + 1) % len(statuses)
+
+@bot.event
+async def on_ready():
+    print(f'⚡ {bot.user} | RXT ENGINE Online')
+    
+    if not rotate_status.is_running():
+        rotate_status.start()
+        print("✅ Rotating status task started (5s interval)")
 
     try:
         synced = await bot.tree.sync()
@@ -367,14 +384,7 @@ async def on_ready():
 
 @bot.event
 async def on_guild_join(guild):
-    """Update presence when joining new server"""
-    await bot.change_presence(
-        activity=discord.Activity(
-            type=discord.ActivityType.watching,
-            name=f"{len(bot.guilds)} servers"
-        )
-    )
-    
+    """Handle joining new server"""
     # Update server list immediately
     try:
         from server_list import on_guild_join_server_list_update
@@ -384,14 +394,7 @@ async def on_guild_join(guild):
 
 @bot.event
 async def on_guild_remove(guild):
-    """Update presence when leaving server"""
-    await bot.change_presence(
-        activity=discord.Activity(
-            type=discord.ActivityType.watching,
-            name=f"{len(bot.guilds)} servers"
-        )
-    )
-    
+    """Handle leaving server"""
     # Update server list immediately
     try:
         from server_list import on_guild_remove_server_list_update
