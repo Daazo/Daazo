@@ -52,9 +52,6 @@ author = "agent"
 task = "shell.exec"
 args = "python main.py"
 
-[workflows.workflow.metadata]
-outputType = "console"
-
 [agent]
 expertMode = true
 integrations = ["python_gemini:1.0.0"]
