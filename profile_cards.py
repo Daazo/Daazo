@@ -12,7 +12,7 @@ import asyncio
 import io
 
 # Import brand colors
-from brand_config import create_permission_denied_embed, create_owner_only_embed,  BrandColorsRGB, BOT_NAME, BOT_VERSION, BOT_FOOTER, BOT_OWNER_DESCRIPTION, BOT_DIRECTOR_NAME, BOT_DIRECTOR_DESCRIPTION
+from brand_config import create_permission_denied_embed, create_owner_only_embed,  BrandColorsRGB, BOT_NAME, BOT_VERSION, BOT_FOOTER
 
 # Default template colors and settings - RXT ENGINE Theme
 CARD_WIDTH = 800
@@ -242,8 +242,11 @@ async def create_bot_profile_card(bot, owner_status, owner_status_emoji, uptime_
     draw.text((50, stats_y + 45), f"⏰ Uptime: {uptime_str}", fill=(200, 200, 200), font=text_font)
     draw.text((50, stats_y + 65), "🟢 Status: Online & Ready", fill=(46, 204, 113), font=text_font)
 
+    # Import descriptions here to avoid circular imports
+    from brand_config import BOT_OWNER_DESCRIPTION, BOT_DIRECTOR_NAME, BOT_DIRECTOR_DESCRIPTION
+    
     # Owner information
-    draw.text((400, stats_y), "👨‍💻 FOUNDER & LEAD DEVELOPER", fill=KARMA_COLOR, font=subtitle_font)
+    draw.text((400, stats_y), "⚙️ FOUNDER & LEAD DEVELOPER", fill=KARMA_COLOR, font=subtitle_font)
     draw.text((400, stats_y + 25), BOT_OWNER_NAME, fill=TEXT_COLOR, font=text_font)
 
     # Better status display
@@ -262,7 +265,7 @@ async def create_bot_profile_card(bot, owner_status, owner_status_emoji, uptime_
     draw.text((400, stats_y + 65), BOT_OWNER_DESCRIPTION[:50], fill=ACCENT_COLOR, font=small_font)
     
     # Director information
-    draw.text((50, stats_y + 110), "🎯 CORE ARCHITECTURE DIRECTOR", fill=KARMA_COLOR, font=subtitle_font)
+    draw.text((50, stats_y + 110), "📌 CORE ARCHITECTURE DIRECTOR", fill=KARMA_COLOR, font=subtitle_font)
     draw.text((50, stats_y + 135), BOT_DIRECTOR_NAME, fill=TEXT_COLOR, font=text_font)
     draw.text((50, stats_y + 155), BOT_DIRECTOR_DESCRIPTION[:55], fill=ACCENT_COLOR, font=small_font)
 

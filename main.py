@@ -273,13 +273,14 @@ async def cleanup_empty_custom_vcs():
 # Bot Events
 rotating_status_index = 0
 
-@tasks.loop(seconds=5)
+@tasks.loop(seconds=3)
 async def rotate_status():
-    """Rotate bot status between three messages every 5 seconds"""
+    """Rotate bot status between messages every 3 seconds"""
     global rotating_status_index
     statuses = [
         "ʀxᴛ ᴇɴɢɪɴᴇ",
-        f"ᴡᴀᴛᴄʜɪɴɢ {len(bot.guilds)} sᴇʀᴠᴇʀs",
+        f"ᴀᴄᴛɪᴠᴇ ɪɴ {len(bot.guilds)} sᴇʀᴠᴇʀs",
+        "ᴄᴏᴍᴍᴀɴᴅɪɴɢ ᴠɪsɪᴏɴ ᴛᴏᴋʏᴏ<3",
         "ᴘᴏᴡᴇʀᴇᴅ ʙʏ ʀ!ᴏ</>"
     ]
     
@@ -297,7 +298,7 @@ async def on_ready():
     
     if not rotate_status.is_running():
         rotate_status.start()
-        print("✅ Rotating status task started (5s interval)")
+        print("✅ Rotating status task started (3s interval)")
 
     try:
         synced = await bot.tree.sync()
