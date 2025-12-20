@@ -299,6 +299,15 @@ async def on_ready():
     if not rotate_status.is_running():
         rotate_status.start()
         print("✅ Rotating status task started (3s interval)")
+    
+    # Add invite tracker cog if not already added
+    try:
+        import invite_tracker
+        if not any(isinstance(cog, invite_tracker.InviteTrackerCog) for cog in bot.cogs.values()):
+            await bot.add_cog(invite_tracker.InviteTrackerCog(bot))
+            print("✅ Invite tracker cog added")
+    except Exception as e:
+        print(f"⚠️ Failed to add invite tracker cog: {e}")
 
     try:
         synced = await bot.tree.sync()
@@ -1541,8 +1550,10 @@ class HelpSelect(discord.ui.Select):
         await interaction.response.edit_message(embed=embed, view=HelpView())
 
     async def show_bot_info_help(self, interaction: discord.Interaction):
+        from brand_config import BOT_DIRECTOR_NAME, BOT_DIRECTOR_DESCRIPTION, BOT_DIRECTOR_ID
         bot_owner_id = os.getenv('BOT_OWNER_ID')
         owner_mention = f"<@{bot_owner_id}>" if bot_owner_id else "Contact via server"
+        director_mention = f"<@{BOT_DIRECTOR_ID}>" if BOT_DIRECTOR_ID else "Contact via server"
         support_server = os.getenv('SUPPORT_SERVER')
         contact_email = os.getenv('CONTACT_EMAIL')
         email_text = contact_email if contact_email else "Not available"
@@ -1559,12 +1570,17 @@ class HelpSelect(discord.ui.Select):
         )
         embed.add_field(
             name="⚡ **System Architect**",
-            value=f"**Creator:** {BOT_OWNER_NAME}\n**Contact:** {owner_mention}\n**Role:** {BOT_OWNER_DESCRIPTION}\n**Support Protocol:** Mention owner in any server",
+            value=f"**Creator:** {BOT_OWNER_NAME}\n**Contact:** {owner_mention}\n**Role:** {BOT_OWNER_DESCRIPTION}\n**Support Protocol:** Send mail, DM Director, DM Developer",
+            inline=False
+        )
+        embed.add_field(
+            name="📌 **Core Architecture Director**",
+            value=f"**Director:** {BOT_DIRECTOR_NAME}\n**Contact:** {director_mention}\n**Role:** {BOT_DIRECTOR_DESCRIPTION}",
             inline=False
         )
         embed.add_field(
             name="📞 **Contact Information**",
-            value=f"**📩 Email:** `{email_text}`\n**💬 Discord:** {owner_mention}\n**🏠 Support Server:** {'Available via button below' if support_server else 'Contact owner for invite'}",
+            value=f"**📩 Email:** `{email_text}`\n**💬 DM Developer:** {owner_mention}\n**💬 DM Director:** {director_mention}\n**🏠 Support Server:** {'Available via button below' if support_server else 'Contact owner for invite'}",
             inline=False
         )
         embed.add_field(
@@ -1574,7 +1590,7 @@ class HelpSelect(discord.ui.Select):
         )
         embed.add_field(
             name="🔗 **Quick Links**",
-            value=f"**💠 Bot Invite:** [Add to Your Server](https://discord.com/api/oauth2/authorize?client_id={bot.user.id}&permissions=8&scope=bot%20applications.commands)\n**💬 DM Developer:** [Click Here](https://discord.com/users/{bot_owner_id if bot_owner_id else '0'})\n{f'**🏠 Support Server:** [Join Here]({support_server})' if support_server else ''}\n\n**⚡ Engineered by R!O</>**",
+            value=f"**💠 Bot Invite:** [Add to Your Server](https://discord.com/api/oauth2/authorize?client_id={bot.user.id}&permissions=8&scope=bot%20applications.commands)\n**💬 DM Developer:** [Click Here](https://discord.com/users/{bot_owner_id if bot_owner_id else '0'})\n**💬 DM Director:** [Click Here](https://discord.com/users/{BOT_DIRECTOR_ID if BOT_DIRECTOR_ID else '0'})\n{f'**🏠 Support Server:** [Join Here]({support_server})' if support_server else ''}\n\n**⚡ Engineered by R!O</> • Directed by {BOT_DIRECTOR_NAME}**",
             inline=False
         )
         embed.set_footer(text=BOT_FOOTER)
@@ -2097,16 +2113,6 @@ except Exception as e:
 try:
     import invite_tracker
     invite_tracker.setup(bot, db, get_server_data, update_server_data, log_action, has_permission, create_error_embed)
-    
-    @bot.event
-    async def on_ready():
-        """Add cog after bot is ready"""
-        try:
-            if not any(isinstance(cog, invite_tracker.InviteTrackerCog) for cog in bot.cogs.values()):
-                await bot.add_cog(invite_tracker.InviteTrackerCog(bot))
-        except Exception as e:
-            print(f"⚠️ Failed to add invite tracker cog: {e}")
-    
     print("✅ Invite tracker system loaded")
 except ImportError as e:
     print(f"⚠️ Invite tracker module not found: {e}")

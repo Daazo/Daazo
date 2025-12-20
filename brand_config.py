@@ -15,7 +15,7 @@ BOT_OWNER_DESCRIPTION = "Founder and lead developer driving the creation, mainte
 
 # Director Information
 BOT_DIRECTOR_ID = "1087619527166132234"
-BOT_DIRECTOR_NAME = "Director"
+BOT_DIRECTOR_NAME = "TOKYO<3"
 BOT_DIRECTOR_DESCRIPTION = "Leads core architecture, feature innovation, and system stability behind RXT ENGINE's automation ecosystem."
 
 # Brand Colors - Quantum Purple Theme (Discord int format)
