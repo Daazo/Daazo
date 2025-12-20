@@ -272,6 +272,7 @@ async def cleanup_empty_custom_vcs():
 
 # Bot Events
 rotating_status_index = 0
+status_task_started = False
 
 @tasks.loop(seconds=3)
 async def rotate_status():
@@ -284,20 +285,25 @@ async def rotate_status():
         "ᴘᴏᴡᴇʀᴇᴅ ʙʏ ʀ!ᴏ</>"
     ]
     
-    await bot.change_presence(
-        activity=discord.Activity(
-            type=discord.ActivityType.watching,
-            name=statuses[rotating_status_index]
+    try:
+        await bot.change_presence(
+            activity=discord.Activity(
+                type=discord.ActivityType.watching,
+                name=statuses[rotating_status_index]
+            )
         )
-    )
-    rotating_status_index = (rotating_status_index + 1) % len(statuses)
+        rotating_status_index = (rotating_status_index + 1) % len(statuses)
+    except Exception as e:
+        print(f"⚠️ Status rotation error: {e}")
 
 @bot.event
 async def on_ready():
+    global status_task_started
     print(f'⚡ {bot.user} | RXT ENGINE Online')
     
-    if not rotate_status.is_running():
+    if not status_task_started and not rotate_status.is_running():
         rotate_status.start()
+        status_task_started = True
         print("✅ Rotating status task started (3s interval)")
     
     # Add invite tracker cog if not already added
