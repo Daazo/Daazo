@@ -1372,6 +1372,11 @@ class HelpSelect(discord.ui.Select):
             value="**Usage:** `/dm user:@member message:\"Your ticket was closed\"`\n**Description:** Send DM to user from server (staff use) - Professional server-branded DMs",
             inline=False
         )
+        embed.add_field(
+            name="👑 `/print-channel [format]`",
+            value="**Usage:** `/print-channel format:txt` (txt, html, or pdf)\n**Description:** Export channel messages transcript to file and send via DM\n**Features:** Clean formatting, username/timestamp/content, attachment links, auto-logs activity\n\u200b",
+            inline=False
+        )
         embed.set_footer(text="🟣 = Everyone • 🟡 = Junior Moderator • 🔴 = Main Moderator • 👑 = Server Owner")
         await interaction.response.edit_message(embed=embed, view=HelpView())
 
