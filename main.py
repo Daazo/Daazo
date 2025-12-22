@@ -1548,13 +1548,28 @@ class HelpSelect(discord.ui.Select):
             inline=False
         )
         embed.add_field(
-            name="🌐 **Multi-Server Intelligence**",
-            value="✅ **MongoDB integration** - Persistent data storage\n✅ **Per-server configuration** - Roles, channels, settings\n✅ **Separated tracking** - Each server independent\n✅ **Individual server settings** - Customize per server\n✅ **Database-backed** - Never lose your data\n\u200b",
+            name="🎤 **Voice Analytics & Tracking**",
+            value="**📊 `/voicetracker`** - Track voice channel activity and member statistics\n**⏱️ `/voicetime`** - View individual member voice time logs and duration\n**Features:** Per-member tracking, session history, duration calculations\n**🔄 Auto-Logging:** All voice activity automatically logged to server logs\n\u200b",
+            inline=False
+        )
+        embed.add_field(
+            name="🎪 **Event Management System**",
+            value="**🎉 `/create-event`** - Create server events with participant tracking\n**🎭 `/event-role`** - Configure events with role assignments\n**🏆 `/announce-random-winner`** - Announce random event winners\n**🏆 `/announce-custom-winner`** - Custom winner announcements with messages\n**Features:** Participant counting, automatic disabling, persistent storage\n\u200b",
+            inline=False
+        )
+        embed.add_field(
+            name="🛠️ **Role Management Commands**",
+            value="**🟡 `/listrole`** - List all available roles in server\n**🔴 `/dm-role`** - Send DM to all members with specific role\n**🔴 `/send-image`** - Send image with embed message to role/channel\n**Management:** Role discovery, bulk DMs, targeted messaging\n\u200b",
             inline=False
         )
         embed.add_field(
             name="🤖 **Automatic Background Features**",
             value="👋 **Welcome DMs** - Professional messages to new members\n💔 **Goodbye DMs** - Farewell messages when members leave\n🎉 **Level Up Cards** - Beautiful rank card generation\n📊 **Live Server Count** - Bot status shows current servers\n⚡ **Real-time Activity** - Instant system-wide monitoring",
+            inline=False
+        )
+        embed.add_field(
+            name="🌐 **Multi-Server Intelligence**",
+            value="✅ **MongoDB integration** - Persistent data storage\n✅ **Per-server configuration** - Roles, channels, settings\n✅ **Separated tracking** - Each server independent\n✅ **Individual server settings** - Customize per server\n✅ **Database-backed** - Never lose your data\n\u200b",
             inline=False
         )
         embed.set_footer(text="🟣 = Everyone • 🟡 = Junior Moderator • 🔴 = Main Moderator • 👑 = Server Owner")
@@ -1596,7 +1611,7 @@ class HelpSelect(discord.ui.Select):
         )
         embed.add_field(
             name="💠 **Quantum Capabilities**",
-            value="◆ **Holographic UI** — Advanced quantum purple interface\n◆ **AI Moderation** — Intelligent enforcement protocols\n◆ **Karma Matrix** — Community recognition system\n◆ **Support Grid** — Multi-channel ticket resolution\n◆ **YouTube Notifier** — RSS-based video upload alerts\n◆ **Neural Storage** — Persistent data architecture\n◆ **Security Core** — Multi-layer protection systems",
+            value="◆ **Holographic UI** — Advanced quantum purple interface\n◆ **AI Chat (Gemini)** — Intelligent conversation & assistance\n◆ **Karma Matrix** — Community recognition system\n◆ **Support Grid** — Multi-channel ticket resolution\n◆ **YouTube Notifier** — RSS-based video upload alerts\n◆ **Neural Storage** — Persistent data architecture\n◆ **Security Core** — 9-module multi-layer protection systems\n◆ **Voice Analytics** — Member activity tracking & statistics\n◆ **Event Manager** — Automated event creation & winner selection\n◆ **Advanced Logging** — Global & per-server activity logs",
             inline=False
         )
         embed.add_field(

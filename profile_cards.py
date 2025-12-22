@@ -271,25 +271,25 @@ async def create_bot_profile_card(bot, owner_status, owner_status_emoji, uptime_
 
     # Features section - better layout with more space
     features_y = 310
-    draw.text((50, features_y), "⚡ CORE FEATURES", fill=COIN_COLOR, font=subtitle_font)
+    draw.text((50, features_y), "⚡ CORE FEATURES (74 COMMANDS)", fill=COIN_COLOR, font=subtitle_font)
 
     # Column 1 features
-    draw.text((50, features_y + 25), "✨ Advanced Karma System", fill=(200, 200, 200), font=small_font)
-    draw.text((50, features_y + 40), "🎫 Professional Tickets", fill=(200, 200, 200), font=small_font)
-    draw.text((50, features_y + 55), "🎭 Reaction Roles", fill=(200, 200, 200), font=small_font)
-    draw.text((50, features_y + 70), "🛡️ Anti-Raid Protection", fill=(200, 200, 200), font=small_font)
+    draw.text((50, features_y + 25), "✨ Karma System & Leaderboard", fill=(200, 200, 200), font=small_font)
+    draw.text((50, features_y + 40), "🎫 Professional Support Tickets", fill=(200, 200, 200), font=small_font)
+    draw.text((50, features_y + 55), "🎭 Reaction Roles Setup", fill=(200, 200, 200), font=small_font)
+    draw.text((50, features_y + 70), "🛡️ 9-Module Security Suite", fill=(200, 200, 200), font=small_font)
 
     # Column 2 features
-    draw.text((280, features_y + 25), "📊 Profile Cards", fill=(200, 200, 200), font=small_font)
-    draw.text((280, features_y + 40), "🔔 YouTube Notifier", fill=(200, 200, 200), font=small_font)
-    draw.text((280, features_y + 55), "🚫 Quarantine System", fill=(200, 200, 200), font=small_font)
-    draw.text((280, features_y + 70), "⏰ Timed Roles", fill=(200, 200, 200), font=small_font)
+    draw.text((280, features_y + 25), "📊 Profile & Server Cards", fill=(200, 200, 200), font=small_font)
+    draw.text((280, features_y + 40), "🔔 YouTube RSS Notifier", fill=(200, 200, 200), font=small_font)
+    draw.text((280, features_y + 55), "🎤 Voice Analytics & Tracking", fill=(200, 200, 200), font=small_font)
+    draw.text((280, features_y + 70), "🎪 Event Management System", fill=(200, 200, 200), font=small_font)
 
     # Column 3 features
-    draw.text((500, features_y + 25), "🎨 Welcome Cards", fill=(200, 200, 200), font=small_font)
-    draw.text((500, features_y + 40), "📢 Announcements", fill=(200, 200, 200), font=small_font)
-    draw.text((500, features_y + 55), "📄 Channel Transcripts", fill=(200, 200, 200), font=small_font)
-    draw.text((500, features_y + 70), "🔐 Whitelist System", fill=(200, 200, 200), font=small_font)
+    draw.text((500, features_y + 25), "🤖 Gemini AI Chat Integration", fill=(200, 200, 200), font=small_font)
+    draw.text((500, features_y + 40), "📢 Announcements & Messaging", fill=(200, 200, 200), font=small_font)
+    draw.text((500, features_y + 55), "📄 Channel Transcripts (TXT/PDF)", fill=(200, 200, 200), font=small_font)
+    draw.text((500, features_y + 70), "📝 Verification & CAPTCHA", fill=(200, 200, 200), font=small_font)
 
     # Build info section
     build_y = 420
