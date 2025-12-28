@@ -8,6 +8,10 @@ import os
 import sys
 import io
 import asyncio
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Global console output queue
 console_output_queue = asyncio.Queue() if asyncio.get_event_loop() else None

@@ -6,6 +6,10 @@ import re
 from datetime import datetime
 from google import genai
 from google.genai import types
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 from brand_config import BrandColors, BOT_FOOTER, VisualElements, create_info_embed, create_error_embed as brand_error_embed, create_warning_embed
 

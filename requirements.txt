@@ -11,3 +11,4 @@ yt-dlp
 google-genai
 reportlab
 sift-stack-py
+python-dotenv

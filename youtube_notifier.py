@@ -6,6 +6,10 @@ import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 import asyncio
 import re
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 from brand_config import BrandColors, BOT_FOOTER, VisualElements
 

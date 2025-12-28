@@ -5,6 +5,10 @@ import asyncio
 from datetime import datetime
 from main import bot, log_action
 import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Server list channel ID
 SUPPORT_SERVER_CHANNEL_ID = 1406243267632300052

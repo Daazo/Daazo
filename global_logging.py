@@ -5,6 +5,11 @@ from discord.ext import commands
 import os
 import asyncio
 from datetime import datetime
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
 from brand_config import BOT_FOOTER, BrandColors
 
 
