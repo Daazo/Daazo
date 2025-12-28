@@ -16,9 +16,10 @@ from PIL import Image, ImageDraw, ImageFont
 import io
 import requests
 from dotenv import load_dotenv
+import os
 
 # Load environment variables from .env file
-load_dotenv()
+load_dotenv(override=True)
 
 # Bot configuration - Import from brand config
 from brand_config import (
