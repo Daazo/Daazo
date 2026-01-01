@@ -388,6 +388,14 @@ async def on_ready():
     except Exception as e:
         print(f"⚠️ Failed to initialize global logging: {e}")
 
+    # Start YouTube Notifier background task
+    try:
+        from youtube_notifier import start_youtube_task
+        start_youtube_task()
+        print("✅ YouTube Notifier task started (5 min interval)")
+    except Exception as e:
+        print(f"⚠️ Failed to start YouTube Notifier task: {e}")
+
     # Initialize Game System
 try:
     from game_system import setup_game_system
@@ -396,14 +404,6 @@ try:
     print("✅ Game system module loaded and initialized")
 except Exception as e:
     print(f"⚠️ Game system load failed: {e}")
-    
-    # Start YouTube Notifier background task
-    try:
-        from youtube_notifier import start_youtube_task
-        start_youtube_task()
-        print("✅ YouTube Notifier task started (5 min interval)")
-    except Exception as e:
-        print(f"⚠️ Failed to start YouTube Notifier task: {e}")
     
     # Enable console output capture for live console logging
     try:
