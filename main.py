@@ -396,15 +396,6 @@ async def on_ready():
     except Exception as e:
         print(f"⚠️ Failed to start YouTube Notifier task: {e}")
 
-    # Initialize Game System
-try:
-    from game_system import setup_game_system
-    setup_game_system(db, log_action) # Pass DB and logging function
-    await bot.load_extension("game_system")
-    print("✅ Game system module loaded and initialized")
-except Exception as e:
-    print(f"⚠️ Game system load failed: {e}")
-    
     # Enable console output capture for live console logging
     try:
         if not isinstance(sys.stdout, ConsoleCapture):
